@@ -90,4 +90,16 @@ export const muiSxStyles = {
     mt: 2,
     py: 1.5,
   },
+  signInLinkBox: {
+    mt: 2,
+    textAlign: 'center',
+  },
+  signInLink: {
+    color: 'primary.main',
+    textDecoration: 'underline',
+    cursor: 'pointer',
+    '&:hover': {
+      color: 'primary.dark',
+    },
+  },
 };
