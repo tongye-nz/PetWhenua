@@ -18,7 +18,6 @@
   <ItemGroup>
     <Folder Include="react-app\src\api\" />
     <Folder Include="react-app\src\models\" />
-    <Folder Include="react-app\src\pages\" />
     <Folder Include="react-app\src\styles\" />
     <Folder Include="react-app\src\utils\" />
   </ItemGroup>
