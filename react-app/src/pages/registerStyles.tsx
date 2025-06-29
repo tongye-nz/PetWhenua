@@ -9,13 +9,19 @@ export const theme = createTheme({
     secondary: {
       main: '#764ba2',
     },
+    error: {
+      main: '#f44336',
+    },
+    success: {
+      main: '#4caf50',
+    },
   },
   typography: {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   },
 });
 
-export const loginStyles: { [key: string]: CSSProperties } = {
+export const registerStyles: { [key: string]: CSSProperties } = {
   backgroundContainer: {
     backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/homepage.jpg")',
     backgroundSize: 'cover',
@@ -32,7 +38,7 @@ export const loginStyles: { [key: string]: CSSProperties } = {
     backdropFilter: 'blur(10px)',
     borderRadius: '8px',
     padding: '24px',
-    maxWidth: '400px',
+    maxWidth: '450px',
     width: '100%',
     boxShadow: '0px 11px 15px -7px rgba(0,0,0,0.2), 0px 24px 38px 3px rgba(0,0,0,0.14), 0px 9px 46px 8px rgba(0,0,0,0.12)',
   },
@@ -73,7 +79,7 @@ export const muiSxStyles = {
     backdropFilter: 'blur(10px)',
     borderRadius: 2,
     padding: 3,
-    maxWidth: 400,
+    maxWidth: 450,
     width: '100%',
   },
   logoBox: {
@@ -87,7 +93,7 @@ export const muiSxStyles = {
     mt: 2,
   },
   submitButtonSx: {
-    mt: 2,
+    mt: 3,
     py: 1.5,
   },
   signInLinkBox: {

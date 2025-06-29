@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import { homeStyles } from './HomeStyles';
-import Header from '../components/Header/Header';
-import Footer from '../components/Footer/Footer';
-import SignIn from './login.tsx';
 
 const Home: React.FC = () => {
   const [hoveredCards, setHoveredCards] = useState<{ [key: number]: boolean }>({});
   const [hoveredJoinBtn, setHoveredJoinBtn] = useState(false);
-  const [showSignIn, setShowSignIn] = useState(false);
 
   const handleCardHover = (cardIndex: number, isHovered: boolean) => {
     setHoveredCards(prev => ({ ...prev, [cardIndex]: isHovered }));
@@ -21,14 +17,8 @@ const Home: React.FC = () => {
 
   const iconCircleStyles = [homeStyles.iconCircle1, homeStyles.iconCircle2, homeStyles.iconCircle3];
 
-  if (showSignIn) {
-    return <SignIn />;
-  }
-
   return (
     <div style={homeStyles.homePage}>
-      <Header onSignInClick={() => setShowSignIn(true)} />
-
       {/* Hero Section */}
       <section style={homeStyles.hero}>
         <div style={homeStyles.heroContent}>
@@ -122,8 +112,6 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 };
