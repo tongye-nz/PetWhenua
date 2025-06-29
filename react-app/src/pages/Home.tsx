@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { homeStyles } from './HomeStyles';
 import Header from '../components/Header/Header';
 import Footer from '../components/Footer/Footer';
-import SignIn from './register.tsx';
+import SignIn from './login.tsx';
 
 const Home: React.FC = () => {
   const [hoveredCards, setHoveredCards] = useState<{ [key: number]: boolean }>({});
