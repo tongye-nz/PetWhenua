@@ -53,13 +53,4 @@ export const headerStyles: { [key: string]: CSSProperties } = {
     color: '#666',
     fontSize: '0.9rem',
   },
-  signInBtn: {
-    background: 'transparent',
-    border: '1px solid #ddd',
-    padding: '0.5rem 1rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    transition: 'all 0.3s ease',
-    color: '#333',
-  },
 };
