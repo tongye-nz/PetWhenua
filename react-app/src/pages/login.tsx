@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
   TextField, 
@@ -19,10 +20,15 @@ const handleSignIn = (email: string, password: string) => {
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
     handleSignIn(email, password);
+  };
+
+  const handleRegisterClick = () => {
+    navigate('/register');
   };
 
   return (
@@ -85,6 +91,19 @@ const SignIn: React.FC = () => {
                 >
                   Sign In
                 </Button>
+
+                <Box sx={muiSxStyles.signInLinkBox}>
+                  <Typography variant="body2" color="text.secondary">
+                    Not a member?{' '}
+                    <Typography 
+                      component="span" 
+                      sx={muiSxStyles.signInLink}
+                      onClick={handleRegisterClick}
+                    >
+                      Register now!
+                    </Typography>
+                  </Typography>
+                </Box>
               </Stack>
             </Box>
           </Stack>
