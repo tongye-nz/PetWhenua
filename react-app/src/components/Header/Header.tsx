@@ -2,7 +2,11 @@ import React from 'react';
 import { Button } from '@mui/material';
 import { headerStyles } from './HeaderStyles';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onSignInClick?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
 
   return (
     <header style={headerStyles.header}>
@@ -16,11 +20,11 @@ const Header: React.FC = () => {
             <a href="#" style={headerStyles.navLink}>Menu1</a>
             <a href="#" style={headerStyles.navLink}>Menu2</a>
           </nav>
-                      <div style={headerStyles.headerRight}>
-              <Button variant="contained">
-                Sign In
-              </Button>
-            </div>
+          <div style={headerStyles.headerRight}>
+            <Button variant="contained" onClick={onSignInClick}>
+              Sign In
+            </Button>
+          </div>
         </div>
       </div>
     </header>
