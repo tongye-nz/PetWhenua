@@ -8,7 +8,7 @@ import {
   Stack
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme, muiSxStyles } from './registerStyles';
+import { theme, muiSxStyles } from './loginStyles.tsx';
 
 const handleSignIn = (email: string, password: string) => {
   console.log('Email:', email);
