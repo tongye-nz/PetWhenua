@@ -15,7 +15,7 @@ export const theme = createTheme({
   },
 });
 
-export const registerStyles: { [key: string]: CSSProperties } = {
+export const loginStyles: { [key: string]: CSSProperties } = {
   backgroundContainer: {
     backgroundImage: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/homepage.jpg")',
     backgroundSize: 'cover',
