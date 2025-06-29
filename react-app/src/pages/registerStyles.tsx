@@ -68,7 +68,7 @@ export const muiSxStyles = {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    minHeight: '100vh',
+    minHeight: 'calc(100vh - 160px)', // Adjust for header and footer
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
