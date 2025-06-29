@@ -1,13 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { Button } from '@mui/material';
 import { headerStyles } from './HeaderStyles';
 
 const Header: React.FC = () => {
-  const [hoveredSignIn, setHoveredSignIn] = useState(false);
-
-  const signInBtnStyle = {
-    ...headerStyles.signInBtn,
-    backgroundColor: hoveredSignIn ? '#f5f5f5' : 'transparent',
-  };
 
   return (
     <header style={headerStyles.header}>
@@ -21,15 +16,11 @@ const Header: React.FC = () => {
             <a href="#" style={headerStyles.navLink}>Menu1</a>
             <a href="#" style={headerStyles.navLink}>Menu2</a>
           </nav>
-          <div style={headerStyles.headerRight}>
-            <button 
-              style={signInBtnStyle}
-              onMouseEnter={() => setHoveredSignIn(true)}
-              onMouseLeave={() => setHoveredSignIn(false)}
-            >
-              Sign In
-            </button>
-          </div>
+                      <div style={headerStyles.headerRight}>
+              <Button variant="contained">
+                Sign In
+              </Button>
+            </div>
         </div>
       </div>
     </header>
