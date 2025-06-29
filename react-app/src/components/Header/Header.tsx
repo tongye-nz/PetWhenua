@@ -1,0 +1,30 @@
+import React from 'react';
+import { Button } from '@mui/material';
+import { headerStyles } from './HeaderStyles';
+
+const Header: React.FC = () => {
+
+  return (
+    <header style={headerStyles.header}>
+      <div style={headerStyles.container}>
+        <div style={headerStyles.headerContent}>
+          <div style={headerStyles.logoImage}>
+            <img src="/logo.png" alt="PetWhenua Logo" style={headerStyles.logoImage} />
+          </div>
+          <nav style={headerStyles.nav}>
+            <a href="#" style={headerStyles.navLinkActive}>Home</a>
+            <a href="#" style={headerStyles.navLink}>Menu1</a>
+            <a href="#" style={headerStyles.navLink}>Menu2</a>
+          </nav>
+                      <div style={headerStyles.headerRight}>
+              <Button variant="contained">
+                Sign In
+              </Button>
+            </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
