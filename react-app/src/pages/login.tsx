@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -6,25 +6,38 @@ import {
   Button, 
   Typography, 
   Paper,
-  Stack
+  Stack,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme, muiSxStyles } from './loginStyles.tsx';
-
-const handleSignIn = (email: string, password: string) => {
-  console.log('Email:', email);
-  console.log('Password:', password);
-  alert(`Demo: Signing in with email: ${email}`);
-};
+import { useAuth } from '../contexts/AuthContext';
 
 const SignIn: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
 
-  const handleSubmit = (event: React.FormEvent) => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    handleSignIn(email, password);
+    clearError();
+    
+    try {
+      await login({ usernameOrEmail, password });
+      navigate('/', { replace: true });
+    } catch (err) {
+      // Error is handled by context
+      console.error('Login failed:', err);
+    }
   };
 
   const handleRegisterClick = () => {
@@ -53,6 +66,13 @@ const SignIn: React.FC = () => {
               Welcome user, please sign in to continue
             </Typography>
 
+            {/* Error Message */}
+            {error && (
+              <Alert severity="error" sx={{ width: '100%' }}>
+                {error}
+              </Alert>
+            )}
+
             {/* Sign In Form */}
             <Box 
               component="form" 
@@ -62,13 +82,13 @@ const SignIn: React.FC = () => {
               <Stack spacing={2}>
                 <TextField
                   fullWidth
-                  type="email"
-                  label="Email"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  label="Email or Username"
+                  placeholder="Enter your email or username"
+                  value={usernameOrEmail}
+                  onChange={(e) => setUsernameOrEmail(e.target.value)}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
                 
                 <TextField
@@ -80,6 +100,7 @@ const SignIn: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
                 
                 <Button
@@ -88,8 +109,10 @@ const SignIn: React.FC = () => {
                   variant="contained"
                   size="large"
                   sx={muiSxStyles.submitButtonSx}
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 >
-                  Sign In
+                  {isLoading ? 'Signing In...' : 'Sign In'}
                 </Button>
 
                 <Box sx={muiSxStyles.signInLinkBox}>
