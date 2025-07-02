@@ -1,0 +1,40 @@
+### Register a new user
+POST https://localhost:7153/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "TestPassword123",
+  "firstName": "Test",
+  "lastName": "User",
+  "phoneNumber": "+1234567890",
+  "location": "Test City"
+}
+
+### Login with username
+POST https://localhost:7153/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "testuser",
+  "password": "TestPassword123"
+}
+
+### Login with email
+POST https://localhost:7153/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "test@example.com",
+  "password": "TestPassword123"
+}
+
+### Verify token (requires Authorization header)
+POST https://localhost:7153/api/auth/verify-token
+Authorization: Bearer YOUR_JWT_TOKEN_HERE
+Content-Type: application/json
+
+### Example of accessing protected endpoint (replace with actual token)
+GET https://localhost:7153/api/users
+Authorization: Bearer YOUR_JWT_TOKEN_HERE 
