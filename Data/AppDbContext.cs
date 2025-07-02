@@ -11,7 +11,7 @@ public class AppDbContext : DbContext
     {
         modelBuilder.Entity<User>()
             .HasMany(u => u.Pets)
-            .WithOne(p => p.Owner)
-            .HasForeignKey(p => p.OwnerId);
+            .WithOne(p => p.User)
+            .HasForeignKey(p => p.UserId);
     }
 }
