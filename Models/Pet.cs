@@ -13,5 +13,5 @@ public class Pet
     // Foreign key
     public int UserId { get; set; }
     // Navigation property
-    public User? Owner { get; set; }
+    public User? User { get; set; }
 }
