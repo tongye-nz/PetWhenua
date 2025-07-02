@@ -4,6 +4,7 @@ import { Button, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import { headerStyles } from './HeaderStyles';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface HeaderProps {
   onSignInClick?: () => void;
@@ -11,7 +12,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isAuthenticated, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [isProfileHovered, setIsProfileHovered] = useState(false);
@@ -85,7 +86,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     
     switch (action) {
       case 'details':
-        console.log('Navigate to My Details');
+        navigate('/profile');
         break;
       case 'pets':
         console.log('Navigate to My Pets');
@@ -94,8 +95,8 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         console.log('Navigate to Messages');
         break;
       case 'signout':
-        setIsLoggedIn(false);
-        console.log('Sign Out');
+        logout();
+        navigate('/');
         break;
       default:
         break;
@@ -244,7 +245,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
 
                      {/* Mobile Profile Section */}
                      <div style={headerStyles.mobileProfileSection}>
-                       {isLoggedIn ? (
+                       {isAuthenticated ? (
                          <div>
                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                              <AccountCircleIcon
@@ -293,7 +294,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                {/* Desktop Profile/Sign In */}
                {!isMobile && (
                  <>
-                   {isLoggedIn ? (
+                   {isAuthenticated ? (
                      <div style={headerStyles.profileContainer} ref={dropdownRef}>
                        <AccountCircleIcon
                          style={{
@@ -340,20 +341,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         </div>
       </header>
 
-      {/* Temporary toggle button for demo purposes */}
-      <div style={{ 
-        position: 'fixed', 
-        top: '10px', 
-        left: '10px', 
-        fontSize: '12px',
-        background: '#f0f0f0',
-        padding: '4px 8px',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        zIndex: 1001
-      }} onClick={() => setIsLoggedIn(!isLoggedIn)}>
-        Demo: {isLoggedIn ? 'Logged In' : 'Not Logged In'} (Click to toggle)
-      </div>
+
     </>
   );
 };

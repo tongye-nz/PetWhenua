@@ -20,6 +20,10 @@ const Dashboard: React.FC = () => {
     navigate('/');
   };
 
+  const handleViewProfile = () => {
+    navigate('/profile');
+  };
+
   if (!user) {
     return null;
   }
@@ -89,6 +93,14 @@ const Dashboard: React.FC = () => {
           </Box>
 
           <Stack direction="row" spacing={2}>
+            <Button
+              variant="outlined"
+              onClick={handleViewProfile}
+              size="large"
+            >
+              View Profile
+            </Button>
+            
             <Button
               variant="outlined"
               color="error"
