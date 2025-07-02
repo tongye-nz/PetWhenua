@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 public class AppDbContext : DbContext
 {
@@ -34,6 +35,11 @@ public class AppDbContext : DbContext
             .Property(p => p.Images)
             .HasConversion(
                 v => string.Join(',', v),
-                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList());
+                v => v.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList())
+            .Metadata.SetValueComparer(
+                new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
+                    (c1, c2) => c1!.SequenceEqual(c2!),
+                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    c => c.ToList()));
     }
 }
