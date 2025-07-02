@@ -9,4 +9,9 @@ public class Pet
 
     public string? Type { get; set; }
     public int Age { get; set; }
+
+    // Foreign key
+    public int UserId { get; set; }
+    // Navigation property
+    public User? Owner { get; set; }
 }
