@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Paper,
@@ -15,153 +15,74 @@ import {
 } from '@mui/material';
 import { Edit, Save, Cancel, PhotoCamera } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
+import { useUserProfileForm } from '../hooks/useUserProfileForm';
+import { LocationSelector } from '../components/UserProfile/LocationSelector';
+import { VALIDATION_RULES } from '../utils/userProfileValidation';
+import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './userProfileStyles';
-
-interface UserProfileData {
-  id: string;
-  username: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  bio: string;
-  location: string;
-  profilePicture?: string;
-  petCount?: number;
-  joinDate?: string;
-}
 
 const UserProfile: React.FC = () => {
   const { user } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
 
-  // Profile data state
-  const [profileData, setProfileData] = useState<UserProfileData>({
+  // Initialize profile data from authenticated user
+  const getInitialProfileData = (): UserProfileData => ({
     id: user?.userId?.toString() || '',
     username: user?.username || '',
     email: user?.email || '',
-    firstName: '',
-    lastName: '',
-    bio: '',
-    location: '',
-    profilePicture: '',
-    petCount: 0,
-    joinDate: new Date().toLocaleDateString()
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    bio: user?.bio || '',
+    region: '', // Will be loaded from API
+    district: '', // Will be loaded from API
+    profilePicture: user?.profilePicture || '',
+    petCount: 0, // Will be loaded from API
+    joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
   });
 
-  // Form data for editing
-  const [formData, setFormData] = useState<UserProfileData>(profileData);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  // Profile data state
+  const [profileData, setProfileData] = useState<UserProfileData>(getInitialProfileData());
 
-  useEffect(() => {
-    // Load user profile data
+  // API simulation function
+  const saveUserProfile = async (data: UserProfileData): Promise<void> => {
+    // TODO: Replace with actual API call
+    // await userProfileAPI.updateProfile(data);
+    
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Update local profile data
+    setProfileData(data);
+  };
+
+  // Load profile data from API
+  const loadUserProfile = async (): Promise<void> => {
+    try {
+      // TODO: Replace with actual API call when backend is ready
+      // const apiProfile = await userProfileAPI.getProfile(user?.userId);
+      // setProfileData(apiProfile);
+      
+      // For now, use authenticated user data
+      if (user) {
+        const currentProfile = getInitialProfileData();
+        setProfileData(currentProfile);
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+    }
+  };
+
+  // Initialize form with custom hook
+  const form = useUserProfileForm({
+    initialData: profileData,
+    onSave: saveUserProfile
+  });
+
+  // Load profile data on component mount
+  React.useEffect(() => {
     loadUserProfile();
   }, []);
 
-  const loadUserProfile = async () => {
-    try {
-      setLoading(true);
-      // TODO: Implement API call to fetch user profile
-      // For now, using mock data
-      const mockProfile: UserProfileData = {
-        id: user?.userId?.toString() || '1',
-        username: user?.username || 'petlover123',
-        email: user?.email || 'user@petwhenua.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        bio: 'Animal lover and proud owner of 2 dogs and 1 cat. Love organizing pet meetups!',
-        location: 'Auckland, New Zealand',
-        profilePicture: '',
-        petCount: 3,
-        joinDate: 'January 2024'
-      };
-      setProfileData(mockProfile);
-      setFormData(mockProfile);
-    } catch (err) {
-      setError('Failed to load profile data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    if (!formData.firstName.trim()) {
-      errors.firstName = 'First name is required';
-    }
-    if (!formData.lastName.trim()) {
-      errors.lastName = 'Last name is required';
-    }
-    if (!formData.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      errors.email = 'Email is invalid';
-    }
-    if (formData.bio.length > 500) {
-      errors.bio = 'Bio must be less than 500 characters';
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleInputChange = (field: keyof UserProfileData, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    // Clear error for this field
-    if (formErrors[field]) {
-      setFormErrors(prev => ({
-        ...prev,
-        [field]: ''
-      }));
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-    setError('');
-    setSuccess('');
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setFormData(profileData);
-    setFormErrors({});
-    setError('');
-    setSuccess('');
-  };
-
-  const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      
-      // TODO: Implement API call to update user profile
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setProfileData(formData);
-      setIsEditing(false);
-      setSuccess('Profile updated successfully!');
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to update profile. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Handle profile picture change
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -169,16 +90,14 @@ const UserProfile: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setFormData(prev => ({
-          ...prev,
-          profilePicture: result
-        }));
+        form.handleInputChange('profilePicture', result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  if (loading && !isEditing) {
+  // Show loading spinner during initial load
+  if (!profileData.id && form.loading) {
     return (
       <Container style={userProfileStyles.container}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
@@ -197,11 +116,11 @@ const UserProfile: React.FC = () => {
             <Typography variant="h4" style={userProfileStyles.title}>
               My Profile
             </Typography>
-            {!isEditing ? (
+            {!form.isEditing ? (
               <Button
                 variant="outlined"
                 startIcon={<Edit />}
-                onClick={handleEdit}
+                onClick={form.startEditing}
                 style={userProfileStyles.editButton}
               >
                 Edit Profile
@@ -210,19 +129,19 @@ const UserProfile: React.FC = () => {
               <Box>
                 <Button
                   variant="contained"
-                  startIcon={loading ? <CircularProgress size={16} /> : <Save />}
-                  onClick={handleSave}
-                  disabled={loading}
+                  startIcon={form.loading ? <CircularProgress size={16} /> : <Save />}
+                  onClick={form.saveForm}
+                  disabled={form.loading || !form.isValid}
                   style={userProfileStyles.saveButton}
                 >
-                  {loading ? 'Saving...' : 'Save'}
+                  {form.loading ? 'Saving...' : 'Save'}
                 </Button>
                 <Button
                   variant="outlined"
                   startIcon={<Cancel />}
-                  onClick={handleCancel}
+                  onClick={form.cancelEditing}
                   style={userProfileStyles.cancelButton}
-                  disabled={loading}
+                  disabled={form.loading}
                 >
                   Cancel
                 </Button>
@@ -233,14 +152,14 @@ const UserProfile: React.FC = () => {
           <Divider style={userProfileStyles.divider} />
 
           {/* Success/Error Messages */}
-          {success && (
+          {form.success && (
             <Alert severity="success" style={userProfileStyles.alert}>
-              {success}
+              {form.success}
             </Alert>
           )}
-          {error && (
+          {form.error && (
             <Alert severity="error" style={userProfileStyles.alert}>
-              {error}
+              {form.error}
             </Alert>
           )}
 
@@ -249,12 +168,12 @@ const UserProfile: React.FC = () => {
             <Box style={userProfileStyles.leftSection}>
               <Box style={userProfileStyles.avatarSection}>
                 <Avatar
-                  src={formData.profilePicture || profileData.profilePicture}
+                  src={form.formData.profilePicture || profileData.profilePicture}
                   style={userProfileStyles.avatar}
                 >
-                  {formData.firstName.charAt(0)}{formData.lastName.charAt(0)}
+                  {form.formData.firstName.charAt(0)}{form.formData.lastName.charAt(0)}
                 </Avatar>
-                {isEditing && (
+                {form.isEditing && (
                   <Box style={userProfileStyles.uploadContainer}>
                     <input
                       accept="image/*"
@@ -294,63 +213,71 @@ const UserProfile: React.FC = () => {
             <Box style={userProfileStyles.rightSection}>
               <Box style={userProfileStyles.formSection}>
                 <Stack spacing={2}>
+                  {/* Name Fields */}
                   <Box style={userProfileStyles.nameRow}>
                     <TextField
                       label="First Name"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      disabled={!isEditing}
-                      error={!!formErrors.firstName}
-                      helperText={formErrors.firstName}
+                      value={form.formData.firstName}
+                      onChange={(e) => form.handleInputChange('firstName', e.target.value)}
+                      disabled={!form.isEditing}
+                      error={!!form.errors.firstName}
+                      helperText={form.errors.firstName}
                       style={userProfileStyles.halfWidth}
                     />
                     <TextField
                       label="Last Name"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      disabled={!isEditing}
-                      error={!!formErrors.lastName}
-                      helperText={formErrors.lastName}
+                      value={form.formData.lastName}
+                      onChange={(e) => form.handleInputChange('lastName', e.target.value)}
+                      disabled={!form.isEditing}
+                      error={!!form.errors.lastName}
+                      helperText={form.errors.lastName}
                       style={userProfileStyles.halfWidth}
                     />
                   </Box>
+
+                  {/* Username (Read-only) */}
                   <TextField
                     label="Username"
-                    value={formData.username}
+                    value={form.formData.username}
                     disabled={true}
                     fullWidth
                     style={userProfileStyles.textField}
                     helperText="Username cannot be changed"
                   />
+
+                  {/* Email */}
                   <TextField
                     label="Email"
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    disabled={!isEditing}
-                    error={!!formErrors.email}
-                    helperText={formErrors.email}
+                    value={form.formData.email}
+                    onChange={(e) => form.handleInputChange('email', e.target.value)}
+                    disabled={!form.isEditing}
+                    error={!!form.errors.email}
+                    helperText={form.errors.email}
                     fullWidth
                     style={userProfileStyles.textField}
                   />
-                  <TextField
-                    label="Location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    disabled={!isEditing}
-                    fullWidth
-                    style={userProfileStyles.textField}
-                    placeholder="e.g., Auckland, New Zealand"
+
+                  {/* Location Selection */}
+                  <LocationSelector
+                    region={form.formData.region}
+                    district={form.formData.district}
+                    disabled={!form.isEditing}
+                    errors={form.errors}
+                    onRegionChange={(region) => form.handleInputChange('region', region)}
+                    onDistrictChange={(district) => form.handleInputChange('district', district)}
                   />
+
+                  {/* Bio */}
                   <TextField
                     label="Bio"
-                    value={formData.bio}
-                    onChange={(e) => handleInputChange('bio', e.target.value)}
-                    disabled={!isEditing}
+                    value={form.formData.bio}
+                    onChange={(e) => form.handleInputChange('bio', e.target.value)}
+                    disabled={!form.isEditing}
                     multiline
                     rows={4}
-                    error={!!formErrors.bio}
-                    helperText={formErrors.bio || `${formData.bio.length}/500 characters`}
+                    error={!!form.errors.bio}
+                    helperText={form.errors.bio || `${form.formData.bio.length}/${VALIDATION_RULES.BIO_MAX_LENGTH} characters`}
                     fullWidth
                     style={userProfileStyles.textField}
                     placeholder="Tell us about yourself and your pets..."
