@@ -46,6 +46,7 @@ public class User
     [MaxLength(20)]
     public string Role { get; set; } = "member";
 
-    // Navigation property
+    // Navigation properties
     public List<Pet> Pets { get; set; } = new();
+    public List<Post> Posts { get; set; } = new();
 }
