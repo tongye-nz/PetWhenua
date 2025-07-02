@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 public class Pet
@@ -22,4 +23,14 @@ public class Pet
     public int Age { get; set; }
 
     [MaxLength(20)]
-    public
+    public string? Gender { get; set; }
+
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
+    public string? ProfilePicture { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
