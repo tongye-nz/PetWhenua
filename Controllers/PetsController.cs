@@ -24,6 +24,6 @@ public class PetsController : ControllerBase
     {
         _context.Pets.Add(pet);
         await _context.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetPets), new { id = pet.Id }, pet);
+        return CreatedAtAction(nameof(GetPets), new { id = pet.PetId }, pet);
     }
 }
