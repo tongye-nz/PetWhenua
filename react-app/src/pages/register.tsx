@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
@@ -7,16 +7,20 @@ import {
   Typography, 
   Paper,
   Stack,
-  Alert
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme, muiSxStyles } from './registerStyles';
+import { useAuth } from '../contexts/AuthContext';
 
 interface FormData {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface FormErrors {
@@ -24,12 +28,9 @@ interface FormErrors {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  firstName?: string;
+  lastName?: string;
 }
-
-const handleRegister = (formData: FormData) => {
-  console.log('Registration data:', formData);
-  alert(`Demo: Registering user ${formData.username} with email: ${formData.email}`);
-};
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -37,11 +38,20 @@ const Register: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
-  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
+  const { register, isAuthenticated, isLoading, error, clearError } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -79,21 +89,19 @@ const Register: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    clearError();
+    
     if (validateForm()) {
-      handleRegister(formData);
-      setShowSuccess(true);
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          username: '',
-          email: '',
-          password: '',
-          confirmPassword: '',
-        });
-        setShowSuccess(false);
-      }, 3000);
+      try {
+        const { confirmPassword, ...registerData } = formData;
+        await register(registerData);
+        navigate('/dashboard', { replace: true });
+      } catch (err) {
+        // Error is handled by context
+        console.error('Registration failed:', err);
+      }
     }
   };
 
@@ -140,10 +148,10 @@ const Register: React.FC = () => {
               Join PetWhenua and connect with pet lovers in your community
             </Typography>
 
-            {/* Success Message */}
-            {showSuccess && (
-              <Alert severity="success" sx={{ width: '100%' }}>
-                Account created successfully! Welcome to PetWhenua!
+            {/* Error Message */}
+            {error && (
+              <Alert severity="error" sx={{ width: '100%' }}>
+                {error}
               </Alert>
             )}
 
@@ -164,6 +172,7 @@ const Register: React.FC = () => {
                   helperText={errors.username}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
 
                 <TextField
@@ -177,7 +186,34 @@ const Register: React.FC = () => {
                   helperText={errors.email}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
+
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="First Name"
+                    placeholder="Enter your first name"
+                    value={formData.firstName}
+                    onChange={handleInputChange('firstName')}
+                    error={!!errors.firstName}
+                    helperText={errors.firstName}
+                    variant="outlined"
+                    disabled={isLoading}
+                  />
+                  
+                  <TextField
+                    fullWidth
+                    label="Last Name"
+                    placeholder="Enter your last name"
+                    value={formData.lastName}
+                    onChange={handleInputChange('lastName')}
+                    error={!!errors.lastName}
+                    helperText={errors.lastName}
+                    variant="outlined"
+                    disabled={isLoading}
+                  />
+                </Box>
                 
                 <TextField
                   fullWidth
@@ -190,6 +226,7 @@ const Register: React.FC = () => {
                   helperText={errors.password}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
 
                 <TextField
@@ -203,6 +240,7 @@ const Register: React.FC = () => {
                   helperText={errors.confirmPassword}
                   required
                   variant="outlined"
+                  disabled={isLoading}
                 />
                 
                 <Button
@@ -211,8 +249,10 @@ const Register: React.FC = () => {
                   variant="contained"
                   size="large"
                   sx={muiSxStyles.submitButtonSx}
+                  disabled={isLoading}
+                  startIcon={isLoading ? <CircularProgress size={20} /> : null}
                 >
-                  Create Account
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
 
                 <Box sx={muiSxStyles.signInLinkBox}>

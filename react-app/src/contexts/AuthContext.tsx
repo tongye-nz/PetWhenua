@@ -1,0 +1,201 @@
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import type { ReactNode } from 'react';
+import { authService } from '../api/auth.api';
+import type { User, AuthState, LoginRequest, RegisterRequest, ApiError } from '../models/auth.types';
+
+// Authentication context type
+interface AuthContextType extends AuthState {
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<void>;
+  logout: () => void;
+  checkAuth: () => Promise<void>;
+  error: string | null;
+  clearError: () => void;
+}
+
+// Actions for auth reducer
+type AuthAction =
+  | { type: 'AUTH_START' }
+  | { type: 'AUTH_SUCCESS'; payload: { user: User; token: string } }
+  | { type: 'AUTH_FAILURE'; payload: string }
+  | { type: 'LOGOUT' }
+  | { type: 'CLEAR_ERROR' };
+
+// Initial state
+const initialState: AuthState = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isLoading: false,
+};
+
+// Auth reducer
+const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'AUTH_START':
+      return {
+        ...state,
+        isLoading: true,
+      };
+    case 'AUTH_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        token: action.payload.token,
+        isAuthenticated: true,
+        isLoading: false,
+      };
+    case 'AUTH_FAILURE':
+      return {
+        ...state,
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        token: null,
+        isAuthenticated: false,
+        isLoading: false,
+      };
+    case 'CLEAR_ERROR':
+      return state;
+    default:
+      return state;
+  }
+};
+
+// Create context
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Auth provider component
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(authReducer, initialState);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Check authentication status on app load
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  // Login function
+  const login = async (credentials: LoginRequest): Promise<void> => {
+    try {
+      dispatch({ type: 'AUTH_START' });
+      setError(null);
+      
+      const response = await authService.login(credentials);
+      
+      dispatch({
+        type: 'AUTH_SUCCESS',
+        payload: {
+          user: response.user,
+          token: response.token,
+        },
+      });
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message);
+      dispatch({ type: 'AUTH_FAILURE', payload: apiError.message });
+      throw err;
+    }
+  };
+
+  // Register function
+  const register = async (userData: RegisterRequest): Promise<void> => {
+    try {
+      dispatch({ type: 'AUTH_START' });
+      setError(null);
+      
+      const response = await authService.register(userData);
+      
+      dispatch({
+        type: 'AUTH_SUCCESS',
+        payload: {
+          user: response.user,
+          token: response.token,
+        },
+      });
+    } catch (err) {
+      const apiError = err as ApiError;
+      setError(apiError.message);
+      dispatch({ type: 'AUTH_FAILURE', payload: apiError.message });
+      throw err;
+    }
+  };
+
+  // Logout function
+  const logout = (): void => {
+    authService.logout();
+    dispatch({ type: 'LOGOUT' });
+    setError(null);
+  };
+
+  // Check authentication status
+  const checkAuth = async (): Promise<void> => {
+    try {
+      const storedToken = authService.getStoredToken();
+      const storedUser = authService.getStoredUser();
+
+      if (storedToken && storedUser) {
+        // Verify token is still valid
+        try {
+          await authService.verifyToken();
+          dispatch({
+            type: 'AUTH_SUCCESS',
+            payload: {
+              user: storedUser,
+              token: storedToken,
+            },
+          });
+        } catch {
+          // Token is invalid, remove from storage
+          authService.logout();
+          dispatch({ type: 'LOGOUT' });
+        }
+      }
+    } catch (err) {
+      // Silent fail for auth check
+      authService.logout();
+      dispatch({ type: 'LOGOUT' });
+    }
+  };
+
+  // Clear error function
+  const clearError = (): void => {
+    setError(null);
+    dispatch({ type: 'CLEAR_ERROR' });
+  };
+
+  const value: AuthContextType = {
+    ...state,
+    login,
+    register,
+    logout,
+    checkAuth,
+    error,
+    clearError,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Hook to use auth context
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}; 
