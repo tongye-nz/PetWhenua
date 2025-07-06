@@ -1,122 +1,169 @@
 using Microsoft.EntityFrameworkCore;
+using PetWhenua.Services.Factories;
+using PetWhenua.Services.Repositories;
 
 namespace PetWhenua.Services
 {
     public class PostService : IPostService
     {
-        private readonly AppDbContext _context;
+        private readonly IPostRepository _postRepository;
+        private readonly IPostFactory _postFactory;
 
-        public PostService(AppDbContext context)
+        public PostService(IPostRepository postRepository, IPostFactory postFactory)
         {
-            _context = context;
+            _postRepository = postRepository;
+            _postFactory = postFactory;
         }
 
         public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null)
         {
-            var query = _context.Posts.Include(p => p.User).AsQueryable();
-
-            if (postType.HasValue)
-            {
-                query = query.Where(p => p.PostType == postType.Value);
-            }
-
-            if (userId.HasValue)
-            {
-                query = query.Where(p => p.UserId == userId.Value);
-            }
-
-            return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+            return await _postRepository.GetAllPostsAsync(postType, userId);
         }
 
         public async Task<Post?> GetPostByIdAsync(int id)
         {
-            return await _context.Posts
-                .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.PostId == id);
+            return await _postRepository.GetPostByIdAsync(id);
         }
 
         public async Task<Post> CreatePostAsync(Post post)
         {
             // Validate user exists
-            var userExists = await _context.Users.AnyAsync(u => u.UserId == post.UserId);
-            if (!userExists)
+            if (!await _postRepository.UserExistsAsync(post.UserId))
             {
                 throw new InvalidOperationException("Invalid UserId. User does not exist.");
             }
 
+            // Validate post using factory
+            _postFactory.ValidatePostForCreation(post);
+
+            // Set timestamps
             post.CreatedAt = DateTime.UtcNow;
             post.UpdatedAt = DateTime.UtcNow;
 
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
+            return await _postRepository.AddPostAsync(post);
+        }
 
-            return post;
+        public async Task<Post> CreatePostAsync(int userId, PostType postType, string title, string description, string content)
+        {
+            // Validate user exists
+            if (!await _postRepository.UserExistsAsync(userId))
+            {
+                throw new InvalidOperationException("Invalid UserId. User does not exist.");
+            }
+
+            // Create post using factory
+            var post = _postFactory.CreatePost(userId, postType, title, description, content);
+
+            return await _postRepository.AddPostAsync(post);
+        }
+
+        public async Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string description, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        {
+            // Validate user exists
+            if (!await _postRepository.UserExistsAsync(userId))
+            {
+                throw new InvalidOperationException("Invalid UserId. User does not exist.");
+            }
+
+            // Create post using factory
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+
+            return await _postRepository.AddPostAsync(post);
         }
 
         public async Task<Post> UpdatePostAsync(Post post)
         {
-            var existingPost = await _context.Posts.FindAsync(post.PostId);
+            var existingPost = await _postRepository.GetPostByIdAsync(post.PostId);
             if (existingPost == null)
             {
                 throw new InvalidOperationException($"Post with ID {post.PostId} not found.");
             }
 
-            // Update properties
-            existingPost.PostType = post.PostType;
-            existingPost.Title = post.Title;
-            existingPost.Description = post.Description;
-            existingPost.Content = post.Content;
-            existingPost.Images = post.Images;
-            existingPost.Location = post.Location;
-            existingPost.Price = post.Price;
-            existingPost.EventDate = post.EventDate;
-            existingPost.Category = post.Category;
-            existingPost.Status = post.Status;
-            existingPost.UpdatedAt = DateTime.UtcNow;
+            // Use factory to create updated post
+            var updatedPost = _postFactory.CreatePostFromExisting(existingPost, post);
 
-            await _context.SaveChangesAsync();
-            return existingPost;
+            return await _postRepository.UpdatePostAsync(updatedPost);
+        }
+
+        public async Task<Post> MarkPostAsSoldAsync(int id)
+        {
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                throw new InvalidOperationException($"Post with ID {id} not found.");
+            }
+
+            // Use factory to mark as sold
+            var soldPost = _postFactory.CreateSoldPost(post);
+
+            return await _postRepository.UpdatePostAsync(soldPost);
+        }
+
+        public async Task<Post> MarkPostAsExpiredAsync(int id)
+        {
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                throw new InvalidOperationException($"Post with ID {id} not found.");
+            }
+
+            // Use factory to mark as expired
+            var expiredPost = _postFactory.CreateExpiredPost(post);
+
+            return await _postRepository.UpdatePostAsync(expiredPost);
+        }
+
+        public async Task<Post> MarkPostAsCancelledAsync(int id)
+        {
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                throw new InvalidOperationException($"Post with ID {id} not found.");
+            }
+
+            // Use factory to mark as cancelled
+            var cancelledPost = _postFactory.CreateCancelledPost(post);
+
+            return await _postRepository.UpdatePostAsync(cancelledPost);
+        }
+
+        public async Task<Post> MarkPostAsActiveAsync(int id)
+        {
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                throw new InvalidOperationException($"Post with ID {id} not found.");
+            }
+
+            // Use factory to mark as active
+            var activePost = _postFactory.CreateActivePost(post);
+
+            return await _postRepository.UpdatePostAsync(activePost);
         }
 
         public async Task<bool> DeletePostAsync(int id)
         {
-            var post = await _context.Posts.FindAsync(id);
-            if (post == null)
-            {
-                return false;
-            }
-
-            _context.Posts.Remove(post);
-            await _context.SaveChangesAsync();
-            return true;
+            return await _postRepository.DeletePostAsync(id);
         }
 
         public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
         {
-            var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
-            if (!userExists)
+            if (!await _postRepository.UserExistsAsync(userId))
             {
                 throw new InvalidOperationException($"User with ID {userId} not found.");
             }
 
-            return await _context.Posts
-                .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+            return await _postRepository.GetPostsByUserAsync(userId);
         }
 
         public async Task<IEnumerable<Post>> GetPostsByTypeAsync(PostType postType)
         {
-            return await _context.Posts
-                .Include(p => p.User)
-                .Where(p => p.PostType == postType)
-                .OrderByDescending(p => p.CreatedAt)
-                .ToListAsync();
+            return await _postRepository.GetPostsByTypeAsync(postType);
         }
 
         public async Task<bool> PostExistsAsync(int id)
         {
-            return await _context.Posts.AnyAsync(p => p.PostId == id);
+            return await _postRepository.PostExistsAsync(id);
         }
     }
 }
