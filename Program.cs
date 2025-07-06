@@ -33,9 +33,13 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetRepository, PetRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
 
 // Register factories
 builder.Services.AddScoped<IUserFactory, UserFactory>();
+builder.Services.AddScoped<IPetFactory, PetFactory>();
+builder.Services.AddScoped<IPostFactory, PostFactory>();
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();
