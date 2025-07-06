@@ -9,12 +9,10 @@ namespace PetWhenua.Controllers
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
         private readonly IAuthService _authService;
 
-        public AuthController(AppDbContext context, IAuthService authService)
+        public AuthController(IAuthService authService)
         {
-            _context = context;
             _authService = authService;
         }
 
@@ -26,53 +24,15 @@ namespace PetWhenua.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Check if username already exists
-            var existingUsername = await _context.Users
-                .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower());
-            if (existingUsername)
+            try
             {
-                return BadRequest("Username already exists.");
+                var response = await _authService.RegisterAsync(request);
+                return Ok(response);
             }
-
-            // Check if email already exists
-            var existingEmail = await _context.Users
-                .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
-            if (existingEmail)
+            catch (InvalidOperationException ex)
             {
-                return BadRequest("Email already exists.");
+                return BadRequest(ex.Message);
             }
-
-            // Create new user
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = _authService.HashPassword(request.Password),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                Location = request.Location,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true,
-                Role = "member"
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            // Generate JWT token
-            var token = _authService.GenerateJwtToken(user);
-            var userDto = _authService.MapToUserDto(user);
-
-            var response = new AuthResponseDto
-            {
-                Token = token,
-                Expires = DateTime.UtcNow.AddDays(1), // 24 hours
-                User = userDto
-            };
-
-            return Ok(response);
         }
 
         [HttpPost("login")]
@@ -83,58 +43,30 @@ namespace PetWhenua.Controllers
                 return BadRequest(ModelState);
             }
 
-            // Find user by username or email
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => 
-                    u.Username.ToLower() == request.UsernameOrEmail.ToLower() ||
-                    u.Email.ToLower() == request.UsernameOrEmail.ToLower());
-
-            if (user == null)
+            try
             {
-                return Unauthorized("Invalid username/email or password.");
+                var response = await _authService.LoginAsync(request);
+                return Ok(response);
             }
-
-            // Check if user is active
-            if (!user.IsActive)
+            catch (UnauthorizedAccessException ex)
             {
-                return Unauthorized("Account is deactivated. Please contact support.");
+                return Unauthorized(ex.Message);
             }
-
-            // Verify password
-            if (!_authService.VerifyPassword(request.Password, user.PasswordHash))
-            {
-                return Unauthorized("Invalid username/email or password.");
-            }
-
-            // Generate JWT token
-            var token = _authService.GenerateJwtToken(user);
-            var userDto = _authService.MapToUserDto(user);
-
-            var response = new AuthResponseDto
-            {
-                Token = token,
-                Expires = DateTime.UtcNow.AddDays(1), // 24 hours
-                User = userDto
-            };
-
-            return Ok(response);
         }
 
         [HttpPost("verify-token")]
         [Microsoft.AspNetCore.Authorization.Authorize]
         public async Task<IActionResult> VerifyToken()
         {
-            // This endpoint can be used to verify if the current token is valid
-            // The JWT middleware will handle token validation
             var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            if (string.IsNullOrEmpty(userIdClaim))
             {
                 return Unauthorized("Invalid token.");
             }
 
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null || !user.IsActive)
+            var user = await _authService.GetUserByTokenAsync(userIdClaim);
+            if (user == null)
             {
                 return Unauthorized("User not found or inactive.");
             }

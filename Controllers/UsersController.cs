@@ -1,52 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using PetWhenua.Services;
 
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IUserService _userService;
 
-    public UsersController(AppDbContext context)
+    public UsersController(IUserService userService)
     {
-        _context = context;
+        _userService = userService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetUsers([FromQuery] bool includePets = false, [FromQuery] bool includePosts = false)
     {
-        var query = _context.Users.AsQueryable();
-
-        if (includePets)
-        {
-            query = query.Include(u => u.Pets);
-        }
-
-        if (includePosts)
-        {
-            query = query.Include(u => u.Posts);
-        }
-
-        var users = await query.OrderBy(u => u.Username).ToListAsync();
+        var users = await _userService.GetUsersAsync(includePets, includePosts);
         return Ok(users);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(int id, [FromQuery] bool includePets = false, [FromQuery] bool includePosts = false)
     {
-        var query = _context.Users.AsQueryable();
-
-        if (includePets)
-        {
-            query = query.Include(u => u.Pets);
-        }
-
-        if (includePosts)
-        {
-            query = query.Include(u => u.Posts);
-        }
-
-        var user = await query.FirstOrDefaultAsync(u => u.UserId == id);
+        var user = await _userService.GetUserByIdAsync(id, includePets, includePosts);
 
         if (user == null)
         {
@@ -59,8 +35,7 @@ public class UsersController : ControllerBase
     [HttpGet("username/{username}")]
     public async Task<IActionResult> GetUserByUsername(string username)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == username);
+        var user = await _userService.GetUserByUsernameAsync(username);
 
         if (user == null)
         {
@@ -73,8 +48,7 @@ public class UsersController : ControllerBase
     [HttpGet("email/{email}")]
     public async Task<IActionResult> GetUserByEmail(string email)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _userService.GetUserByEmailAsync(email);
 
         if (user == null)
         {
@@ -87,29 +61,15 @@ public class UsersController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateUser(User user)
     {
-        // Check if username already exists
-        var existingUsername = await _context.Users
-            .AnyAsync(u => u.Username == user.Username);
-        if (existingUsername)
+        try
         {
-            return BadRequest("Username already exists.");
+            var createdUser = await _userService.CreateUserAsync(user);
+            return CreatedAtAction(nameof(GetUser), new { id = createdUser.UserId }, createdUser);
         }
-
-        // Check if email already exists
-        var existingEmail = await _context.Users
-            .AnyAsync(u => u.Email == user.Email);
-        if (existingEmail)
+        catch (InvalidOperationException ex)
         {
-            return BadRequest("Email already exists.");
+            return BadRequest(ex.Message);
         }
-
-        user.CreatedAt = DateTime.UtcNow;
-        user.UpdatedAt = DateTime.UtcNow;
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
     }
 
     [HttpPut("{id}")]
@@ -120,75 +80,26 @@ public class UsersController : ControllerBase
             return BadRequest("User ID mismatch.");
         }
 
-        var existingUser = await _context.Users.FindAsync(id);
-        if (existingUser == null)
-        {
-            return NotFound($"User with ID {id} not found.");
-        }
-
-        // Check if username is being changed and if it already exists
-        if (existingUser.Username != user.Username)
-        {
-            var usernameExists = await _context.Users
-                .AnyAsync(u => u.Username == user.Username && u.UserId != id);
-            if (usernameExists)
-            {
-                return BadRequest("Username already exists.");
-            }
-        }
-
-        // Check if email is being changed and if it already exists
-        if (existingUser.Email != user.Email)
-        {
-            var emailExists = await _context.Users
-                .AnyAsync(u => u.Email == user.Email && u.UserId != id);
-            if (emailExists)
-            {
-                return BadRequest("Email already exists.");
-            }
-        }
-
-        // Update properties
-        existingUser.Username = user.Username;
-        existingUser.Email = user.Email;
-        existingUser.PasswordHash = user.PasswordHash;
-        existingUser.FirstName = user.FirstName;
-        existingUser.LastName = user.LastName;
-        existingUser.ProfilePicture = user.ProfilePicture;
-        existingUser.Bio = user.Bio;
-        existingUser.Location = user.Location;
-        existingUser.PhoneNumber = user.PhoneNumber;
-        existingUser.IsActive = user.IsActive;
-        existingUser.Role = user.Role;
-        existingUser.UpdatedAt = DateTime.UtcNow;
-
         try
         {
-            await _context.SaveChangesAsync();
+            var updatedUser = await _userService.UpdateUserAsync(user);
+            return Ok(updatedUser);
         }
-        catch (DbUpdateConcurrencyException)
+        catch (InvalidOperationException ex)
         {
-            if (!await UserExists(id))
-            {
-                return NotFound();
-            }
-            throw;
+            return BadRequest(ex.Message);
         }
-
-        return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(int id)
     {
-        var user = await _context.Users.FindAsync(id);
-        if (user == null)
+        var deleted = await _userService.DeleteUserAsync(id);
+        
+        if (!deleted)
         {
             return NotFound($"User with ID {id} not found.");
         }
-
-        _context.Users.Remove(user);
-        await _context.SaveChangesAsync();
 
         return NoContent();
     }
@@ -196,70 +107,70 @@ public class UsersController : ControllerBase
     [HttpGet("{id}/pets")]
     public async Task<IActionResult> GetUserPets(int id)
     {
-        var userExists = await _context.Users.AnyAsync(u => u.UserId == id);
+        var userExists = await _userService.UserExistsAsync(id);
         if (!userExists)
         {
             return NotFound($"User with ID {id} not found.");
         }
 
-        var pets = await _context.Pets
-            .Where(p => p.UserId == id)
-            .ToListAsync();
-
-        return Ok(pets);
+        var user = await _userService.GetUserByIdAsync(id, includePets: true);
+        return Ok(user?.Pets ?? new List<Pet>());
     }
 
     [HttpGet("{id}/posts")]
     public async Task<IActionResult> GetUserPosts(int id)
     {
-        var userExists = await _context.Users.AnyAsync(u => u.UserId == id);
+        var userExists = await _userService.UserExistsAsync(id);
         if (!userExists)
         {
             return NotFound($"User with ID {id} not found.");
         }
 
-        var posts = await _context.Posts
-            .Where(p => p.UserId == id)
-            .OrderByDescending(p => p.CreatedAt)
-            .ToListAsync();
-
-        return Ok(posts);
+        var user = await _userService.GetUserByIdAsync(id, includePosts: true);
+        return Ok(user?.Posts ?? new List<Post>());
     }
 
     [HttpPatch("{id}/deactivate")]
     public async Task<IActionResult> DeactivateUser(int id)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _userService.GetUserByIdAsync(id);
         if (user == null)
         {
             return NotFound($"User with ID {id} not found.");
         }
 
         user.IsActive = false;
-        user.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return NoContent();
+        
+        try
+        {
+            await _userService.UpdateUserAsync(user);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPatch("{id}/activate")]
     public async Task<IActionResult> ActivateUser(int id)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _userService.GetUserByIdAsync(id);
         if (user == null)
         {
             return NotFound($"User with ID {id} not found.");
         }
 
         user.IsActive = true;
-        user.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-
-        return NoContent();
-    }
-
-    private async Task<bool> UserExists(int id)
-    {
-        return await _context.Users.AnyAsync(e => e.UserId == id);
+        
+        try
+        {
+            await _userService.UpdateUserAsync(user);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 } 

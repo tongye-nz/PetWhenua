@@ -1,47 +1,28 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using PetWhenua.Services;
 
 [ApiController]
 [Route("api/[controller]")]
 public class PetsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IPetService _petService;
 
-    public PetsController(AppDbContext context)
+    public PetsController(IPetService petService)
     {
-        _context = context;
+        _petService = petService;
     }
 
     [HttpGet]
     public async Task<IActionResult> GetPets([FromQuery] bool includeUser = false, [FromQuery] int? userId = null)
     {
-        var query = _context.Pets.AsQueryable();
-
-        if (includeUser)
-        {
-            query = query.Include(p => p.User);
-        }
-
-        if (userId.HasValue)
-        {
-            query = query.Where(p => p.UserId == userId.Value);
-        }
-
-        var pets = await query.OrderBy(p => p.Name).ToListAsync();
+        var pets = await _petService.GetPetsAsync(includeUser, userId);
         return Ok(pets);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPet(int id, [FromQuery] bool includeUser = false)
     {
-        var query = _context.Pets.AsQueryable();
-
-        if (includeUser)
-        {
-            query = query.Include(p => p.User);
-        }
-
-        var pet = await query.FirstOrDefaultAsync(p => p.PetId == id);
+        var pet = await _petService.GetPetByIdAsync(id, includeUser);
 
         if (pet == null)
         {
@@ -54,20 +35,15 @@ public class PetsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreatePet(Pet pet)
     {
-        // Validate user exists
-        var userExists = await _context.Users.AnyAsync(u => u.UserId == pet.UserId);
-        if (!userExists)
+        try
         {
-            return BadRequest("Invalid UserId. User does not exist.");
+            var createdPet = await _petService.CreatePetAsync(pet);
+            return CreatedAtAction(nameof(GetPet), new { id = createdPet.PetId }, createdPet);
         }
-
-        pet.CreatedAt = DateTime.UtcNow;
-        pet.UpdatedAt = DateTime.UtcNow;
-
-        _context.Pets.Add(pet);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetPet), new { id = pet.PetId }, pet);
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     [HttpPut("{id}")]
@@ -78,60 +54,26 @@ public class PetsController : ControllerBase
             return BadRequest("Pet ID mismatch.");
         }
 
-        var existingPet = await _context.Pets.FindAsync(id);
-        if (existingPet == null)
-        {
-            return NotFound($"Pet with ID {id} not found.");
-        }
-
-        // Validate user exists if UserId is being changed
-        if (existingPet.UserId != pet.UserId)
-        {
-            var userExists = await _context.Users.AnyAsync(u => u.UserId == pet.UserId);
-            if (!userExists)
-            {
-                return BadRequest("Invalid UserId. User does not exist.");
-            }
-        }
-
-        // Update properties
-        existingPet.UserId = pet.UserId;
-        existingPet.Name = pet.Name;
-        existingPet.Species = pet.Species;
-        existingPet.Breed = pet.Breed;
-        existingPet.Age = pet.Age;
-        existingPet.Gender = pet.Gender;
-        existingPet.Description = pet.Description;
-        existingPet.ProfilePicture = pet.ProfilePicture;
-        existingPet.UpdatedAt = DateTime.UtcNow;
-
         try
         {
-            await _context.SaveChangesAsync();
+            await _petService.UpdatePetAsync(pet);
+            return NoContent();
         }
-        catch (DbUpdateConcurrencyException)
+        catch (InvalidOperationException ex)
         {
-            if (!await PetExists(id))
-            {
-                return NotFound();
-            }
-            throw;
+            return BadRequest(ex.Message);
         }
-
-        return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeletePet(int id)
     {
-        var pet = await _context.Pets.FindAsync(id);
-        if (pet == null)
+        var deleted = await _petService.DeletePetAsync(id);
+        
+        if (!deleted)
         {
             return NotFound($"Pet with ID {id} not found.");
         }
-
-        _context.Pets.Remove(pet);
-        await _context.SaveChangesAsync();
 
         return NoContent();
     }
@@ -139,34 +81,21 @@ public class PetsController : ControllerBase
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetPetsByUser(int userId)
     {
-        var userExists = await _context.Users.AnyAsync(u => u.UserId == userId);
-        if (!userExists)
+        try
         {
-            return NotFound($"User with ID {userId} not found.");
+            var pets = await _petService.GetPetsByUserAsync(userId);
+            return Ok(pets);
         }
-
-        var pets = await _context.Pets
-            .Where(p => p.UserId == userId)
-            .OrderBy(p => p.Name)
-            .ToListAsync();
-
-        return Ok(pets);
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
     }
 
     [HttpGet("species/{species}")]
     public async Task<IActionResult> GetPetsBySpecies(string species)
     {
-        var pets = await _context.Pets
-            .Include(p => p.User)
-            .Where(p => p.Species != null && p.Species.ToLower() == species.ToLower())
-            .OrderBy(p => p.Name)
-            .ToListAsync();
-
+        var pets = await _petService.GetPetsBySpeciesAsync(species);
         return Ok(pets);
-    }
-
-    private async Task<bool> PetExists(int id)
-    {
-        return await _context.Pets.AnyAsync(e => e.PetId == id);
     }
 }
