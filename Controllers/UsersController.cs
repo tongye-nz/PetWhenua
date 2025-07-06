@@ -133,44 +133,28 @@ public class UsersController : ControllerBase
     [HttpPatch("{id}/deactivate")]
     public async Task<IActionResult> DeactivateUser(int id)
     {
-        var user = await _userService.GetUserByIdAsync(id);
-        if (user == null)
-        {
-            return NotFound($"User with ID {id} not found.");
-        }
-
-        user.IsActive = false;
-        
         try
         {
-            await _userService.UpdateUserAsync(user);
-            return NoContent();
+            var deactivatedUser = await _userService.DeactivateUserAsync(id);
+            return Ok(deactivatedUser);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return NotFound(ex.Message);
         }
     }
 
     [HttpPatch("{id}/activate")]
     public async Task<IActionResult> ActivateUser(int id)
     {
-        var user = await _userService.GetUserByIdAsync(id);
-        if (user == null)
-        {
-            return NotFound($"User with ID {id} not found.");
-        }
-
-        user.IsActive = true;
-        
         try
         {
-            await _userService.UpdateUserAsync(user);
-            return NoContent();
+            var activatedUser = await _userService.ActivateUserAsync(id);
+            return Ok(activatedUser);
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(ex.Message);
+            return NotFound(ex.Message);
         }
     }
 } 

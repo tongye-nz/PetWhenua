@@ -1,3 +1,5 @@
+using PetWhenua.Models.Dtos;
+
 namespace PetWhenua.Services
 {
     public interface IUserService
@@ -7,7 +9,10 @@ namespace PetWhenua.Services
         Task<User?> GetUserByUsernameAsync(string username);
         Task<User?> GetUserByEmailAsync(string email);
         Task<User> CreateUserAsync(User user);
+        Task<User> CreateUserFromRegistrationAsync(RegisterRequestDto request, string passwordHash);
         Task<User> UpdateUserAsync(User user);
+        Task<User> DeactivateUserAsync(int id);
+        Task<User> ActivateUserAsync(int id);
         Task<bool> DeleteUserAsync(int id);
         Task<bool> UserExistsAsync(int id);
         Task<bool> UsernameExistsAsync(string username);

@@ -22,12 +22,12 @@ namespace PetWhenua.Services
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
-        private readonly AppDbContext _context;
+        private readonly IUserService _userService;
 
-        public AuthService(IConfiguration configuration, AppDbContext context)
+        public AuthService(IConfiguration configuration, IUserService userService)
         {
             _configuration = configuration;
-            _context = context;
+            _userService = userService;
         }
 
         public string HashPassword(string password)
@@ -90,40 +90,9 @@ namespace PetWhenua.Services
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
         {
-            // Check if username already exists
-            var existingUsername = await _context.Users
-                .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower());
-            if (existingUsername)
-            {
-                throw new InvalidOperationException("Username already exists.");
-            }
-
-            // Check if email already exists
-            var existingEmail = await _context.Users
-                .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
-            if (existingEmail)
-            {
-                throw new InvalidOperationException("Email already exists.");
-            }
-
-            // Create new user
-            var user = new User
-            {
-                Username = request.Username,
-                Email = request.Email,
-                PasswordHash = HashPassword(request.Password),
-                FirstName = request.FirstName,
-                LastName = request.LastName,
-                PhoneNumber = request.PhoneNumber,
-                Location = request.Location,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true,
-                Role = "member"
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
+            // Use UserService to create user from registration (includes validation)
+            var passwordHash = HashPassword(request.Password);
+            var user = await _userService.CreateUserFromRegistrationAsync(request, passwordHash);
 
             // Generate JWT token
             var token = GenerateJwtToken(user);
@@ -139,11 +108,9 @@ namespace PetWhenua.Services
 
         public async Task<AuthResponseDto> LoginAsync(LoginRequestDto request)
         {
-            // Find user by username or email
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => 
-                    u.Username.ToLower() == request.UsernameOrEmail.ToLower() ||
-                    u.Email.ToLower() == request.UsernameOrEmail.ToLower());
+            // Find user by username or email using UserService
+            var user = await _userService.GetUserByUsernameAsync(request.UsernameOrEmail) ??
+                       await _userService.GetUserByEmailAsync(request.UsernameOrEmail);
 
             if (user == null)
             {
@@ -181,7 +148,7 @@ namespace PetWhenua.Services
                 return null;
             }
 
-            var user = await _context.Users.FindAsync(id);
+            var user = await _userService.GetUserByIdAsync(id);
             return user?.IsActive == true ? user : null;
         }
     }
