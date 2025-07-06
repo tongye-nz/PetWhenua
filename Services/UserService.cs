@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PetWhenua.Models.Dtos;
 using PetWhenua.Services.Factories;
-using PetWhenua.Services.Repositories;
+using PetWhenua.Repositories.Abstract;
 
 namespace PetWhenua.Services
 {

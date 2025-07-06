@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PetWhenua.Services;
-using PetWhenua.Services.Repositories;
+using PetWhenua.Repositories.Abstract;
+using PetWhenua.Repositories.Concrete;
 using PetWhenua.Services.Factories;
 
 var builder = WebApplication.CreateBuilder(args);

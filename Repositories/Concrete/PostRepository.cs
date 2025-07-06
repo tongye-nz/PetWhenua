@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using PetWhenua.Repositories.Abstract;
 
-namespace PetWhenua.Services.Repositories
+namespace PetWhenua.Repositories.Concrete
 {
     public class PostRepository : IPostRepository
     {

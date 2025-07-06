@@ -1,4 +1,4 @@
-namespace PetWhenua.Services.Repositories
+namespace PetWhenua.Repositories.Abstract
 {
     public interface IUserRepository
     {
