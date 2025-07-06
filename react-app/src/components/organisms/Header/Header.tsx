@@ -4,7 +4,7 @@ import { Button, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 import { headerStyles } from './HeaderStyles';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface HeaderProps {
   onSignInClick?: () => void;

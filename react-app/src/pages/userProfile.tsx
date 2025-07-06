@@ -16,10 +16,10 @@ import {
 import { Edit, Save, Cancel, PhotoCamera } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
-import { LocationSelector } from '../components/UserProfile/LocationSelector';
+import { LocationSelector } from '../components/molecules/LocationSelector';
 import { VALIDATION_RULES } from '../utils/userProfileValidation';
 import type { UserProfileData } from '../types/userProfile.types';
-import { userProfileStyles } from './userProfileStyles';
+import { userProfileStyles } from './UserProfile.styles';
 
 const UserProfile: React.FC = () => {
   const { user } = useAuth();

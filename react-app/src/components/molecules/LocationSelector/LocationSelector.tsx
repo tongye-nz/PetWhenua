@@ -9,8 +9,8 @@ import {
   CircularProgress
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import { useLocationSelector } from '../../hooks/useLocationSelector';
-import type { UserProfileFormErrors } from '../../types/userProfile.types';
+import { useLocationSelector } from '../../../hooks/useLocationSelector';
+import type { UserProfileFormErrors } from '../../../types/userProfile.types';
 
 interface LocationSelectorProps {
   region: string;

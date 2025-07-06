@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../Header/Header';
-import Footer from '../Footer/Footer';
+import { Header } from '../../organisms';
+import { Footer } from '../../organisms';
 
 interface LayoutProps {
   children: React.ReactNode;

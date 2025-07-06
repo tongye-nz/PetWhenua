@@ -11,7 +11,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
-import { theme, muiSxStyles } from './loginStyles.tsx';
+import { theme, muiSxStyles } from './Login.styles';
 import { useAuth } from '../contexts/AuthContext';
 
 const SignIn: React.FC = () => {
