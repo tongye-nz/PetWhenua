@@ -1,1 +1,2 @@
-export { LocationSelector } from './LocationSelector';
+export { default } from './LocationSelector';
+export type { LocationSelectorProps } from './LocationSelector';

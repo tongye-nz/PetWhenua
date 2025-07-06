@@ -12,7 +12,7 @@ import type { SelectChangeEvent } from '@mui/material';
 import { useLocationSelector } from '../../../hooks/useLocationSelector';
 import type { UserProfileFormErrors } from '../../../types/userProfile.types';
 
-interface LocationSelectorProps {
+export interface LocationSelectorProps {
   region: string;
   district: string;
   disabled?: boolean;
@@ -22,7 +22,7 @@ interface LocationSelectorProps {
   style?: React.CSSProperties;
 }
 
-export const LocationSelector: React.FC<LocationSelectorProps> = ({
+const LocationSelector: React.FC<LocationSelectorProps> = ({
   region,
   district,
   disabled = false,
@@ -134,3 +134,5 @@ export const LocationSelector: React.FC<LocationSelectorProps> = ({
     </Box>
   );
 }; 
+
+export default LocationSelector;

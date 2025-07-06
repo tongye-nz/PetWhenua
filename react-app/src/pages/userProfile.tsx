@@ -16,7 +16,7 @@ import {
 import { Edit, Save, Cancel, PhotoCamera } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
-import { LocationSelector } from '../components/molecules/LocationSelector';
+import LocationSelector from '../components/molecules/LocationSelector';
 import { VALIDATION_RULES } from '../utils/userProfileValidation';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
@@ -264,8 +264,8 @@ const UserProfile: React.FC = () => {
                     district={form.formData.district}
                     disabled={!form.isEditing}
                     errors={form.errors}
-                    onRegionChange={(region) => form.handleInputChange('region', region)}
-                    onDistrictChange={(district) => form.handleInputChange('district', district)}
+                    onRegionChange={(region: string) => form.handleInputChange('region', region)}
+                    onDistrictChange={(district: string) => form.handleInputChange('district', district)}
                   />
 
                   {/* Bio */}
