@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { footerStyles } from './FooterStyles';
+import { footerStyles } from './Footer.styles';
 
 const Footer: React.FC = () => {
   const [hoveredLinks, setHoveredLinks] = useState<{ [key: string]: boolean }>({});

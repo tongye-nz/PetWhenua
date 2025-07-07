@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
-import { headerStyles } from './HeaderStyles';
+import { headerStyles } from './Header.styles';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface HeaderProps {
