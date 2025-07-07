@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Stack } from '@mui/material';
-import { Logo, Text } from '../../atoms';
+import { Logo, Text } from '../../../';
 
 export interface AuthHeaderProps {
   title: string;

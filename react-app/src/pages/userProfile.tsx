@@ -2,21 +2,18 @@ import React, { useState } from 'react';
 import {
   Container,
   Paper,
-  Typography,
-  TextField,
-  Button,
   Box,
   Avatar,
   Alert,
-  CircularProgress,
   IconButton,
   Divider,
   Stack
 } from '@mui/material';
-import { Edit, Save, Cancel, PhotoCamera } from '@mui/icons-material';
+import { PhotoCamera } from '@mui/icons-material';
+import { Button, Input, Text, LoadingSpinner } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
-import LocationSelector from '../components/molecules/LocationSelector';
+import { LocationSelector } from '../components';
 import { VALIDATION_RULES } from '../utils/userProfileValidation';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
@@ -101,7 +98,7 @@ const UserProfile: React.FC = () => {
     return (
       <Container style={userProfileStyles.container}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+          <LoadingSpinner />
         </Box>
       </Container>
     );
@@ -113,13 +110,12 @@ const UserProfile: React.FC = () => {
         <Paper elevation={3} style={userProfileStyles.profileCard}>
           {/* Header */}
           <Box style={userProfileStyles.header}>
-            <Typography variant="h4" style={userProfileStyles.title}>
+            <Text variant="h4" style={userProfileStyles.title}>
               My Profile
-            </Typography>
+            </Text>
             {!form.isEditing ? (
               <Button
-                variant="outlined"
-                startIcon={<Edit />}
+                variant="outline"
                 onClick={form.startEditing}
                 style={userProfileStyles.editButton}
               >
@@ -128,17 +124,16 @@ const UserProfile: React.FC = () => {
             ) : (
               <Box>
                 <Button
-                  variant="contained"
-                  startIcon={form.loading ? <CircularProgress size={16} /> : <Save />}
+                  variant="primary"
                   onClick={form.saveForm}
                   disabled={form.loading || !form.isValid}
+                  isLoading={form.loading}
                   style={userProfileStyles.saveButton}
                 >
                   {form.loading ? 'Saving...' : 'Save'}
                 </Button>
                 <Button
-                  variant="outlined"
-                  startIcon={<Cancel />}
+                  variant="outline"
                   onClick={form.cancelEditing}
                   style={userProfileStyles.cancelButton}
                   disabled={form.loading}
@@ -190,21 +185,21 @@ const UserProfile: React.FC = () => {
                         <PhotoCamera />
                       </IconButton>
                     </label>
-                    <Typography variant="caption" style={userProfileStyles.uploadText}>
+                    <Text variant="caption" style={userProfileStyles.uploadText}>
                       Change Photo
-                    </Typography>
+                    </Text>
                   </Box>
                 )}
                 <Box style={userProfileStyles.stats}>
-                  <Typography variant="h6" style={userProfileStyles.statNumber}>
+                  <Text variant="h6" style={userProfileStyles.statNumber}>
                     {profileData.petCount}
-                  </Typography>
-                  <Typography variant="body2" style={userProfileStyles.statLabel}>
+                  </Text>
+                  <Text variant="body2" style={userProfileStyles.statLabel}>
                     Pets Registered
-                  </Typography>
-                  <Typography variant="body2" style={userProfileStyles.joinDate}>
+                  </Text>
+                  <Text variant="body2" style={userProfileStyles.joinDate}>
                     Joined {profileData.joinDate}
-                  </Typography>
+                  </Text>
                 </Box>
               </Box>
             </Box>
@@ -215,7 +210,7 @@ const UserProfile: React.FC = () => {
                 <Stack spacing={2}>
                   {/* Name Fields */}
                   <Box style={userProfileStyles.nameRow}>
-                    <TextField
+                    <Input
                       label="First Name"
                       value={form.formData.firstName}
                       onChange={(e) => form.handleInputChange('firstName', e.target.value)}
@@ -224,7 +219,7 @@ const UserProfile: React.FC = () => {
                       helperText={form.errors.firstName}
                       style={userProfileStyles.halfWidth}
                     />
-                    <TextField
+                    <Input
                       label="Last Name"
                       value={form.formData.lastName}
                       onChange={(e) => form.handleInputChange('lastName', e.target.value)}
@@ -236,7 +231,7 @@ const UserProfile: React.FC = () => {
                   </Box>
 
                   {/* Username (Read-only) */}
-                  <TextField
+                  <Input
                     label="Username"
                     value={form.formData.username}
                     disabled={true}
@@ -246,7 +241,7 @@ const UserProfile: React.FC = () => {
                   />
 
                   {/* Email */}
-                  <TextField
+                  <Input
                     label="Email"
                     type="email"
                     value={form.formData.email}
@@ -269,7 +264,7 @@ const UserProfile: React.FC = () => {
                   />
 
                   {/* Bio */}
-                  <TextField
+                  <Input
                     label="Bio"
                     value={form.formData.bio}
                     onChange={(e) => form.handleInputChange('bio', e.target.value)}

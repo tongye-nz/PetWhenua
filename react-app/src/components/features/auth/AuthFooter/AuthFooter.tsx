@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { Text } from '../../atoms';
+import { Text } from '../../../';
 
 export interface AuthFooterProps {
   primaryText?: string;

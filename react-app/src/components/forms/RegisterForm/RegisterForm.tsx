@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Stack, Alert, Typography } from '@mui/material';
-import { Button, Input } from '../../atoms';
+import { Button, Input } from '../../';
 
 export interface RegisterFormData {
   username: string;

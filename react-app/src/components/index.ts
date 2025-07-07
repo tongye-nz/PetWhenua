@@ -1,14 +1,14 @@
-// Atoms
-export * from './atoms';
+// UI Components (Design System)
+export * from './ui';
 
-// Molecules
-export * from './molecules';
+// Forms
+export * from './forms';
 
-// Organisms
-export * from './organisms';
+// Layout Components
+export * from './layout';
 
-// Templates
-export * from './templates';
+// Features
+export * from './features';
 
 // Common
 export * from './common';
