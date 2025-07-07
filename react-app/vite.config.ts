@@ -24,7 +24,7 @@ export default defineConfig({
           ],
           'location-data': ['./src/data/nzLocations.ts'],
           'profile-components': [
-            './src/components/UserProfile/LocationSelector.tsx',
+            './src/components/forms/LocationSelector/LocationSelector.tsx',
             './src/hooks/useLocationSelector.ts',
             './src/hooks/useUserProfileForm.ts',
             './src/utils/userProfileValidation.ts'

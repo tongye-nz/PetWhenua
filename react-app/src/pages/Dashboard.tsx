@@ -2,12 +2,11 @@ import React from 'react';
 import { 
   Box, 
   Paper, 
-  Typography, 
-  Button, 
   Stack, 
   Avatar,
   Chip
 } from '@mui/material';
+import { Button, Text } from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,13 +43,13 @@ const Dashboard: React.FC = () => {
           </Avatar>
           
           <Stack spacing={1} alignItems="center">
-            <Typography variant="h4" fontWeight="bold">
+            <Text variant="h4" fontWeight="bold">
               Welcome, {user.firstName || user.username}! 🎉
-            </Typography>
+            </Text>
             
-            <Typography variant="body1" color="text.secondary">
+            <Text variant="body1" color="text.secondary">
               You have successfully logged into PetWhenua
-            </Typography>
+            </Text>
             
             <Chip 
               label={`Role: ${user.role}`} 
@@ -67,34 +66,34 @@ const Dashboard: React.FC = () => {
             border: '1px solid',
             borderColor: 'grey.200'
           }}>
-            <Typography variant="h6" gutterBottom>
+            <Text variant="h6" gutterBottom>
               Your Profile Information
-            </Typography>
+            </Text>
             
             <Stack spacing={1}>
-              <Typography><strong>Username:</strong> {user.username}</Typography>
-              <Typography><strong>Email:</strong> {user.email}</Typography>
+              <Text><strong>Username:</strong> {user.username}</Text>
+              <Text><strong>Email:</strong> {user.email}</Text>
               {user.firstName && (
-                <Typography><strong>First Name:</strong> {user.firstName}</Typography>
+                <Text><strong>First Name:</strong> {user.firstName}</Text>
               )}
               {user.lastName && (
-                <Typography><strong>Last Name:</strong> {user.lastName}</Typography>
+                <Text><strong>Last Name:</strong> {user.lastName}</Text>
               )}
               {user.location && (
-                <Typography><strong>Location:</strong> {user.location}</Typography>
+                <Text><strong>Location:</strong> {user.location}</Text>
               )}
               {user.phoneNumber && (
-                <Typography><strong>Phone:</strong> {user.phoneNumber}</Typography>
+                <Text><strong>Phone:</strong> {user.phoneNumber}</Text>
               )}
-              <Typography>
+              <Text>
                 <strong>Member Since:</strong> {new Date(user.createdAt).toLocaleDateString()}
-              </Typography>
+              </Text>
             </Stack>
           </Box>
 
           <Stack direction="row" spacing={2}>
             <Button
-              variant="outlined"
+              variant="outline"
               onClick={handleViewProfile}
               size="large"
             >
@@ -102,8 +101,7 @@ const Dashboard: React.FC = () => {
             </Button>
             
             <Button
-              variant="outlined"
-              color="error"
+              variant="outline"
               onClick={handleLogout}
               size="large"
             >
@@ -111,8 +109,7 @@ const Dashboard: React.FC = () => {
             </Button>
             
             <Button
-              variant="contained"
-              color="primary"
+              variant="primary"
               size="large"
               disabled
             >

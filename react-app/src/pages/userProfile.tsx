@@ -2,24 +2,20 @@ import React, { useState } from 'react';
 import {
   Container,
   Paper,
-  Typography,
-  TextField,
-  Button,
   Box,
-  Avatar,
   Alert,
-  CircularProgress,
-  IconButton,
-  Divider,
-  Stack
+  Divider
 } from '@mui/material';
-import { Edit, Save, Cancel, PhotoCamera } from '@mui/icons-material';
+import { 
+  LoadingSpinner,
+  ProfileAvatarSection,
+  ProfileInfoForm,
+  ProfileHeaderSection
+} from '../components';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
-import { LocationSelector } from '../components/UserProfile/LocationSelector';
-import { VALIDATION_RULES } from '../utils/userProfileValidation';
 import type { UserProfileData } from '../types/userProfile.types';
-import { userProfileStyles } from './userProfileStyles';
+import { userProfileStyles } from './UserProfile.styles';
 
 const UserProfile: React.FC = () => {
   const { user } = useAuth();
@@ -101,7 +97,7 @@ const UserProfile: React.FC = () => {
     return (
       <Container style={userProfileStyles.container}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <CircularProgress />
+          <LoadingSpinner />
         </Box>
       </Container>
     );
@@ -112,42 +108,15 @@ const UserProfile: React.FC = () => {
       <Container style={userProfileStyles.container}>
         <Paper elevation={3} style={userProfileStyles.profileCard}>
           {/* Header */}
-          <Box style={userProfileStyles.header}>
-            <Typography variant="h4" style={userProfileStyles.title}>
-              My Profile
-            </Typography>
-            {!form.isEditing ? (
-              <Button
-                variant="outlined"
-                startIcon={<Edit />}
-                onClick={form.startEditing}
-                style={userProfileStyles.editButton}
-              >
-                Edit Profile
-              </Button>
-            ) : (
-              <Box>
-                <Button
-                  variant="contained"
-                  startIcon={form.loading ? <CircularProgress size={16} /> : <Save />}
-                  onClick={form.saveForm}
-                  disabled={form.loading || !form.isValid}
-                  style={userProfileStyles.saveButton}
-                >
-                  {form.loading ? 'Saving...' : 'Save'}
-                </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<Cancel />}
-                  onClick={form.cancelEditing}
-                  style={userProfileStyles.cancelButton}
-                  disabled={form.loading}
-                >
-                  Cancel
-                </Button>
-              </Box>
-            )}
-          </Box>
+          <ProfileHeaderSection
+            isEditing={form.isEditing}
+            isLoading={form.loading}
+            isValid={form.isValid}
+            onStartEditing={form.startEditing}
+            onSaveForm={form.saveForm}
+            onCancelEditing={form.cancelEditing}
+            styles={userProfileStyles}
+          />
 
           <Divider style={userProfileStyles.divider} />
 
@@ -165,126 +134,22 @@ const UserProfile: React.FC = () => {
 
           <Box style={userProfileStyles.contentContainer}>
             {/* Profile Picture Section */}
-            <Box style={userProfileStyles.leftSection}>
-              <Box style={userProfileStyles.avatarSection}>
-                <Avatar
-                  src={form.formData.profilePicture || profileData.profilePicture}
-                  style={userProfileStyles.avatar}
-                >
-                  {form.formData.firstName.charAt(0)}{form.formData.lastName.charAt(0)}
-                </Avatar>
-                {form.isEditing && (
-                  <Box style={userProfileStyles.uploadContainer}>
-                    <input
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      id="profile-picture-upload"
-                      type="file"
-                      onChange={handleProfilePictureChange}
-                    />
-                    <label htmlFor="profile-picture-upload">
-                      <IconButton
-                        component="span"
-                        style={userProfileStyles.uploadButton}
-                      >
-                        <PhotoCamera />
-                      </IconButton>
-                    </label>
-                    <Typography variant="caption" style={userProfileStyles.uploadText}>
-                      Change Photo
-                    </Typography>
-                  </Box>
-                )}
-                <Box style={userProfileStyles.stats}>
-                  <Typography variant="h6" style={userProfileStyles.statNumber}>
-                    {profileData.petCount}
-                  </Typography>
-                  <Typography variant="body2" style={userProfileStyles.statLabel}>
-                    Pets Registered
-                  </Typography>
-                  <Typography variant="body2" style={userProfileStyles.joinDate}>
-                    Joined {profileData.joinDate}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+            <ProfileAvatarSection
+              profileData={profileData}
+              formData={form.formData}
+              isEditing={form.isEditing}
+              onProfilePictureChange={handleProfilePictureChange}
+              styles={userProfileStyles}
+            />
 
             {/* Profile Information Section */}
-            <Box style={userProfileStyles.rightSection}>
-              <Box style={userProfileStyles.formSection}>
-                <Stack spacing={2}>
-                  {/* Name Fields */}
-                  <Box style={userProfileStyles.nameRow}>
-                    <TextField
-                      label="First Name"
-                      value={form.formData.firstName}
-                      onChange={(e) => form.handleInputChange('firstName', e.target.value)}
-                      disabled={!form.isEditing}
-                      error={!!form.errors.firstName}
-                      helperText={form.errors.firstName}
-                      style={userProfileStyles.halfWidth}
-                    />
-                    <TextField
-                      label="Last Name"
-                      value={form.formData.lastName}
-                      onChange={(e) => form.handleInputChange('lastName', e.target.value)}
-                      disabled={!form.isEditing}
-                      error={!!form.errors.lastName}
-                      helperText={form.errors.lastName}
-                      style={userProfileStyles.halfWidth}
-                    />
-                  </Box>
-
-                  {/* Username (Read-only) */}
-                  <TextField
-                    label="Username"
-                    value={form.formData.username}
-                    disabled={true}
-                    fullWidth
-                    style={userProfileStyles.textField}
-                    helperText="Username cannot be changed"
-                  />
-
-                  {/* Email */}
-                  <TextField
-                    label="Email"
-                    type="email"
-                    value={form.formData.email}
-                    onChange={(e) => form.handleInputChange('email', e.target.value)}
-                    disabled={!form.isEditing}
-                    error={!!form.errors.email}
-                    helperText={form.errors.email}
-                    fullWidth
-                    style={userProfileStyles.textField}
-                  />
-
-                  {/* Location Selection */}
-                  <LocationSelector
-                    region={form.formData.region}
-                    district={form.formData.district}
-                    disabled={!form.isEditing}
-                    errors={form.errors}
-                    onRegionChange={(region) => form.handleInputChange('region', region)}
-                    onDistrictChange={(district) => form.handleInputChange('district', district)}
-                  />
-
-                  {/* Bio */}
-                  <TextField
-                    label="Bio"
-                    value={form.formData.bio}
-                    onChange={(e) => form.handleInputChange('bio', e.target.value)}
-                    disabled={!form.isEditing}
-                    multiline
-                    rows={4}
-                    error={!!form.errors.bio}
-                    helperText={form.errors.bio || `${form.formData.bio.length}/${VALIDATION_RULES.BIO_MAX_LENGTH} characters`}
-                    fullWidth
-                    style={userProfileStyles.textField}
-                    placeholder="Tell us about yourself and your pets..."
-                  />
-                </Stack>
-              </Box>
-            </Box>
+            <ProfileInfoForm
+              formData={form.formData}
+              errors={form.errors}
+              isEditing={form.isEditing}
+              onInputChange={form.handleInputChange}
+              styles={userProfileStyles}
+            />
           </Box>
         </Paper>
       </Container>

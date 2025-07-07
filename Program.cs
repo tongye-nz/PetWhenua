@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using PetWhenua.Services;
+using PetWhenua.Repositories.Abstract;
+using PetWhenua.Repositories.Concrete;
+using PetWhenua.Services.Factories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +31,16 @@ builder.Services.AddCors(options =>
 // Add Entity Framework Core services
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Register repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IPetRepository, PetRepository>();
+builder.Services.AddScoped<IPostRepository, PostRepository>();
+
+// Register factories
+builder.Services.AddScoped<IUserFactory, UserFactory>();
+builder.Services.AddScoped<IPetFactory, PetFactory>();
+builder.Services.AddScoped<IPostFactory, PostFactory>();
 
 // Register services
 builder.Services.AddScoped<IAuthService, AuthService>();

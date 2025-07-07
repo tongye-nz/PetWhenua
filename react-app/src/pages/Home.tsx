@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { homeStyles } from './HomeStyles';
+import { homeStyles } from './Home.styles';
 
 const Home: React.FC = () => {
   const [hoveredCards, setHoveredCards] = useState<{ [key: number]: boolean }>({});
