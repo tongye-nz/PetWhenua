@@ -5,6 +5,7 @@ import { Layout } from './components/common';
 import Home from './pages/Home.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
+import MyPets from './pages/MyPets.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
 
@@ -29,6 +30,11 @@ function App() {
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <UserProfile />
+                </ProtectedRoute>
+              } />
+              <Route path="/pets" element={
+                <ProtectedRoute>
+                  <MyPets />
                 </ProtectedRoute>
               } />
               <Route path="/login" element={<Login />} />

@@ -89,7 +89,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         navigate('/profile');
         break;
       case 'pets':
-        console.log('Navigate to My Pets');
+        navigate('/pets');
         break;
       case 'messages':
         console.log('Navigate to Messages');
