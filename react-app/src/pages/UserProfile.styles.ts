@@ -2,10 +2,7 @@ import type { CSSProperties } from 'react';
 
 export const userProfileStyles: Record<string, CSSProperties> = {
   background: {
-    backgroundImage: 'url(/homepage.jpg)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#f5f5f5',
     minHeight: '100vh',
     paddingTop: '2rem',
     paddingBottom: '2rem',
