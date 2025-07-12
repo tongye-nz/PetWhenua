@@ -43,7 +43,7 @@ public class User
 
     public bool IsActive { get; set; } = true;
 
-    [MaxLength(20)]
+    [MaxLength(50)]
     public string Role { get; set; } = "member";
 
     // Navigation properties

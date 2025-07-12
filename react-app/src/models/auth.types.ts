@@ -1,3 +1,5 @@
+import type { UserRole } from '../utils/userRoles';
+
 export interface User {
   userId: number;
   username: string;
@@ -9,7 +11,7 @@ export interface User {
   location?: string;
   phoneNumber?: string;
   createdAt: string;
-  role: string;
+  role: UserRole;
 }
 
 export interface RegisterRequest {
