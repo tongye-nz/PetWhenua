@@ -11,7 +11,7 @@ const Register: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate('/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -21,7 +21,7 @@ const Register: React.FC = () => {
     try {
       const { confirmPassword, ...registerData } = formData;
       await register(registerData);
-      navigate('/dashboard', { replace: true });
+      navigate('/profile', { replace: true });
     } catch (err) {
       // Error is handled by context
       console.error('Registration failed:', err);
