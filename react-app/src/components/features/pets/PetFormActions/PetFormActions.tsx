@@ -19,7 +19,7 @@ const PetFormActions: React.FC<PetFormActionsProps> = ({
     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end', mt: 4 }}>
       {showCancel && onCancel && (
         <Button
-          variant="outline"
+          variant="error"
           onClick={onCancel}
           disabled={isLoading}
         >

@@ -67,18 +67,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             Save
           </Button>
           <Button
-            variant="outline"
+            variant="error"
             startIcon={<Cancel />}
             onClick={onCancel}
             disabled={isSaving}
-            sx={{
-              borderColor: '#f44336',
-              color: '#f44336',
-              '&:hover': {
-                borderColor: '#d32f2f',
-                backgroundColor: 'rgba(244, 67, 54, 0.04)',
-              },
-            }}
           >
             Cancel
           </Button>

@@ -4,9 +4,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  DialogContentText,
-  Button
+  DialogContentText
 } from '@mui/material';
+import { Button } from '../../../ui';
 import type { Pet } from '../../../../models/pet.types';
 
 export interface PetDeleteDialogProps {
@@ -31,10 +31,10 @@ const PetDeleteDialog: React.FC<PetDeleteDialogProps> = ({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>
+        <Button variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button onClick={onConfirm} color="error">
+        <Button variant="error" onClick={onConfirm}>
           Delete
         </Button>
       </DialogActions>

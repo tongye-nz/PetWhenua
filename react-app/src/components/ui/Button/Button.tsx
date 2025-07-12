@@ -4,7 +4,7 @@ import type { ButtonProps as MuiButtonProps } from '@mui/material';
 import { buttonStyles } from './Button.styles';
 
 export interface ButtonProps extends Omit<MuiButtonProps, 'variant'> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'text';
+  variant?: 'primary' | 'secondary' | 'outline' | 'text' | 'error';
   size?: 'small' | 'medium' | 'large';
   isLoading?: boolean;
   fullWidth?: boolean;
@@ -22,7 +22,8 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const muiVariant = variant === 'primary' ? 'contained' : 
                      variant === 'secondary' ? 'contained' : 
-                     variant === 'outline' ? 'outlined' : 'text';
+                     variant === 'outline' ? 'outlined' :
+                     variant === 'error' ? 'outlined' : 'text';
 
   const buttonStyle = buttonStyles[variant] || buttonStyles.primary;
 
