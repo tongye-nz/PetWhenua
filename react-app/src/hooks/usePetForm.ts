@@ -10,7 +10,8 @@ const initialFormData: PetFormData = {
   name: '',
   species: '',
   breed: '',
-  age: '',
+  birthYear: '',
+  birthMonth: '',
   gender: '',
   description: '',
   profilePicture: ''
@@ -38,8 +39,23 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
       newErrors.species = 'Species is required';
     }
 
-    if (formData.age === '' || formData.age < 0 || formData.age > 50) {
-      newErrors.age = 'Please enter a valid age (0-50 years)';
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+
+    if (!formData.birthYear || formData.birthYear < 1990 || formData.birthYear > currentYear) {
+      newErrors.birthYear = 'Please enter a valid birth year';
+    }
+
+    if (formData.birthMonth && (formData.birthMonth < 1 || formData.birthMonth > 12)) {
+      newErrors.birthMonth = 'Please enter a valid birth month (1-12)';
+    }
+
+    // Additional validation: prevent future birth month in current year
+    if (formData.birthYear && formData.birthMonth && 
+        formData.birthYear === currentYear && 
+        formData.birthMonth > currentMonth) {
+      newErrors.birthMonth = 'Birth month cannot be in the future';
     }
 
     if (formData.description && formData.description.length > 500) {

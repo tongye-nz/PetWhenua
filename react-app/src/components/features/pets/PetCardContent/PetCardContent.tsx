@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Text } from '../../../ui';
 import type { Pet } from '../../../../models/pet.types';
+import { formatPetAge } from '../../../../models/pet.types';
 
 export interface PetCardContentProps {
   pet: Pet;
@@ -16,10 +17,31 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
   pet,
   compact
 }) => {
-  const getAgeText = (age: number) => {
-    if (age === 0) return 'Less than 1 year';
-    if (age === 1) return '1 year old';
-    return `${age} years old`;
+  const getAgeText = () => {
+    // Use new birth year/month if available, otherwise fall back to age
+    if (pet.birthYear) {
+      return formatPetAge(pet.birthYear, pet.birthMonth);
+    } else if (pet.age !== undefined) {
+      // Enhanced legacy age display to show months for young pets
+      if (pet.age === 0) {
+        // For pets marked as 0 years old, try to estimate months from creation date
+        if (pet.createdAt) {
+          const createdDate = new Date(pet.createdAt);
+          const now = new Date();
+          const monthsDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
+          
+          if (monthsDiff >= 1) {
+            return monthsDiff === 1 ? '1 month old' : `${monthsDiff} months old`;
+          } else {
+            return 'Less than 1 month old';
+          }
+        }
+        return 'Less than 1 year old';
+      }
+      if (pet.age === 1) return '1 year old';
+      return `${pet.age} years old`;
+    }
+    return 'Age unknown';
   };
 
   return (
@@ -58,7 +80,7 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
       </Box>
 
       <Text variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {getAgeText(pet.age)}
+        {getAgeText()}
         {pet.gender && ` • ${pet.gender}`}
       </Text>
 

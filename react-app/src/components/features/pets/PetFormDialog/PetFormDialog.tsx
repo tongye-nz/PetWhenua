@@ -31,7 +31,8 @@ const PetFormDialog: React.FC<PetFormDialogProps> = ({
       name: editingPet.name,
       species: editingPet.species || '',
       breed: editingPet.breed || '',
-      age: editingPet.age,
+      birthYear: editingPet.birthYear || '',
+      birthMonth: editingPet.birthMonth || '',
       gender: editingPet.gender || '',
       description: editingPet.description || '',
       profilePicture: editingPet.profilePicture || ''

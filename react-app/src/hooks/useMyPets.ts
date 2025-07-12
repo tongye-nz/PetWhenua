@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
 import type { Pet, PetFormData } from '../models/pet.types';
+import { calculateAgeInYears } from '../models/pet.types';
 
 export const useMyPets = () => {
   const { user } = useAuth();
@@ -46,7 +47,11 @@ export const useMyPets = () => {
       const petData = {
         ...formData,
         userId: user.userId,
-        age: typeof formData.age === 'string' ? parseInt(formData.age) : formData.age
+        // Calculate age from birth year for backend compatibility
+        age: formData.birthYear ? calculateAgeInYears(formData.birthYear as number) : 0,
+        // Ensure birth year and month are numbers or undefined
+        birthYear: formData.birthYear ? formData.birthYear as number : undefined,
+        birthMonth: formData.birthMonth ? formData.birthMonth as number : undefined
       };
 
       if (editingPet) {

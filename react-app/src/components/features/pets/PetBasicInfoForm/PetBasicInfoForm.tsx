@@ -1,15 +1,15 @@
 import React from 'react';
 import {
   Box,
-  MenuItem,
   FormControl,
   InputLabel,
   Select,
-  FormHelperText
+  MenuItem
 } from '@mui/material';
 import { Input } from '../../../ui';
 import type { PetFormData, PetFormErrors } from '../../../../models/pet.types';
-import { PET_SPECIES, PET_GENDERS, DOG_BREEDS, CAT_BREEDS } from '../../../../models/pet.types';
+import { PET_GENDERS } from '../../../../models/pet.types';
+import { PetBirthDateSelector, PetSpeciesBreedSelector } from '../';
 
 export interface PetBasicInfoFormProps {
   formData: PetFormData;
@@ -22,18 +22,6 @@ const PetBasicInfoForm: React.FC<PetBasicInfoFormProps> = ({
   errors,
   onInputChange
 }) => {
-  // Get breed options based on selected species
-  const getBreedOptions = () => {
-    switch (formData.species) {
-      case 'dog':
-        return DOG_BREEDS.map(breed => ({ value: breed, label: breed }));
-      case 'cat':
-        return CAT_BREEDS.map(breed => ({ value: breed, label: breed }));
-      default:
-        return [{ value: 'Mixed Breed', label: 'Mixed Breed' }, { value: 'Other', label: 'Other' }];
-    }
-  };
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Pet Name */}
@@ -48,51 +36,18 @@ const PetBasicInfoForm: React.FC<PetBasicInfoFormProps> = ({
       />
 
       {/* Species and Breed Row */}
-      <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <FormControl fullWidth error={!!errors.species} required>
-          <InputLabel>Species</InputLabel>
-          <Select
-            value={formData.species}
-            label="Species"
-            onChange={(e) => onInputChange('species', e.target.value)}
-          >
-            {PET_SPECIES.map((species) => (
-              <MenuItem key={species.value} value={species.value}>
-                {species.label}
-              </MenuItem>
-            ))}
-          </Select>
-          {errors.species && <FormHelperText>{errors.species}</FormHelperText>}
-        </FormControl>
+      <PetSpeciesBreedSelector
+        formData={formData}
+        errors={errors}
+        onInputChange={onInputChange}
+      />
 
-        <FormControl fullWidth>
-          <InputLabel>Breed</InputLabel>
-          <Select
-            value={formData.breed}
-            label="Breed"
-            onChange={(e) => onInputChange('breed', e.target.value)}
-            disabled={!formData.species}
-          >
-            {getBreedOptions().map((breed) => (
-              <MenuItem key={breed.value} value={breed.value}>
-                {breed.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
-
-      {/* Age and Gender Row */}
+      {/* Birth Date and Gender Row */}
       <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <Input
-          fullWidth
-          label="Age (years)"
-          type="number"
-          value={formData.age}
-          onChange={(e) => onInputChange('age', parseInt(e.target.value) || '')}
-          error={!!errors.age}
-          helperText={errors.age}
-          inputProps={{ min: 0, max: 50 }}
+        <PetBirthDateSelector
+          formData={formData}
+          errors={errors}
+          onInputChange={onInputChange}
         />
 
         <FormControl fullWidth>

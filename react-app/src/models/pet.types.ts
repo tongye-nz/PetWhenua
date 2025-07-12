@@ -4,7 +4,9 @@ export interface Pet {
   name: string;
   species?: string;
   breed?: string;
-  age: number;
+  age: number; // Keep for backward compatibility with backend
+  birthYear?: number; // New field for more precise age calculation
+  birthMonth?: number; // New field (1-12) for month precision
   gender?: string;
   description?: string;
   profilePicture?: string;
@@ -22,7 +24,9 @@ export interface CreatePetRequest {
   name: string;
   species?: string;
   breed?: string;
-  age: number;
+  age: number; // Calculated from birth year/month
+  birthYear?: number;
+  birthMonth?: number;
   gender?: string;
   description?: string;
   profilePicture?: string;
@@ -43,7 +47,8 @@ export interface PetFormData {
   name: string;
   species: string;
   breed: string;
-  age: number | '';
+  birthYear: number | '';
+  birthMonth: number | '';
   gender: string;
   description: string;
   profilePicture: string;
@@ -53,35 +58,29 @@ export interface PetFormErrors {
   name?: string;
   species?: string;
   breed?: string;
-  age?: string;
+  birthYear?: string;
+  birthMonth?: string;
   gender?: string;
   description?: string;
   profilePicture?: string;
 }
 
-// Common pet species and breeds for dropdowns
-export const PET_SPECIES = [
-  { value: 'dog', label: 'Dog' },
-  { value: 'cat', label: 'Cat' },
-  { value: 'bird', label: 'Bird' },
-  { value: 'rabbit', label: 'Rabbit' },
-  { value: 'fish', label: 'Fish' },
-  { value: 'reptile', label: 'Reptile' },
-  { value: 'other', label: 'Other' }
-];
+// Re-export utilities for backward compatibility
+export {
+  calculatePetAge,
+  formatPetAge,
+  calculateAgeInYears
+} from '../utils/petAgeUtils';
 
-export const PET_GENDERS = [
-  { value: 'male', label: 'Male' },
-  { value: 'female', label: 'Female' },
-  { value: 'unknown', label: 'Unknown' }
-];
+export {
+  BIRTH_MONTHS,
+  generateBirthYears,
+  getValidBirthMonths
+} from '../utils/petBirthDateUtils';
 
-export const DOG_BREEDS = [
-  'Labrador Retriever', 'Golden Retriever', 'German Shepherd', 'Bulldog',
-  'Poodle', 'Beagle', 'Rottweiler', 'Yorkshire Terrier', 'Mixed Breed'
-];
-
-export const CAT_BREEDS = [
-  'Persian', 'Maine Coon', 'British Shorthair', 'Ragdoll',
-  'Bengal', 'Siamese', 'Abyssinian', 'Mixed Breed'
-];
+export {
+  PET_SPECIES,
+  PET_GENDERS,
+  DOG_BREEDS,
+  CAT_BREEDS
+} from '../utils/petConstants';
