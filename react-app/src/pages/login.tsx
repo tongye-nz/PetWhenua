@@ -11,7 +11,7 @@ const SignIn: React.FC = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate('/profile', { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -20,7 +20,7 @@ const SignIn: React.FC = () => {
     
     try {
       await login(formData);
-      navigate('/dashboard', { replace: true });
+      navigate('/profile', { replace: true });
     } catch (err) {
       // Error is handled by context
       console.error('Login failed:', err);

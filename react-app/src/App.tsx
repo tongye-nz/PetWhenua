@@ -9,7 +9,6 @@ import { ProtectedRoute } from './components/common';
 import './App.css';
 
 // Lazy load heavier components
-const Dashboard = lazy(() => import('./pages/Dashboard.tsx'));
 const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
 
 function App() {
@@ -27,11 +26,6 @@ function App() {
           }}>Loading...</div>}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <UserProfile />
