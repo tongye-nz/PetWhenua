@@ -39,28 +39,6 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     fontWeight: 'bold',
   },
 
-  editButton: {
-    borderColor: '#667eea',
-    color: '#667eea',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
-  },
-
-  saveButton: {
-    backgroundColor: '#667eea',
-    color: 'white',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
-    marginRight: '0.5rem',
-  },
-
-  cancelButton: {
-    borderColor: '#e53e3e',
-    color: '#e53e3e',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
-  },
-
   divider: {
     marginBottom: '2rem',
     backgroundColor: 'rgba(102, 126, 234, 0.2)',
