@@ -47,4 +47,18 @@ export const buttonStyles: Record<string, SxProps<Theme>> = {
       color: '#ccc',
     },
   },
+  error: {
+    backgroundColor: 'transparent',
+    color: '#f44336',
+    border: '1px solid #f44336',
+    '&:hover': {
+      backgroundColor: '#ffebee',
+      borderColor: '#d32f2f',
+    },
+    '&:disabled': {
+      backgroundColor: 'transparent',
+      color: '#ccc',
+      borderColor: '#ccc',
+    },
+  },
 };

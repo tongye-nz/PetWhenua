@@ -27,18 +27,20 @@ export const useUserProfileForm = ({ initialData, onSave }: UseUserProfileFormPr
 
   // Generic input change handler
   const handleInputChange = (field: UserProfileField, value: string) => {
-    setFormData(prev => ({
-      ...prev,
+    const updatedFormData = {
+      ...formData,
       [field]: value
-    }));
+    };
+    
+    setFormData(updatedFormData);
 
-    // Clear error for this field
-    if (errors[field as keyof UserProfileFormErrors]) {
-      setErrors(prev => ({
-        ...prev,
-        [field]: undefined
-      }));
-    }
+    // Clear error for this field and re-validate the entire form
+    const newErrors = { ...errors };
+    delete newErrors[field as keyof UserProfileFormErrors];
+    
+    // Run validation on the updated form data to check if there are still errors
+    const validationErrors = validateUserProfile(updatedFormData);
+    setErrors(validationErrors);
   };
 
   // Validate form

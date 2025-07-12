@@ -7,11 +7,11 @@ import {
   Divider
 } from '@mui/material';
 import { 
-  LoadingSpinner,
   ProfileAvatarSection,
   ProfileInfoForm,
   ProfileHeaderSection
-} from '../components';
+} from '../components/features/profile';
+import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import type { UserProfileData } from '../types/userProfile.types';
@@ -96,9 +96,11 @@ const UserProfile: React.FC = () => {
   if (!profileData.id && form.loading) {
     return (
       <Container style={userProfileStyles.container}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-          <LoadingSpinner />
-        </Box>
+        <LoadingSpinner 
+          size="large"
+          centered
+          containerProps={{ minHeight: "400px" }}
+        />
       </Container>
     );
   }

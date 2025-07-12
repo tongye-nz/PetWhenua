@@ -32,6 +32,12 @@ namespace PetWhenua.Migrations
                     b.Property<int>("Age")
                         .HasColumnType("int");
 
+                    b.Property<int?>("BirthMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BirthYear")
+                        .HasColumnType("int");
+
                     b.Property<string>("Breed")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");

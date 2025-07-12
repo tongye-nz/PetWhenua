@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Avatar, IconButton, Typography } from '@mui/material';
+import { Box, Avatar, IconButton } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
+import { Text } from '../../../ui';
 
 export interface ProfilePictureProps {
   src?: string;
@@ -70,9 +71,9 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
               <PhotoCamera />
             </IconButton>
           </label>
-          <Typography variant="caption" sx={{ color: '#666' }}>
+          <Text variant="caption" sx={{ color: '#666' }}>
             Change Photo
-          </Typography>
+          </Text>
         </Box>
       )}
     </Box>

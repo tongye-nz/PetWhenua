@@ -2,10 +2,7 @@ import type { CSSProperties } from 'react';
 
 export const userProfileStyles: Record<string, CSSProperties> = {
   background: {
-    backgroundImage: 'url(/homepage.jpg)',
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    backgroundColor: '#f5f5f5',
     minHeight: '100vh',
     paddingTop: '2rem',
     paddingBottom: '2rem',
@@ -37,28 +34,6 @@ export const userProfileStyles: Record<string, CSSProperties> = {
   title: {
     color: '#333',
     fontWeight: 'bold',
-  },
-
-  editButton: {
-    borderColor: '#667eea',
-    color: '#667eea',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
-  },
-
-  saveButton: {
-    backgroundColor: '#667eea',
-    color: 'white',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
-    marginRight: '0.5rem',
-  },
-
-  cancelButton: {
-    borderColor: '#e53e3e',
-    color: '#e53e3e',
-    borderRadius: '8px',
-    padding: '0.5rem 1.5rem',
   },
 
   divider: {

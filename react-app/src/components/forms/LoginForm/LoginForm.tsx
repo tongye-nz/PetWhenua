@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Stack, Alert, Typography } from '@mui/material';
-import { Button, Input } from '../../';
+import { Box, Stack, Alert } from '@mui/material';
+import { Button, Input, Text } from '../../ui';
 
 export interface LoginFormData {
   usernameOrEmail: string;
@@ -69,14 +69,14 @@ const LoginForm: React.FC<LoginFormProps> = ({
           isLoading={isLoading}
           disabled={disabled}
         >
-          {isLoading ? 'Signing In...' : 'Sign In'}
+          Sign In
         </Button>
 
         {onRegisterClick && (
           <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="body2" color="text.secondary">
+            <Text variant="body2" color="text.secondary">
               Not a member?{' '}
-              <Typography 
+              <Text 
                 component="span" 
                 sx={{ 
                   color: 'primary.main', 
@@ -89,8 +89,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
                 onClick={onRegisterClick}
               >
                 Register now!
-              </Typography>
-            </Typography>
+              </Text>
+            </Text>
           </Box>
         )}
       </Stack>

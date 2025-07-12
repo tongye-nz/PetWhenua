@@ -1,5 +1,6 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { Text } from '../../../ui';
 
 export interface ProfileStatsProps {
   petCount: number;
@@ -29,12 +30,12 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({
     }}>
       {stats.map((stat, index) => (
         <Box key={index} sx={{ textAlign: 'center' }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#4caf50' }}>
+          <Text variant="h6" weight="bold" sx={{ color: '#4caf50' }}>
             {stat.value}
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#666' }}>
+          </Text>
+          <Text variant="body2" sx={{ color: '#666' }}>
             {stat.label}
-          </Typography>
+          </Text>
         </Box>
       ))}
     </Box>

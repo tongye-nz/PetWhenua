@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, IconButton } from '@mui/material';
+import { IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
+import { Button } from '../../ui';
 import { headerStyles } from './Header.styles';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -89,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         navigate('/profile');
         break;
       case 'pets':
-        console.log('Navigate to My Pets');
+        navigate('/pets');
         break;
       case 'messages':
         console.log('Navigate to Messages');
@@ -279,7 +280,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                          </div>
                        ) : (
                          <Button 
-                           variant="contained" 
+                           variant="primary" 
                            onClick={handleSignInClick}
                            fullWidth
                          >
@@ -330,7 +331,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                        )}
                      </div>
                    ) : (
-                     <Button variant="contained" onClick={handleSignInClick}>
+                     <Button variant="primary" onClick={handleSignInClick}>
                        Sign In
                      </Button>
                    )}

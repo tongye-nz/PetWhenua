@@ -22,6 +22,10 @@ public class Pet
 
     public int Age { get; set; }
 
+    // New fields for more precise age calculation
+    public int? BirthYear { get; set; }
+    public int? BirthMonth { get; set; } // 1-12
+
     [MaxLength(20)]
     public string? Gender { get; set; }
 

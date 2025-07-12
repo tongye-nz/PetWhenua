@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { Button, Text } from '../../../';
+import { Button, Text } from '../../../ui';
 
 export interface ProfileHeaderSectionProps {
   isEditing: boolean;
@@ -30,25 +30,22 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
         <Button
           variant="outline"
           onClick={onStartEditing}
-          style={styles.editButton}
         >
           Edit Profile
         </Button>
       ) : (
-        <Box>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="primary"
             onClick={onSaveForm}
-            disabled={isLoading || !isValid}
+            disabled={!isValid}
             isLoading={isLoading}
-            style={styles.saveButton}
           >
-            {isLoading ? 'Saving...' : 'Save'}
+            Save
           </Button>
           <Button
-            variant="outline"
+            variant="error"
             onClick={onCancelEditing}
-            style={styles.cancelButton}
             disabled={isLoading}
           >
             Cancel
