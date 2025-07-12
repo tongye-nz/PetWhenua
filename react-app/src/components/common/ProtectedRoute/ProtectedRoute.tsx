@@ -1,7 +1,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { CircularProgress, Box } from '@mui/material';
 import { useAuth } from '../../../contexts/AuthContext';
+import { LoadingSpinner } from '../../ui';
 import type { ReactNode } from 'react';
 
 interface ProtectedRouteProps {
@@ -14,14 +14,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="60vh"
-      >
-        <CircularProgress />
-      </Box>
+      <LoadingSpinner 
+        size="large"
+        centered
+        containerProps={{ minHeight: "60vh" }}
+      />
     );
   }
 

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Typography, Button, CircularProgress } from '@mui/material';
+import { Box } from '@mui/material';
 import { Edit, Save, Cancel } from '@mui/icons-material';
+import { Text, Button } from '../../../ui';
 
 export interface ProfileHeaderProps {
   title: string;
@@ -28,13 +29,13 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       alignItems: 'center',
       padding: 2,
     }}>
-      <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+      <Text variant="h4" weight="bold" sx={{ color: '#2e7d32' }}>
         {title}
-      </Typography>
+      </Text>
       
       {!isEditing ? (
         <Button
-          variant="outlined"
+          variant="outline"
           startIcon={<Edit />}
           onClick={onStartEditing}
           sx={{ 
@@ -51,10 +52,11 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
       ) : (
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
-            variant="contained"
-            startIcon={isSaving ? <CircularProgress size={16} /> : <Save />}
+            variant="primary"
+            startIcon={<Save />}
             onClick={onSave}
-            disabled={isSaving || !isValid}
+            disabled={!isValid}
+            isLoading={isSaving}
             sx={{
               backgroundColor: '#4caf50',
               '&:hover': {
@@ -62,10 +64,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               },
             }}
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            Save
           </Button>
           <Button
-            variant="outlined"
+            variant="outline"
             startIcon={<Cancel />}
             onClick={onCancel}
             disabled={isSaving}
