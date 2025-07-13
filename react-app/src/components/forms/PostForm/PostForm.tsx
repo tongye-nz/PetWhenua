@@ -226,7 +226,7 @@ const PostForm: React.FC<PostFormProps> = ({
   const requiresPrice = formData.postType === 2; // Buy/Sell
   const requiresEventDate = formData.postType === 0 || formData.postType === 1; // Meetup or Pet Wedding
   const requiresLocation = formData.postType === 2 || formData.postType === 0 || formData.postType === 1; // Buy/Sell, Meetup, Pet Wedding
-  const showCategory = formData.postType === 5 || formData.postType === 2; // Moment, Buy/Sell only
+  const showCategory = formData.postType === 2; // Buy/Sell only
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
