@@ -1,34 +1,14 @@
 import React from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Container, Box, Typography, Button } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { PostForm } from '../components/forms';
 import { useAuth } from '../contexts/AuthContext';
-import type { CreatePostRequest, UpdatePostRequest, Post, PostType } from '../models/post.types';
+import type { CreatePostRequest, UpdatePostRequest, Post } from '../models/post.types';
 
 const CreatePost: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [searchParams] = useSearchParams();
-  const postTypeParam = searchParams.get('type');
-
-  // Map URL parameter to PostType
-  const getPostTypeFromParam = (param: string | null): PostType | undefined => {
-    if (!param) return undefined;
-    
-    const typeMap: { [key: string]: PostType } = {
-      'moment': 0,
-      'buy-sell': 1,
-      'meetup': 2,
-      'pet-wedding': 3,
-      'library': 4,
-      'announcement': 5
-    };
-    
-    return typeMap[param];
-  };
-
-  const preselectedPostType = getPostTypeFromParam(postTypeParam);
 
   const handleFormSubmit = async (_: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => {
     // If a post was created, navigate to its detail page
@@ -41,12 +21,8 @@ const CreatePost: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // Navigate back to the posts page or the specific post type page
-    if (postTypeParam) {
-      navigate(`/posts/${postTypeParam}`);
-    } else {
-      navigate('/posts');
-    }
+    // Navigate back to the posts page
+    navigate('/posts');
   };
 
   if (!user) {
@@ -88,7 +64,6 @@ const CreatePost: React.FC = () => {
       {/* Post Creation Form */}
       <PostForm
         mode="create"
-        initialData={preselectedPostType !== undefined ? { postType: preselectedPostType } : undefined}
         onSubmit={handleFormSubmit}
         onCancel={handleCancel}
       />

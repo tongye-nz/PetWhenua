@@ -55,29 +55,8 @@ const Posts: React.FC = () => {
   };
 
   const handleCreatePost = () => {
-    // Navigate to create post page with optional post type parameter
-    const postType = getPostTypeFromParam(postTypeParam);
-    if (postType !== undefined) {
-      const postTypeKey = Object.keys({
-        'moment': 0,
-        'buy-sell': 1,
-        'meetup': 2,
-        'pet-wedding': 3,
-        'library': 4,
-        'announcement': 5
-      }).find(key => ({
-        'moment': 0,
-        'buy-sell': 1,
-        'meetup': 2,
-        'pet-wedding': 3,
-        'library': 4,
-        'announcement': 5
-      })[key] === postType);
-      
-      navigate(`/create-post?type=${postTypeKey}`);
-    } else {
-      navigate('/create-post');
-    }
+    // Navigate to create post page
+    navigate('/create-post');
   };
 
   const handleEditPost = (post: Post) => {
