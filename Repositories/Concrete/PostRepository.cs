@@ -80,6 +80,15 @@ namespace PetWhenua.Repositories.Concrete
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Post>> GetPostsByTypeAndStatusAsync(PostType postType, PostStatus status)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => p.PostType == postType && p.Status == status)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<bool> PostExistsAsync(int id)
         {
             return await _context.Posts.AnyAsync(p => p.PostId == id);

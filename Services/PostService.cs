@@ -8,11 +8,13 @@ namespace PetWhenua.Services
     {
         private readonly IPostRepository _postRepository;
         private readonly IPostFactory _postFactory;
+        private readonly IPostAuthorizationService _authorizationService;
 
-        public PostService(IPostRepository postRepository, IPostFactory postFactory)
+        public PostService(IPostRepository postRepository, IPostFactory postFactory, IPostAuthorizationService authorizationService)
         {
             _postRepository = postRepository;
             _postFactory = postFactory;
+            _authorizationService = authorizationService;
         }
 
         public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null)
@@ -164,6 +166,77 @@ namespace PetWhenua.Services
         public async Task<bool> PostExistsAsync(int id)
         {
             return await _postRepository.PostExistsAsync(id);
+        }
+
+        public async Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string description, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        {
+            // Validate user exists
+            if (!await _postRepository.UserExistsAsync(userId))
+            {
+                throw new InvalidOperationException("Invalid UserId. User does not exist.");
+            }
+
+            // Check if user can create this type of post
+            if (!_authorizationService.CanCreatePost(userRole, postType))
+            {
+                throw new InvalidOperationException($"User with role '{userRole}' cannot create posts of type '{postType}'.");
+            }
+
+            // Get the appropriate initial status based on user role and post type
+            var initialStatus = _authorizationService.GetInitialPostStatus(userRole, postType);
+
+            // Create post using factory
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            
+            // Override the status with role-based logic
+            post.Status = initialStatus;
+
+            return await _postRepository.AddPostAsync(post);
+        }
+
+        public async Task<Post> ChangePostStatusAsync(int postId, PostStatus newStatus, int requestingUserId, string requestingUserRole)
+        {
+            var post = await _postRepository.GetPostByIdAsync(postId);
+            if (post == null)
+            {
+                throw new InvalidOperationException($"Post with ID {postId} not found.");
+            }
+
+            // Check if the user can change this post's status
+            var isOwner = post.UserId == requestingUserId;
+            if (!_authorizationService.CanChangePostStatus(requestingUserRole, post.PostType, isOwner))
+            {
+                throw new InvalidOperationException($"User with role '{requestingUserRole}' cannot change status of {post.PostType} posts.");
+            }
+
+            // Validate the status change is allowed
+            if (!_authorizationService.IsValidStatusChange(post.PostType, post.Status, newStatus))
+            {
+                throw new InvalidOperationException($"Cannot change post status from {post.Status} to {newStatus} for {post.PostType} posts.");
+            }
+
+            // Update the post status
+            post.Status = newStatus;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            return await _postRepository.UpdatePostAsync(post);
+        }
+
+        public async Task<IEnumerable<Post>> GetInactiveMeetupPostsAsync()
+        {
+            return await _postRepository.GetPostsByTypeAndStatusAsync(PostType.Meetup, PostStatus.Inactive);
+        }
+
+        public async Task<bool> CanUserChangePostStatusAsync(int postId, int userId, string userRole)
+        {
+            var post = await _postRepository.GetPostByIdAsync(postId);
+            if (post == null)
+            {
+                return false;
+            }
+
+            var isOwner = post.UserId == userId;
+            return _authorizationService.CanChangePostStatus(userRole, post.PostType, isOwner);
         }
     }
 }

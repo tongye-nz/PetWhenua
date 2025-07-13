@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PetWhenua.Services;
+using PetWhenua.Models.Dtos;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -98,4 +99,69 @@ public class PostsController : ControllerBase
         var posts = await _postService.GetPostsByTypeAsync(postType);
         return Ok(posts);
     }
-} 
+
+    [HttpPost("with-role")]
+    public async Task<IActionResult> CreatePostWithRole([FromBody] CreatePostWithRoleRequest request)
+    {
+        try
+        {
+            var createdPost = await _postService.CreatePostWithUserRoleAsync(
+                request.UserId, 
+                request.UserRole, 
+                request.PostType, 
+                request.Title, 
+                request.Description, 
+                request.Content, 
+                request.Images, 
+                request.Location, 
+                request.Price, 
+                request.EventDate, 
+                request.Category
+            );
+            return CreatedAtAction(nameof(GetPost), new { id = createdPost.PostId }, createdPost);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> ChangePostStatus(int id, [FromBody] ChangePostStatusRequest request)
+    {
+        try
+        {
+            var updatedPost = await _postService.ChangePostStatusAsync(id, request.NewStatus, request.RequestingUserId, request.RequestingUserRole);
+            return Ok(updatedPost);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("meetups/inactive")]
+    public async Task<IActionResult> GetInactiveMeetupPosts()
+    {
+        var posts = await _postService.GetInactiveMeetupPostsAsync();
+        return Ok(posts);
+    }
+
+    [HttpGet("{id}/can-change-status")]
+    public async Task<IActionResult> CanUserChangePostStatus(int id, [FromQuery] int userId, [FromQuery] string userRole)
+    {
+        var canChange = await _postService.CanUserChangePostStatusAsync(id, userId, userRole);
+        return Ok(new { canChangeStatus = canChange });
+    }
+
+    [HttpGet("meetup/activation-info")]
+    public IActionResult GetMeetupActivationInfo()
+    {
+        var info = new MeetupActivationInfo
+        {
+            AutoActiveRoles = PostAuthorizationService.GetAutoActiveMeetupRoles(),
+            ActivationRoles = PostAuthorizationService.GetMeetupActivationRoles()
+        };
+        return Ok(info);
+    }
+}
