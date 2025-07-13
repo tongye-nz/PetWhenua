@@ -7,11 +7,16 @@ import {
   FormControl, 
   InputLabel, 
   Select, 
-  MenuItem
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import { Button, Input } from '../../ui';
 import type { CreatePostRequest, UpdatePostRequest, PostType } from '../../../models/post.types';
 import { useAuth } from '../../../contexts/AuthContext';
+import { usePost } from '../../../contexts/PostContext';
 
 export interface PostFormData {
   title: string;
@@ -40,9 +45,6 @@ export interface PostFormProps {
   initialData?: Partial<PostFormData>;
   onSubmit: (data: CreatePostRequest | UpdatePostRequest) => void;
   onCancel?: () => void;
-  isLoading?: boolean;
-  error?: string | null;
-  disabled?: boolean;
 }
 
 const PostForm: React.FC<PostFormProps> = ({
@@ -50,11 +52,9 @@ const PostForm: React.FC<PostFormProps> = ({
   initialData,
   onSubmit,
   onCancel,
-  isLoading = false,
-  error = null,
-  disabled = false,
 }) => {
   const { user } = useAuth();
+  const { createPost, updatePost, loading, error } = usePost();
   
   const [formData, setFormData] = useState<PostFormData>({
     title: initialData?.title || '',
@@ -166,39 +166,50 @@ const PostForm: React.FC<PostFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
     if (!validateForm() || !user) {
       return;
     }
 
-    const submitData = mode === 'create' 
-      ? {
-          userId: user.userId,
-          userRole: user.role,
-          postType: formData.postType,
-          title: formData.title,
-          description: formData.description,
-          content: formData.content,
-          images: formData.images,
-          location: formData.location || undefined,
-          price: formData.price || undefined,
-          eventDate: formData.eventDate || undefined,
-          category: formData.category || undefined,
-        } as CreatePostRequest
-      : {
-          title: formData.title,
-          description: formData.description,
-          content: formData.content,
-          images: formData.images,
-          location: formData.location || undefined,
-          price: formData.price || undefined,
-          eventDate: formData.eventDate || undefined,
-          category: formData.category || undefined,
-        } as UpdatePostRequest;
+    try {
+      const submitData = mode === 'create' 
+        ? {
+            userId: user.userId,
+            userRole: user.role,
+            postType: formData.postType,
+            title: formData.title,
+            description: formData.description,
+            content: formData.content,
+            images: formData.images,
+            location: formData.location || undefined,
+            price: formData.price || undefined,
+            eventDate: formData.eventDate || undefined,
+            category: formData.category || undefined,
+          } as CreatePostRequest
+        : {
+            title: formData.title,
+            description: formData.description,
+            content: formData.content,
+            images: formData.images,
+            location: formData.location || undefined,
+            price: formData.price || undefined,
+            eventDate: formData.eventDate || undefined,
+            category: formData.category || undefined,
+          } as UpdatePostRequest;
 
-    onSubmit(submitData);
+      if (mode === 'create') {
+        await createPost(submitData as CreatePostRequest);
+      } else {
+        // For edit mode, we'd need the post ID - this will be implemented when we have actual editing
+        console.log('Edit mode submit:', submitData);
+      }
+      
+      onSubmit(submitData);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    }
   };
 
   const requiresPrice = formData.postType === 1; // Buy/Sell
@@ -225,7 +236,7 @@ const PostForm: React.FC<PostFormProps> = ({
             onChange={handleSelectChange('postType')}
             label="Post Type"
             error={!!errors.postType}
-            disabled={disabled || isLoading}
+            disabled={loading}
           >
             {postTypeOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -253,7 +264,7 @@ const PostForm: React.FC<PostFormProps> = ({
           error={!!errors.title}
           helperText={errors.title}
           required
-          disabled={disabled || isLoading}
+          disabled={loading}
           placeholder="Enter a catchy title for your post"
         />
 
@@ -267,7 +278,7 @@ const PostForm: React.FC<PostFormProps> = ({
           required
           multiline
           rows={2}
-          disabled={disabled || isLoading}
+          disabled={loading}
           placeholder="Brief description of your post"
         />
 
@@ -281,7 +292,7 @@ const PostForm: React.FC<PostFormProps> = ({
           required
           multiline
           rows={4}
-          disabled={disabled || isLoading}
+          disabled={loading}
           placeholder="Tell us more about your post..."
         />
 
@@ -295,7 +306,7 @@ const PostForm: React.FC<PostFormProps> = ({
             error={!!errors.price}
             helperText={errors.price}
             required
-            disabled={disabled || isLoading}
+            disabled={loading}
             placeholder="Enter price in NZD"
             inputProps={{ min: 0, step: 0.01 }}
           />
@@ -310,7 +321,7 @@ const PostForm: React.FC<PostFormProps> = ({
             error={!!errors.eventDate}
             helperText={errors.eventDate}
             required
-            disabled={disabled || isLoading}
+            disabled={loading}
             InputLabelProps={{ shrink: true }}
           />
         )}
@@ -320,7 +331,7 @@ const PostForm: React.FC<PostFormProps> = ({
           label="Location"
           value={formData.location || ''}
           onChange={handleInputChange('location')}
-          disabled={disabled || isLoading}
+          disabled={loading}
           placeholder="Add location (optional)"
         />
 
@@ -328,7 +339,7 @@ const PostForm: React.FC<PostFormProps> = ({
           label="Category"
           value={formData.category || ''}
           onChange={handleInputChange('category')}
-          disabled={disabled || isLoading}
+          disabled={loading}
           placeholder="Add category tags (optional)"
         />
 
@@ -339,8 +350,8 @@ const PostForm: React.FC<PostFormProps> = ({
             variant="primary"
             size="large"
             fullWidth
-            isLoading={isLoading}
-            disabled={disabled}
+            loading={loading}
+            disabled={loading}
           >
             {mode === 'create' ? 'Create Post' : 'Update Post'}
           </Button>
@@ -352,7 +363,7 @@ const PostForm: React.FC<PostFormProps> = ({
               size="large"
               fullWidth
               onClick={onCancel}
-              disabled={isLoading}
+              disabled={loading}
             >
               Cancel
             </Button>
