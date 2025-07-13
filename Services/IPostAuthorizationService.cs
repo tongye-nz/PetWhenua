@@ -44,5 +44,20 @@ namespace PetWhenua.Services
         /// <param name="newStatus">Desired new status</param>
         /// <returns>True if the status change is valid</returns>
         bool IsValidStatusChange(PostType postType, PostStatus currentStatus, PostStatus newStatus);
+
+        /// <summary>
+        /// Gets detailed information about post creation restrictions by role
+        /// </summary>
+        /// <param name="userRole">The user's role</param>
+        /// <returns>Dictionary of post types and whether the user can create them</returns>
+        Dictionary<PostType, bool> GetPostCreationPermissions(string userRole);
+
+        /// <summary>
+        /// Gets a user-friendly error message for unauthorized post creation attempts
+        /// </summary>
+        /// <param name="userRole">The user's role</param>
+        /// <param name="postType">The post type they tried to create</param>
+        /// <returns>Descriptive error message</returns>
+        string GetPostCreationErrorMessage(string userRole, PostType postType);
     }
 }

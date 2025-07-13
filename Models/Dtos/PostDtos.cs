@@ -67,4 +67,24 @@ namespace PetWhenua.Models.Dtos
         public string MemberStatusMessage { get; set; } = "Members can create meetup posts, but they will be inactive until approved by an admin.";
         public string AdminStatusMessage { get; set; } = "Meetup admins, site admins, and vets can create active meetup posts immediately.";
     }
+
+    public class PostCreationPermissionsResponse
+    {
+        public string UserRole { get; set; } = string.Empty;
+        public string UserRoleDisplayName { get; set; } = string.Empty;
+        public Dictionary<string, bool> Permissions { get; set; } = new();
+        public List<string> RestrictedPostTypes { get; set; } = new();
+        public List<string> AllowedPostTypes { get; set; } = new();
+    }
+
+    public class PostCreationRestrictionsInfo
+    {
+        public List<string> LibraryPostRoles { get; set; } = new();
+        public List<string> AnnouncementPostRoles { get; set; } = new();
+        public List<string> UnrestrictedPostRoles { get; set; } = new();
+        public Dictionary<string, List<string>> PostTypeRestrictions { get; set; } = new();
+        public string LibraryRestrictionMessage { get; set; } = "Only veterinarians and site administrators can create Library posts.";
+        public string AnnouncementRestrictionMessage { get; set; } = "Only site administrators can create Announcement posts.";
+        public string UnrestrictedMessage { get; set; } = "All authenticated users can create Moment, BuySell, PetWedding, and Meetup posts.";
+    }
 }
