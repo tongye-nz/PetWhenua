@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Card,
@@ -15,17 +15,15 @@ import {
 import { Add } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PostsGrid } from '../components/features/posts';
-import { PostForm } from '../components/forms';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import type { Post, PostFilters, PostType } from '../models/post.types';
 
 const Posts: React.FC = () => {
   const { postType: postTypeParam } = useParams<{ postType?: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
-  const [showForm, setShowForm] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   // Map URL parameter to PostType
   const getPostTypeFromParam = (param?: string): PostType | undefined => {
@@ -57,13 +55,34 @@ const Posts: React.FC = () => {
   };
 
   const handleCreatePost = () => {
-    setEditingPost(null);
-    setShowForm(true);
+    // Navigate to create post page with optional post type parameter
+    const postType = getPostTypeFromParam(postTypeParam);
+    if (postType !== undefined) {
+      const postTypeKey = Object.keys({
+        'moment': 0,
+        'buy-sell': 1,
+        'meetup': 2,
+        'pet-wedding': 3,
+        'library': 4,
+        'announcement': 5
+      }).find(key => ({
+        'moment': 0,
+        'buy-sell': 1,
+        'meetup': 2,
+        'pet-wedding': 3,
+        'library': 4,
+        'announcement': 5
+      })[key] === postType);
+      
+      navigate(`/create-post?type=${postTypeKey}`);
+    } else {
+      navigate('/create-post');
+    }
   };
 
   const handleEditPost = (post: Post) => {
-    setEditingPost(post);
-    setShowForm(true);
+    // Navigate to edit page (to be implemented later)
+    console.log('Edit post:', post.postId);
   };
 
   const handleDeletePost = async (post: Post) => {
@@ -77,14 +96,8 @@ const Posts: React.FC = () => {
     }
   };
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingPost(null);
-  };
-
   const handleViewPost = (post: Post) => {
-    // Future: Navigate to post detail page
-    console.log('View post:', post.postId);
+    navigate(`/post/${post.postId}`);
   };
 
   // Get display name for current post type
@@ -238,29 +251,6 @@ const Posts: React.FC = () => {
         >
           <Add />
         </Fab>
-      )}
-
-      {/* Post Form Dialog */}
-      {showForm && (
-        <PostForm 
-          mode={editingPost ? 'edit' : 'create'}
-          initialData={editingPost ? {
-            title: editingPost.title,
-            description: editingPost.description,
-            content: editingPost.content,
-            images: editingPost.images,
-            location: editingPost.location,
-            price: editingPost.price,
-            eventDate: editingPost.eventDate,
-            category: editingPost.category,
-            postType: editingPost.postType,
-          } : undefined}
-          onSubmit={async () => {
-            // Handle form submission - this will be managed by PostForm
-            handleFormClose();
-          }}
-          onCancel={handleFormClose}
-        />
       )}
     </Container>
   );

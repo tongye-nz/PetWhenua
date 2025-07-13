@@ -8,6 +8,8 @@ import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
 import MyPets from './pages/MyPets.tsx';
 import Posts from './pages/Posts.tsx';
+import PostDetail from './pages/PostDetail.tsx';
+import CreatePost from './pages/CreatePost.tsx';
 import MyPosts from './pages/MyPosts.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
@@ -33,6 +35,12 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/posts" element={<Posts />} />
                 <Route path="/posts/:postType" element={<Posts />} />
+                <Route path="/post/:id" element={<PostDetail />} />
+                <Route path="/create-post" element={
+                  <ProtectedRoute>
+                    <CreatePost />
+                  </ProtectedRoute>
+                } />
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <UserProfile />

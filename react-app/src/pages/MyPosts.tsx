@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Box,
@@ -10,16 +11,14 @@ import {
 import { Add } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PostsGrid } from '../components/features/posts';
-import { PostForm } from '../components/forms';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import type { Post, PostStatus } from '../models/post.types';
 
 const MyPosts: React.FC = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { posts, loading, error, fetchPosts, clearError } = usePost();
-  const [showForm, setShowForm] = useState(false);
-  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
 
   useEffect(() => {
@@ -57,13 +56,12 @@ const MyPosts: React.FC = () => {
   const currentPosts = filterPostsByStatus(tabs[selectedTab].status);
 
   const handleCreatePost = () => {
-    setEditingPost(null);
-    setShowForm(true);
+    navigate('/create-post');
   };
 
   const handleEditPost = (post: Post) => {
-    setEditingPost(post);
-    setShowForm(true);
+    // Navigate to edit page (to be implemented later)
+    console.log('Edit post:', post.postId);
   };
 
   const handleDeletePost = async (post: Post) => {
@@ -77,14 +75,8 @@ const MyPosts: React.FC = () => {
     }
   };
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingPost(null);
-  };
-
   const handleViewPost = (post: Post) => {
-    // Future: Navigate to post detail page
-    console.log('View post:', post.postId);
+    navigate(`/post/${post.postId}`);
   };
 
   if (!user) {
@@ -180,29 +172,6 @@ const MyPosts: React.FC = () => {
             Create Your First Post
           </Button>
         </Box>
-      )}
-
-      {/* Post Form Dialog */}
-      {showForm && (
-        <PostForm 
-          mode={editingPost ? 'edit' : 'create'}
-          initialData={editingPost ? {
-            title: editingPost.title,
-            description: editingPost.description,
-            content: editingPost.content,
-            images: editingPost.images,
-            location: editingPost.location,
-            price: editingPost.price,
-            eventDate: editingPost.eventDate,
-            category: editingPost.category,
-            postType: editingPost.postType,
-          } : undefined}
-          onSubmit={async () => {
-            // Handle form submission - this will be managed by PostForm
-            handleFormClose();
-          }}
-          onCancel={handleFormClose}
-        />
       )}
     </Container>
   );

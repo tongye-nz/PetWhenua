@@ -10,7 +10,7 @@ import {
   MenuItem
 } from '@mui/material';
 import { Button, Input } from '../../ui';
-import type { CreatePostRequest, UpdatePostRequest, PostType } from '../../../models/post.types';
+import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
 
@@ -39,7 +39,7 @@ export interface PostFormErrors {
 export interface PostFormProps {
   mode: 'create' | 'edit';
   initialData?: Partial<PostFormData>;
-  onSubmit: (data: CreatePostRequest | UpdatePostRequest) => void;
+  onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
   onCancel?: () => void;
 }
 
@@ -215,13 +215,13 @@ const PostForm: React.FC<PostFormProps> = ({
           } as UpdatePostRequest;
 
       if (mode === 'create') {
-        await createPost(submitData as CreatePostRequest);
+        const createdPost = await createPost(submitData as CreatePostRequest);
+        onSubmit(submitData, createdPost);
       } else {
         // For edit mode, we'd need the post ID - this will be implemented when we have actual editing
         console.log('Edit mode submit:', submitData);
+        onSubmit(submitData);
       }
-      
-      onSubmit(submitData);
     } catch (error) {
       console.error('Form submission error:', error);
     }
