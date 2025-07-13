@@ -79,5 +79,11 @@ namespace PetWhenua.Services
 
         public async Task<bool> CanUserChangePostStatusAsync(int postId, int userId, string userRole)
             => await _statusService.CanUserChangePostStatusAsync(postId, userId, userRole);
+
+        public async Task<List<PostStatus>> GetAvailableStatusTransitionsAsync(int postId, int userId, string userRole)
+            => await _statusService.GetAvailableStatusTransitionsAsync(postId, userId, userRole);
+
+        public Dictionary<PostType, List<PostStatus>> GetStatusChangePermissions(string userRole)
+            => _statusService.GetStatusChangePermissions(userRole);
     }
 }

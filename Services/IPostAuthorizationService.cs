@@ -59,5 +59,21 @@ namespace PetWhenua.Services
         /// <param name="postType">The post type they tried to create</param>
         /// <returns>Descriptive error message</returns>
         string GetPostCreationErrorMessage(string userRole, PostType postType);
+
+        /// <summary>
+        /// Gets the allowed status transitions for a specific post type
+        /// </summary>
+        /// <param name="postType">The type of post</param>
+        /// <returns>List of allowed status values</returns>
+        List<PostStatus> GetAllowedStatusTransitions(PostType postType);
+
+        /// <summary>
+        /// Gets error message for unauthorized status change attempts
+        /// </summary>
+        /// <param name="userRole">The user's role</param>
+        /// <param name="postType">The post type</param>
+        /// <param name="isOwner">Whether the user owns the post</param>
+        /// <returns>Descriptive error message</returns>
+        string GetStatusChangeErrorMessage(string userRole, PostType postType, bool isOwner);
     }
 }

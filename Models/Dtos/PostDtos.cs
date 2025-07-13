@@ -87,4 +87,35 @@ namespace PetWhenua.Models.Dtos
         public string AnnouncementRestrictionMessage { get; set; } = "Only site administrators can create Announcement posts.";
         public string UnrestrictedMessage { get; set; } = "All authenticated users can create Moment, BuySell, PetWedding, and Meetup posts.";
     }
+
+    public class PostStatusTransitionsResponse
+    {
+        public int PostId { get; set; }
+        public PostType PostType { get; set; }
+        public PostStatus CurrentStatus { get; set; }
+        public List<PostStatus> AvailableTransitions { get; set; } = new();
+        public bool CanChangeStatus { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    public class StatusChangePermissionsResponse
+    {
+        public string UserRole { get; set; } = string.Empty;
+        public string UserRoleDisplayName { get; set; } = string.Empty;
+        public Dictionary<string, List<string>> AllowedTransitions { get; set; } = new();
+        public Dictionary<string, string> PostTypeRules { get; set; } = new();
+    }
+
+    public class UpdatePostStatusRequest
+    {
+        [Required]
+        public PostStatus Status { get; set; }
+
+        [Required]
+        public int UserId { get; set; }
+
+        [Required]
+        [MaxLength(50)]
+        public string UserRole { get; set; } = string.Empty;
+    }
 }

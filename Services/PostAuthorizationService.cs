@@ -26,15 +26,42 @@ namespace PetWhenua.Services
 
         public bool CanChangePostStatus(string userRole, PostType postType, bool isOwner = false)
         {
-            // For Meetup posts, only admins can change status
-            if (postType == PostType.Meetup)
+            // Site admin can always change any post status
+            if (UserRoles.IsAdmin(userRole))
             {
-                // Site Admins and Meetup Admins can always change meetup post status
-                return UserRoles.IsAdmin(userRole) || UserRoles.IsMeetupAdmin(userRole);
+                return true;
             }
 
-            // For other post types, owners can change their own post status, admins can change any
-            return isOwner || UserRoles.IsAdmin(userRole);
+            // Apply specific rules based on post type
+            switch (postType)
+            {
+                case PostType.BuySell:
+                    // BuySell posts: creator or site admin can update status
+                    return isOwner;
+
+                case PostType.PetWedding:
+                    // PetWedding posts: creator or site admin can update status
+                    return isOwner;
+
+                case PostType.Library:
+                    // Library posts: only vet creator or site admin can update status
+                    return isOwner && UserRoles.IsVet(userRole);
+
+                case PostType.Announcement:
+                    // Announcement posts: only site admin can update status
+                    return false; // Only site admin (handled above)
+
+                case PostType.Meetup:
+                    // Meetup posts: only admins can change status
+                    return UserRoles.IsMeetupAdmin(userRole);
+
+                case PostType.Moment:
+                    // Moment posts: no status updates needed per requirements
+                    return false;
+
+                default:
+                    return false;
+            }
         }
 
         public bool CanCreatePost(string userRole, PostType postType)
@@ -122,33 +149,48 @@ namespace PetWhenua.Services
         /// <returns>True if the status change is valid</returns>
         public bool IsValidStatusChange(PostType postType, PostStatus currentStatus, PostStatus newStatus)
         {
-            // Prevent invalid status transitions
+            // Prevent no-change operations
             if (currentStatus == newStatus)
             {
-                return false; // No change needed
+                return false;
             }
 
-            // For meetup posts, certain transitions might be restricted
-            if (postType == PostType.Meetup)
+            // Apply specific rules based on post type
+            switch (postType)
             {
-                // Don't allow changing from Active to Inactive for meetups (should use Cancelled instead)
-                if (currentStatus == PostStatus.Active && newStatus == PostStatus.Inactive)
-                {
-                    return false;
-                }
-            }
+                case PostType.BuySell:
+                    // BuySell posts: can be updated to Sold, Inactive, or Cancelled
+                    return newStatus == PostStatus.Sold || 
+                           newStatus == PostStatus.Inactive || 
+                           newStatus == PostStatus.Cancelled;
 
-            // For BuySell posts, validate Sold status
-            if (postType == PostType.BuySell)
-            {
-                // Only allow setting to Sold from Active
-                if (newStatus == PostStatus.Sold && currentStatus != PostStatus.Active)
-                {
-                    return false;
-                }
-            }
+                case PostType.PetWedding:
+                    // PetWedding posts: can be marked as Cancelled or Inactive
+                    return newStatus == PostStatus.Cancelled || 
+                           newStatus == PostStatus.Inactive;
 
-            return true;
+                case PostType.Library:
+                    // Library posts: can only be set to Inactive
+                    return newStatus == PostStatus.Inactive;
+
+                case PostType.Announcement:
+                    // Announcement posts: can be set to Inactive or Expired
+                    return newStatus == PostStatus.Inactive || 
+                           newStatus == PostStatus.Expired;
+
+                case PostType.Meetup:
+                    // Meetup posts: can transition between Active/Inactive/Cancelled
+                    return newStatus == PostStatus.Active || 
+                           newStatus == PostStatus.Inactive || 
+                           newStatus == PostStatus.Cancelled;
+
+                case PostType.Moment:
+                    // Moment posts: no status transitions allowed per requirements
+                    return false;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -222,6 +264,82 @@ namespace PetWhenua.Services
                 
                 default:
                     return $"Your role ({roleDisplayName}) does not have permission to create {postType} posts.";
+            }
+        }
+
+        /// <summary>
+        /// Gets the allowed status transitions for a specific post type
+        /// </summary>
+        /// <param name="postType">The type of post</param>
+        /// <returns>List of allowed status values</returns>
+        public List<PostStatus> GetAllowedStatusTransitions(PostType postType)
+        {
+            switch (postType)
+            {
+                case PostType.BuySell:
+                    return new List<PostStatus> { PostStatus.Sold, PostStatus.Inactive, PostStatus.Cancelled };
+
+                case PostType.PetWedding:
+                    return new List<PostStatus> { PostStatus.Cancelled, PostStatus.Inactive };
+
+                case PostType.Library:
+                    return new List<PostStatus> { PostStatus.Inactive };
+
+                case PostType.Announcement:
+                    return new List<PostStatus> { PostStatus.Inactive, PostStatus.Expired };
+
+                case PostType.Meetup:
+                    return new List<PostStatus> { PostStatus.Active, PostStatus.Inactive, PostStatus.Cancelled };
+
+                case PostType.Moment:
+                    return new List<PostStatus>(); // No status transitions allowed
+
+                default:
+                    return new List<PostStatus>();
+            }
+        }
+
+        /// <summary>
+        /// Gets error message for unauthorized status change attempts
+        /// </summary>
+        /// <param name="userRole">The user's role</param>
+        /// <param name="postType">The post type</param>
+        /// <param name="isOwner">Whether the user owns the post</param>
+        /// <returns>Descriptive error message</returns>
+        public string GetStatusChangeErrorMessage(string userRole, PostType postType, bool isOwner)
+        {
+            var roleDisplayName = UserRoles.GetDisplayName(userRole);
+            
+            switch (postType)
+            {
+                case PostType.BuySell:
+                    return isOwner 
+                        ? "You can update the status of your BuySell posts." 
+                        : $"Only the creator or site administrators can update BuySell post status. Your role ({roleDisplayName}) does not have permission.";
+
+                case PostType.PetWedding:
+                    return isOwner 
+                        ? "You can update the status of your PetWedding posts." 
+                        : $"Only the creator or site administrators can update PetWedding post status. Your role ({roleDisplayName}) does not have permission.";
+
+                case PostType.Library:
+                    if (!isOwner)
+                        return $"Only the veterinarian creator or site administrators can update Library post status. Your role ({roleDisplayName}) does not have permission.";
+                    if (!UserRoles.IsVet(userRole) && !UserRoles.IsAdmin(userRole))
+                        return $"Only veterinarians can update their own Library posts. Your role ({roleDisplayName}) does not have permission.";
+                    return "You can update the status of your Library posts.";
+
+                case PostType.Announcement:
+                    return $"Only site administrators can update Announcement post status. Your role ({roleDisplayName}) does not have permission.";
+
+                case PostType.Meetup:
+                    return $"Only meetup administrators and site administrators can update Meetup post status. Your role ({roleDisplayName}) does not have permission.";
+
+                case PostType.Moment:
+                    return "Moment posts do not support status updates.";
+
+                default:
+                    return $"Your role ({roleDisplayName}) does not have permission to update {postType} post status.";
             }
         }
     }

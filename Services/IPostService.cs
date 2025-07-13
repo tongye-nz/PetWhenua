@@ -20,5 +20,7 @@ namespace PetWhenua.Services
         Task<IEnumerable<Post>> GetInactiveMeetupPostsAsync();
         Task<bool> PostExistsAsync(int id);
         Task<bool> CanUserChangePostStatusAsync(int postId, int userId, string userRole);
+        Task<List<PostStatus>> GetAvailableStatusTransitionsAsync(int postId, int userId, string userRole);
+        Dictionary<PostType, List<PostStatus>> GetStatusChangePermissions(string userRole);
     }
 }
