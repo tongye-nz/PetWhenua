@@ -59,6 +59,17 @@ export interface CreatePostRequest {
   category?: string;
 }
 
+export interface UpdatePostRequest {
+  title?: string;
+  description?: string;
+  content?: string;
+  images?: string[];
+  location?: string;
+  price?: number;
+  eventDate?: string;
+  category?: string;
+}
+
 export interface UpdatePostStatusRequest {
   status: PostStatus;
   userId: number;
