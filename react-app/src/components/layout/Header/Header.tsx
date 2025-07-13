@@ -92,6 +92,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'pets':
         navigate('/pets');
         break;
+      case 'posts':
+        navigate('/my-posts');
+        break;
       case 'messages':
         console.log('Navigate to Messages');
         break;
@@ -105,7 +108,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   };
 
   const handleNavLinkClick = (href: string) => {
-    console.log(`Navigate to ${href}`);
+    navigate(href);
     setIsMobileMenuOpen(false);
   };
 
@@ -132,14 +135,15 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const dropdownItems = [
     { key: 'details', label: 'My Details', icon: '👤' },
     { key: 'pets', label: 'My Pets', icon: '🐾' },
+    { key: 'posts', label: 'My Posts', icon: '📝' },
     { key: 'messages', label: 'Messages', icon: '💬' },
     { key: 'signout', label: 'Sign Out', icon: '🚪', isSignOut: true }
   ];
 
   const navItems = [
-    { label: 'Home', href: '#', active: true },
-    { label: 'Menu1', href: '#', active: false },
-    { label: 'Menu2', href: '#', active: false }
+    { label: 'Home', href: '/', active: true },
+    { label: 'Posts', href: '/posts', active: false },
+    { label: 'Community', href: '#', active: false }
   ];
 
   return (

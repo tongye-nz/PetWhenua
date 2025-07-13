@@ -1,11 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
+import { PostProvider } from './contexts/PostContext';
 import { Layout } from './components/common';
 import Home from './pages/Home.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
 import MyPets from './pages/MyPets.tsx';
+import Posts from './pages/Posts.tsx';
+import MyPosts from './pages/MyPosts.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
 
@@ -15,34 +18,42 @@ const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Layout>
-          <Suspense fallback={<div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            height: '200px', 
-            fontSize: '18px', 
-            color: '#666' 
-          }}>Loading...</div>}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <UserProfile />
-                </ProtectedRoute>
-              } />
-              <Route path="/pets" element={
-                <ProtectedRoute>
-                  <MyPets />
-                </ProtectedRoute>
-              } />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </Suspense>
-        </Layout>
-      </Router>
+      <PostProvider>
+        <Router>
+          <Layout>
+            <Suspense fallback={<div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              height: '200px', 
+              fontSize: '18px', 
+              color: '#666' 
+            }}>Loading...</div>}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/posts" element={<Posts />} />
+                <Route path="/profile" element={
+                  <ProtectedRoute>
+                    <UserProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/pets" element={
+                  <ProtectedRoute>
+                    <MyPets />
+                  </ProtectedRoute>
+                } />
+                <Route path="/my-posts" element={
+                  <ProtectedRoute>
+                    <MyPosts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+              </Routes>
+            </Suspense>
+          </Layout>
+        </Router>
+      </PostProvider>
     </AuthProvider>
   );
 }

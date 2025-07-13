@@ -1,0 +1,236 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Card,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Fab,
+  Alert
+} from '@mui/material';
+import { Add } from '@mui/icons-material';
+import { Button, Text, LoadingSpinner } from '../components/ui';
+import { PostsGrid } from '../components/features/posts';
+import { PostForm } from '../components/forms';
+import { useAuth } from '../contexts/AuthContext';
+import { usePost } from '../contexts/PostContext';
+import type { Post, PostFilters, PostType } from '../models/post.types';
+
+const Posts: React.FC = () => {
+  const { user } = useAuth();
+  const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
+  const [showForm, setShowForm] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
+
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
+
+  const handleFilterChange = (newFilters: Partial<PostFilters>) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    fetchPosts(updatedFilters);
+  };
+
+  const handleCreatePost = () => {
+    setEditingPost(null);
+    setShowForm(true);
+  };
+
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post);
+    setShowForm(true);
+  };
+
+  const handleDeletePost = async (post: Post) => {
+    if (window.confirm('Are you sure you want to delete this post?')) {
+      try {
+        // The actual delete logic will be handled by PostContext
+        console.log('Delete post:', post.postId);
+      } catch (error) {
+        console.error('Failed to delete post:', error);
+      }
+    }
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingPost(null);
+  };
+
+  const handleViewPost = (post: Post) => {
+    // Future: Navigate to post detail page
+    console.log('View post:', post.postId);
+  };
+
+  const postTypeOptions = [
+    { value: '', label: 'All Types' },
+    { value: 0, label: 'Moment' },
+    { value: 1, label: 'Buy/Sell' },
+    { value: 2, label: 'Meetup' },
+    { value: 3, label: 'Pet Wedding' },
+    { value: 4, label: 'Library' },
+    { value: 5, label: 'Announcement' },
+  ];
+
+  if (loading && posts.length === 0) {
+    return (
+      <Container>
+        <Box display="flex" justifyContent="center" py={4}>
+          <LoadingSpinner />
+        </Box>
+      </Container>
+    );
+  }
+
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Text variant="h4" component="h1" fontWeight="bold">
+          Community Posts
+        </Text>
+        {user && (
+          <Button 
+            variant="primary" 
+            onClick={handleCreatePost}
+            sx={{ display: { xs: 'none', sm: 'flex' } }}
+          >
+            <Add sx={{ mr: 1 }} />
+            Create Post
+          </Button>
+        )}
+      </Box>
+
+      {/* Filters */}
+      <Card sx={{ mb: 4 }}>
+        <CardContent>
+          <Text variant="h6" fontWeight="medium" sx={{ mb: 2 }}>
+            Filters
+          </Text>
+          <Box 
+            sx={{ 
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gap: 2,
+              alignItems: 'end'
+            }}
+          >
+            <FormControl fullWidth>
+              <InputLabel>Post Type</InputLabel>
+              <Select
+                value={filters.postType ?? ''}
+                label="Post Type"
+                onChange={(e) => {
+                  const value = String(e.target.value);
+                  handleFilterChange({ 
+                    postType: value === '' ? undefined : Number(value) as PostType
+                  });
+                }}
+              >
+                {postTypeOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            
+            {user && (
+              <Button 
+                variant={filters.userId === user.userId ? 'primary' : 'outline'}
+                onClick={() => handleFilterChange({ 
+                  userId: filters.userId === user.userId ? undefined : user.userId 
+                })}
+                fullWidth
+              >
+                My Posts
+              </Button>
+            )}
+            
+            <Button 
+              variant="outline" 
+              onClick={() => handleFilterChange({ postType: undefined, userId: undefined })}
+              fullWidth
+            >
+              Clear Filters
+            </Button>
+          </Box>
+        </CardContent>
+      </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          onClose={clearError}
+        >
+          {error}
+        </Alert>
+      )}
+
+      {/* Posts Grid */}
+      <PostsGrid
+        posts={posts}
+        onViewPost={handleViewPost}
+        onEditPost={user ? handleEditPost : undefined}
+        onDeletePost={user ? handleDeletePost : undefined}
+        isLoading={loading}
+        showActions={!!user}
+        emptyMessage={
+          filters.postType !== undefined || filters.userId !== undefined
+            ? 'No posts found matching your filters'
+            : 'No posts found'
+        }
+      />
+
+      {/* Floating Action Button for Mobile */}
+      {user && (
+        <Fab
+          color="primary"
+          aria-label="create post"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            display: { xs: 'flex', sm: 'none' }
+          }}
+          onClick={handleCreatePost}
+        >
+          <Add />
+        </Fab>
+      )}
+
+      {/* Post Form Dialog */}
+      {showForm && (
+        <PostForm 
+          mode={editingPost ? 'edit' : 'create'}
+          initialData={editingPost ? {
+            title: editingPost.title,
+            description: editingPost.description,
+            content: editingPost.content,
+            images: editingPost.images,
+            location: editingPost.location,
+            price: editingPost.price,
+            eventDate: editingPost.eventDate,
+            category: editingPost.category,
+            postType: editingPost.postType,
+          } : undefined}
+          onSubmit={async () => {
+            // Handle form submission - this will be managed by PostForm
+            handleFormClose();
+          }}
+          onCancel={handleFormClose}
+          isLoading={loading}
+          error={error}
+        />
+      )}
+    </Container>
+  );
+};
+
+export default Posts;
