@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Container,
   Card,
@@ -20,14 +21,34 @@ import { usePost } from '../contexts/PostContext';
 import type { Post, PostFilters, PostType } from '../models/post.types';
 
 const Posts: React.FC = () => {
+  const { postType: postTypeParam } = useParams<{ postType?: string }>();
   const { user } = useAuth();
   const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
 
+  // Map URL parameter to PostType
+  const getPostTypeFromParam = (param?: string): PostType | undefined => {
+    if (!param) return undefined;
+    
+    const typeMap: { [key: string]: PostType } = {
+      'moment': 0, // PostType.Moment
+      'buy-sell': 1, // PostType.BuySell  
+      'meetup': 2, // PostType.Meetup
+      'pet-wedding': 3, // PostType.PetWedding
+      'library': 4, // PostType.Library
+      'announcement': 5 // PostType.Announcement
+    };
+    
+    return typeMap[param];
+  };
+
   useEffect(() => {
-    fetchPosts();
-  }, [fetchPosts]);
+    const postType = getPostTypeFromParam(postTypeParam);
+    const initialFilters = postType !== undefined ? { postType } : {};
+    setFilters(initialFilters);
+    fetchPosts(initialFilters);
+  }, [postTypeParam, fetchPosts, setFilters]);
 
   const handleFilterChange = (newFilters: Partial<PostFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
@@ -66,6 +87,20 @@ const Posts: React.FC = () => {
     console.log('View post:', post.postId);
   };
 
+  // Get display name for current post type
+  const getPostTypeDisplayName = (postType?: PostType): string => {
+    if (postType === undefined) return 'All Posts';
+    const typeMap: { [key: number]: string } = {
+      0: 'Moment Posts',
+      1: 'Buy & Sell Posts', 
+      2: 'Meetup Posts',
+      3: 'Pet Wedding Posts',
+      4: 'Library Posts',
+      5: 'Announcement Posts'
+    };
+    return typeMap[postType] || 'Community Posts';
+  };
+
   const postTypeOptions = [
     { value: '', label: 'All Types' },
     { value: 0, label: 'Moment' },
@@ -91,7 +126,7 @@ const Posts: React.FC = () => {
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Text variant="h4" component="h1" fontWeight="bold">
-          Community Posts
+          {getPostTypeDisplayName(filters.postType)}
         </Text>
         {user && (
           <Button 
@@ -225,8 +260,6 @@ const Posts: React.FC = () => {
             handleFormClose();
           }}
           onCancel={handleFormClose}
-          isLoading={loading}
-          error={error}
         />
       )}
     </Container>

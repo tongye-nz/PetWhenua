@@ -202,8 +202,6 @@ const MyPosts: React.FC = () => {
             handleFormClose();
           }}
           onCancel={handleFormClose}
-          isLoading={loading}
-          error={error}
         />
       )}
     </Container>

@@ -32,6 +32,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/posts" element={<Posts />} />
+                <Route path="/posts/:postType" element={<Posts />} />
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <UserProfile />

@@ -7,11 +7,7 @@ import {
   FormControl, 
   InputLabel, 
   Select, 
-  MenuItem,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
+  MenuItem
 } from '@mui/material';
 import { Button, Input } from '../../ui';
 import type { CreatePostRequest, UpdatePostRequest, PostType } from '../../../models/post.types';
@@ -54,7 +50,7 @@ const PostForm: React.FC<PostFormProps> = ({
   onCancel,
 }) => {
   const { user } = useAuth();
-  const { createPost, updatePost, loading, error } = usePost();
+  const { createPost, loading, error } = usePost();
   
   // Role-based post type filtering
   const getAvailablePostTypes = () => {
