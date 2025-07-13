@@ -35,21 +35,21 @@ namespace PetWhenua.Services
             return await _postRepository.AddPostAsync(post);
         }
 
-        public async Task<Post> CreatePostAsync(int userId, PostType postType, string title, string description, string content)
+        public async Task<Post> CreatePostAsync(int userId, PostType postType, string title, string content)
         {
-            var post = _postFactory.CreatePost(userId, postType, title, description, content);
+            var post = _postFactory.CreatePost(userId, postType, title, content);
             return await _postRepository.AddPostAsync(post);
         }
 
-        public async Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string description, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public async Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
         {
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             return await _postRepository.AddPostAsync(post);
         }
 
-        public async Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string description, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public async Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
         {
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             return await _postRepository.AddPostAsync(post);
         }
 

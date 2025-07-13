@@ -24,7 +24,6 @@ export interface Post {
   userId: number;
   postType: PostType;
   title: string;
-  description: string;
   content: string;
   images: string[];
   location?: string;
@@ -50,7 +49,6 @@ export interface CreatePostRequest {
   userRole: string;
   postType: PostType;
   title: string;
-  description: string;
   content: string;
   images?: string[];
   location?: string;
@@ -61,7 +59,6 @@ export interface CreatePostRequest {
 
 export interface UpdatePostRequest {
   title?: string;
-  description?: string;
   content?: string;
   images?: string[];
   location?: string;

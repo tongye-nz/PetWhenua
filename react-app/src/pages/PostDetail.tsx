@@ -209,11 +209,6 @@ const PostDetail: React.FC = () => {
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Description */}
-          <Typography variant="h6" gutterBottom color="text.secondary">
-            {currentPost.description}
-          </Typography>
-
           {/* Content */}
           <Typography variant="body1" sx={{ mt: 3, lineHeight: 1.7 }}>
             {currentPost.content}

@@ -34,10 +34,10 @@ namespace PetWhenua.Services
         /// <summary>
         /// Creates a post with basic information
         /// </summary>
-        public async Task<Post> CreatePostAsync(int userId, PostType postType, string title, string description, string content)
+        public async Task<Post> CreatePostAsync(int userId, PostType postType, string title, string content)
         {
             await ValidateUserExistsAsync(userId);
-            var post = _postFactory.CreatePost(userId, postType, title, description, content);
+            var post = _postFactory.CreatePost(userId, postType, title, content);
             return await _postRepository.AddPostAsync(post);
         }
 
@@ -48,7 +48,6 @@ namespace PetWhenua.Services
             int userId, 
             PostType postType, 
             string title, 
-            string description, 
             string content, 
             List<string>? images = null, 
             string? location = null, 
@@ -57,7 +56,7 @@ namespace PetWhenua.Services
             string? category = null)
         {
             await ValidateUserExistsAsync(userId);
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             return await _postRepository.AddPostAsync(post);
         }
 
@@ -69,7 +68,6 @@ namespace PetWhenua.Services
             string userRole, 
             PostType postType, 
             string title, 
-            string description, 
             string content, 
             List<string>? images = null, 
             string? location = null, 
@@ -86,7 +84,7 @@ namespace PetWhenua.Services
             }
 
             var initialStatus = _authorizationService.GetInitialPostStatus(userRole, postType);
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             post.Status = initialStatus;
 
             return await _postRepository.AddPostAsync(post);
@@ -113,7 +111,7 @@ namespace PetWhenua.Services
         /// <summary>
         /// Creates a post with basic information and role validation
         /// </summary>
-        public async Task<Post> CreatePostAsync(int userId, string userRole, PostType postType, string title, string description, string content)
+        public async Task<Post> CreatePostAsync(int userId, string userRole, PostType postType, string title, string content)
         {
             await ValidateUserExistsAsync(userId);
             
@@ -123,7 +121,7 @@ namespace PetWhenua.Services
                 throw new InvalidOperationException(errorMessage);
             }
             
-            var post = _postFactory.CreatePost(userId, postType, title, description, content);
+            var post = _postFactory.CreatePost(userId, postType, title, content);
             return await _postRepository.AddPostAsync(post);
         }
 
@@ -135,7 +133,6 @@ namespace PetWhenua.Services
             string userRole,
             PostType postType, 
             string title, 
-            string description, 
             string content, 
             List<string>? images = null, 
             string? location = null, 
@@ -151,7 +148,7 @@ namespace PetWhenua.Services
                 throw new InvalidOperationException(errorMessage);
             }
             
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, description, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             return await _postRepository.AddPostAsync(post);
         }
     }

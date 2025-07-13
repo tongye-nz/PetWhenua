@@ -111,7 +111,6 @@ public class PostsController : ControllerBase
                 request.UserRole, 
                 request.PostType, 
                 request.Title, 
-                request.Description, 
                 request.Content, 
                 request.Images, 
                 request.Location, 

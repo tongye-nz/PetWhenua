@@ -19,10 +19,6 @@ namespace PetWhenua.Models.Dtos
         public string Title { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(500)]
-        public string Description { get; set; } = string.Empty;
-
-        [Required]
         public string Content { get; set; } = string.Empty;
 
         public List<string>? Images { get; set; }

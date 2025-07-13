@@ -34,7 +34,7 @@ export const ExamplePostsList: React.FC = () => {
       {posts.map((post) => (
         <div key={post.postId}>
           <h3>{post.title}</h3>
-          <p>{post.description}</p>
+          <p>{post.content}</p>
         </div>
       ))}
     </div>
@@ -52,7 +52,6 @@ export const ExampleCreatePost: React.FC = () => {
         userRole: 'member',
         postType: PostType.Moment,
         title: formData.title,
-        description: formData.description,
         content: formData.content
       });
       // Post automatically added to context state
@@ -70,7 +69,6 @@ export const ExampleCreatePost: React.FC = () => {
       handleSubmit(Object.fromEntries(formData));
     }}>
       <input name="title" placeholder="Title" required />
-      <textarea name="description" placeholder="Description" required />
       <textarea name="content" placeholder="Content" required />
       <button type="submit" disabled={loading}>
         {loading ? 'Creating...' : 'Create Post'}

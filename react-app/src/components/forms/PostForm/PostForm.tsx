@@ -16,7 +16,6 @@ import { usePost } from '../../../contexts/PostContext';
 
 export interface PostFormData {
   title: string;
-  description: string;
   content: string;
   images: string[];
   location?: string;
@@ -28,7 +27,6 @@ export interface PostFormData {
 
 export interface PostFormErrors {
   title?: string;
-  description?: string;
   content?: string;
   postType?: string;
   price?: string;
@@ -83,7 +81,6 @@ const PostForm: React.FC<PostFormProps> = ({
   
   const [formData, setFormData] = useState<PostFormData>({
     title: initialData?.title || '',
-    description: initialData?.description || '',
     content: initialData?.content || '',
     images: initialData?.images || [],
     location: initialData?.location || '',
@@ -142,14 +139,6 @@ const PostForm: React.FC<PostFormProps> = ({
       newErrors.title = 'Title must be less than 200 characters';
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    } else if (formData.description.length < 10) {
-      newErrors.description = 'Description must be at least 10 characters';
-    } else if (formData.description.length > 500) {
-      newErrors.description = 'Description must be less than 500 characters';
-    }
-
     if (!formData.content.trim()) {
       newErrors.content = 'Content is required';
     } else if (formData.content.length < 10) {
@@ -195,7 +184,6 @@ const PostForm: React.FC<PostFormProps> = ({
             userRole: user.role,
             postType: formData.postType,
             title: formData.title,
-            description: formData.description,
             content: formData.content,
             images: formData.images,
             location: formData.location || undefined,
@@ -205,7 +193,6 @@ const PostForm: React.FC<PostFormProps> = ({
           } as CreatePostRequest
         : {
             title: formData.title,
-            description: formData.description,
             content: formData.content,
             images: formData.images,
             location: formData.location || undefined,
@@ -281,20 +268,6 @@ const PostForm: React.FC<PostFormProps> = ({
           required
           disabled={loading}
           placeholder="Enter a catchy title for your post"
-        />
-
-        {/* Description */}
-        <Input
-          label="Description"
-          value={formData.description}
-          onChange={handleInputChange('description')}
-          error={!!errors.description}
-          helperText={errors.description}
-          required
-          multiline
-          rows={2}
-          disabled={loading}
-          placeholder="Brief description of your post"
         />
 
         {/* Content */}
