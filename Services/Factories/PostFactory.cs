@@ -2,14 +2,13 @@ namespace PetWhenua.Services.Factories
 {
     public class PostFactory : IPostFactory
     {
-        public Post CreatePost(int userId, PostType postType, string title, string description, string content)
+        public Post CreatePost(int userId, PostType postType, string title, string content)
         {
             var post = new Post
             {
                 UserId = userId,
                 PostType = postType,
                 Title = title,
-                Description = description,
                 Content = content,
                 Status = PostStatus.Active,
                 CreatedAt = DateTime.UtcNow,
@@ -21,14 +20,13 @@ namespace PetWhenua.Services.Factories
             return post;
         }
 
-        public Post CreatePostWithDetails(int userId, PostType postType, string title, string description, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public Post CreatePostWithDetails(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
         {
             var post = new Post
             {
                 UserId = userId,
                 PostType = postType,
                 Title = title,
-                Description = description,
                 Content = content,
                 Images = images ?? new List<string>(),
                 Location = location,
@@ -54,7 +52,6 @@ namespace PetWhenua.Services.Factories
             // Update properties while preserving certain fields
             existingPost.PostType = updatedPost.PostType;
             existingPost.Title = updatedPost.Title;
-            existingPost.Description = updatedPost.Description;
             existingPost.Content = updatedPost.Content;
             existingPost.Images = updatedPost.Images;
             existingPost.Location = updatedPost.Location;
@@ -120,12 +117,6 @@ namespace PetWhenua.Services.Factories
             if (post.Title.Length > 200)
                 throw new ArgumentException("Post title cannot exceed 200 characters.", nameof(post.Title));
 
-            if (string.IsNullOrWhiteSpace(post.Description))
-                throw new ArgumentException("Post description cannot be empty.", nameof(post.Description));
-
-            if (post.Description.Length > 500)
-                throw new ArgumentException("Post description cannot exceed 500 characters.", nameof(post.Description));
-
             if (string.IsNullOrWhiteSpace(post.Content))
                 throw new ArgumentException("Post content cannot be empty.", nameof(post.Content));
 
@@ -147,8 +138,10 @@ namespace PetWhenua.Services.Factories
             if (post.Price.HasValue && post.Price.Value < 0)
                 throw new ArgumentException("Price cannot be negative.", nameof(post.Price));
 
-            if (post.EventDate.HasValue && post.EventDate.Value < DateTime.Now.Date)
-                throw new ArgumentException("Event date cannot be in the past.", nameof(post.EventDate));
+            // Allow past event dates for testing and admin purposes
+            // The auto-expiry service will handle expired events
+            // if (post.EventDate.HasValue && post.EventDate.Value < DateTime.Now.Date)
+            //     throw new ArgumentException("Event date cannot be in the past.", nameof(post.EventDate));
 
             // Validate post type specific rules
             ValidatePostTypeSpecificRules(post);
@@ -196,6 +189,15 @@ namespace PetWhenua.Services.Factories
                 case PostType.Library:
                     if (string.IsNullOrEmpty(post.Category))
                         throw new ArgumentException("Library posts must have a category.", nameof(post.Category));
+                    break;
+
+                case PostType.Moment:
+                    // No additional validation required for moment posts
+                    // They just need the basic fields: title, description, content
+                    break;
+
+                case PostType.Announcement:
+                    // No additional validation required for announcements
                     break;
             }
         }

@@ -9,7 +9,10 @@ namespace PetWhenua.Repositories.Abstract
         Task<bool> DeletePostAsync(int id);
         Task<IEnumerable<Post>> GetPostsByUserAsync(int userId);
         Task<IEnumerable<Post>> GetPostsByTypeAsync(PostType postType);
+        Task<IEnumerable<Post>> GetPostsByTypeAndStatusAsync(PostType postType, PostStatus status);
         Task<bool> PostExistsAsync(int id);
         Task<bool> UserExistsAsync(int userId);
+        Task<IEnumerable<Post>> GetExpirablePostsAsync(DateTime currentDate);
+        Task<IEnumerable<Post>> GetActiveTimeBasedPostsAsync();
     }
 }

@@ -9,7 +9,8 @@ public enum PostType
     PetWedding,
     BuySell,
     Library,
-    Announcement
+    Announcement,
+    Moment
 }
 
 public enum PostStatus
@@ -36,10 +37,6 @@ public class Post
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
-
-    [Required]
-    [MaxLength(500)]
-    public string Description { get; set; } = string.Empty;
 
     [Required]
     public string Content { get; set; } = string.Empty;

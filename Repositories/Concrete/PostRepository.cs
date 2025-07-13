@@ -80,6 +80,15 @@ namespace PetWhenua.Repositories.Concrete
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<Post>> GetPostsByTypeAndStatusAsync(PostType postType, PostStatus status)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => p.PostType == postType && p.Status == status)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<bool> PostExistsAsync(int id)
         {
             return await _context.Posts.AnyAsync(p => p.PostId == id);
@@ -88,6 +97,31 @@ namespace PetWhenua.Repositories.Concrete
         public async Task<bool> UserExistsAsync(int userId)
         {
             return await _context.Users.AnyAsync(u => u.UserId == userId);
+        }
+
+        public async Task<IEnumerable<Post>> GetExpirablePostsAsync(DateTime currentDate)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => 
+                    (p.PostType == PostType.Meetup || p.PostType == PostType.PetWedding) &&
+                    p.Status == PostStatus.Active &&
+                    p.EventDate.HasValue &&
+                    p.EventDate.Value.Date < currentDate.Date)
+                .OrderBy(p => p.EventDate)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Post>> GetActiveTimeBasedPostsAsync()
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => 
+                    (p.PostType == PostType.Meetup || p.PostType == PostType.PetWedding) &&
+                    p.Status == PostStatus.Active &&
+                    p.EventDate.HasValue)
+                .OrderBy(p => p.EventDate)
+                .ToListAsync();
         }
     }
 }

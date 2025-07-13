@@ -14,56 +14,91 @@ import {
 import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
+import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
+import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
 
 const UserProfile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, checkAuth } = useAuth();
 
   // Initialize profile data from authenticated user
-  const getInitialProfileData = (): UserProfileData => ({
-    id: user?.userId?.toString() || '',
-    username: user?.username || '',
-    email: user?.email || '',
-    firstName: user?.firstName || '',
-    lastName: user?.lastName || '',
-    bio: user?.bio || '',
-    region: '', // Will be loaded from API
-    district: '', // Will be loaded from API
-    profilePicture: user?.profilePicture || '',
-    petCount: 0, // Will be loaded from API
-    joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
-  });
+  const getInitialProfileData = (): UserProfileData => {
+    const { region, district } = parseLocation(user?.location || '');
+    return {
+      id: user?.userId?.toString() || '',
+      username: user?.username || '',
+      email: user?.email || '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      bio: user?.bio || '',
+      region,
+      district,
+      profilePicture: user?.profilePicture || '',
+      petCount: 0, // Will be loaded from API
+      joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
+    };
+  };
 
   // Profile data state
   const [profileData, setProfileData] = useState<UserProfileData>(getInitialProfileData());
 
-  // API simulation function
+  // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
-    // TODO: Replace with actual API call
-    // await userProfileAPI.updateProfile(data);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Update local profile data
-    setProfileData(data);
+    try {
+      const updateRequest: UpdateUserProfileRequest = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        bio: data.bio,
+        location: combineLocation(data.region, data.district),
+        // Don't include phoneNumber for now as it's not in the profile form
+      };
+
+      const updatedUser = await userAPI.updateCurrentUser(updateRequest);
+      
+      // Update local profile data
+      const { region, district } = parseLocation(updatedUser.location || '');
+      setProfileData({
+        ...data,
+        region,
+        district,
+      });
+
+      // Refresh auth context to update user data
+      await checkAuth();
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      throw error;
+    }
   };
 
   // Load profile data from API
   const loadUserProfile = async (): Promise<void> => {
     try {
-      // TODO: Replace with actual API call when backend is ready
-      // const apiProfile = await userProfileAPI.getProfile(user?.userId);
-      // setProfileData(apiProfile);
+      const apiUser = await userAPI.getCurrentUser();
+      const { region, district } = parseLocation(apiUser.location || '');
       
-      // For now, use authenticated user data
+      setProfileData({
+        id: apiUser.userId.toString(),
+        username: apiUser.username,
+        email: apiUser.email,
+        firstName: apiUser.firstName || '',
+        lastName: apiUser.lastName || '',
+        bio: apiUser.bio || '',
+        region,
+        district,
+        profilePicture: apiUser.profilePicture || '',
+        petCount: 0, // TODO: Get pet count from API
+        joinDate: new Date(apiUser.createdAt).toLocaleDateString()
+      });
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+      // Fall back to auth context data
       if (user) {
         const currentProfile = getInitialProfileData();
         setProfileData(currentProfile);
       }
-    } catch (error) {
-      console.error('Failed to load profile:', error);
     }
   };
 

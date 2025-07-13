@@ -97,11 +97,6 @@ namespace PetWhenua.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<DateTime?>("EventDate")
                         .HasColumnType("datetime2");
 

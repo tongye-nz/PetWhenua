@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { IconButton } from '@mui/material';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -13,6 +13,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, logout } = useAuth();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -92,6 +93,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'pets':
         navigate('/pets');
         break;
+      case 'posts':
+        navigate('/my-posts');
+        break;
       case 'messages':
         console.log('Navigate to Messages');
         break;
@@ -105,7 +109,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   };
 
   const handleNavLinkClick = (href: string) => {
-    console.log(`Navigate to ${href}`);
+    navigate(href);
     setIsMobileMenuOpen(false);
   };
 
@@ -132,14 +136,19 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const dropdownItems = [
     { key: 'details', label: 'My Details', icon: '👤' },
     { key: 'pets', label: 'My Pets', icon: '🐾' },
+    { key: 'posts', label: 'My Posts', icon: '📝' },
     { key: 'messages', label: 'Messages', icon: '💬' },
     { key: 'signout', label: 'Sign Out', icon: '🚪', isSignOut: true }
   ];
 
   const navItems = [
-    { label: 'Home', href: '#', active: true },
-    { label: 'Menu1', href: '#', active: false },
-    { label: 'Menu2', href: '#', active: false }
+    { label: 'Home', href: '/', active: location.pathname === '/' },
+    { label: 'Moment', href: '/posts/moment', active: location.pathname === '/posts/moment' },
+    { label: 'Meetup', href: '/posts/meetup', active: location.pathname === '/posts/meetup' },
+    { label: 'Pet Wedding', href: '/posts/pet-wedding', active: location.pathname === '/posts/pet-wedding' },
+    { label: 'Buy & Sell', href: '/posts/buy-sell', active: location.pathname === '/posts/buy-sell' },
+    { label: 'Library', href: '/posts/library', active: location.pathname === '/posts/library' },
+    { label: 'Announcement', href: '/posts/announcement', active: location.pathname === '/posts/announcement' }
   ];
 
   return (

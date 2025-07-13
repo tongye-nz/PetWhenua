@@ -5,4 +5,7 @@ export * from './auth';
 export * from './profile';
 
 // Pet Features
-export * from './pets'; 
+export * from './pets';
+
+// Post Features
+export * from './posts'; 
