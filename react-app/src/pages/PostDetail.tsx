@@ -33,24 +33,24 @@ const PostDetail: React.FC = () => {
 
   const getPostTypeLabel = (postType: PostType): string => {
     const typeMap: { [key: number]: string } = {
-      0: 'Moment',
-      1: 'Buy & Sell',
-      2: 'Meetup',
-      3: 'Pet Wedding',
-      4: 'Library',
-      5: 'Announcement'
+      0: 'Meetup',
+      1: 'Pet Wedding',
+      2: 'Buy & Sell',
+      3: 'Library',
+      4: 'Announcement',
+      5: 'Moment'
     };
     return typeMap[postType] || 'Unknown';
   };
 
   const getPostTypeColor = (postType: PostType): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
     const colorMap: { [key: number]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
-      0: 'primary',    // Moment
-      1: 'success',    // Buy & Sell
-      2: 'info',       // Meetup
-      3: 'secondary',  // Pet Wedding
-      4: 'warning',    // Library
-      5: 'error'       // Announcement
+      0: 'info',       // Meetup
+      1: 'secondary',  // Pet Wedding
+      2: 'success',    // Buy & Sell
+      3: 'warning',    // Library
+      4: 'error',      // Announcement
+      5: 'primary'     // Moment
     };
     return colorMap[postType] || 'primary';
   };

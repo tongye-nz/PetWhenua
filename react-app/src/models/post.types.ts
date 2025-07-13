@@ -1,10 +1,10 @@
 export const PostType = {
-  Moment: 0,
-  BuySell: 1,
-  Meetup: 2,
-  PetWedding: 3,
-  Library: 4,
-  Announcement: 5
+  Meetup: 0,
+  PetWedding: 1,
+  BuySell: 2,
+  Library: 3,
+  Announcement: 4,
+  Moment: 5
 } as const;
 
 export type PostType = typeof PostType[keyof typeof PostType];

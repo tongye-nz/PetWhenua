@@ -54,12 +54,12 @@ const PostForm: React.FC<PostFormProps> = ({
   // Role-based post type filtering
   const getAvailablePostTypes = () => {
     const allPostTypes = [
-      { value: 0, label: 'Moment', description: 'Share a special moment with your pet', requiredRole: 'member' },
-      { value: 1, label: 'Buy/Sell', description: 'Buy or sell pet-related items', requiredRole: 'member' },
-      { value: 2, label: 'Meetup', description: 'Organize pet meetups and playdates', requiredRole: 'member' },
-      { value: 3, label: 'Pet Wedding', description: 'Announce pet weddings and ceremonies', requiredRole: 'member' },
-      { value: 4, label: 'Library', description: 'Share educational content and resources', requiredRole: 'vet' },
-      { value: 5, label: 'Announcement', description: 'General announcements and news', requiredRole: 'site_admin' },
+      { value: 5, label: 'Moment', description: 'Share a special moment with your pet', requiredRole: 'member' },
+      { value: 2, label: 'Buy/Sell', description: 'Buy or sell pet-related items', requiredRole: 'member' },
+      { value: 0, label: 'Meetup', description: 'Organize pet meetups and playdates', requiredRole: 'member' },
+      { value: 1, label: 'Pet Wedding', description: 'Announce pet weddings and ceremonies', requiredRole: 'member' },
+      { value: 3, label: 'Library', description: 'Share educational content and resources', requiredRole: 'vet' },
+      { value: 4, label: 'Announcement', description: 'General announcements and news', requiredRole: 'site_admin' },
     ];
 
     // Role hierarchy for permission checks
@@ -88,7 +88,7 @@ const PostForm: React.FC<PostFormProps> = ({
     price: initialData?.price,
     eventDate: initialData?.eventDate || '',
     category: initialData?.category || '',
-    postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 0 as PostType), // Default to first available post type
+    postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
@@ -147,7 +147,7 @@ const PostForm: React.FC<PostFormProps> = ({
     }
 
     // PostType specific validations
-    if (formData.postType === 1) { // Buy/Sell
+    if (formData.postType === 2) { // Buy/Sell
       if (!formData.price || formData.price <= 0) {
         newErrors.price = 'Price is required for Buy/Sell posts';
       }
@@ -157,7 +157,7 @@ const PostForm: React.FC<PostFormProps> = ({
       }
     }
 
-    if (formData.postType === 2 || formData.postType === 3) { // Meetup or Pet Wedding
+    if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
       if (!formData.eventDate) {
         newErrors.eventDate = 'Event date is required for this post type';
       } else {
@@ -171,7 +171,7 @@ const PostForm: React.FC<PostFormProps> = ({
       }
       // Location is required for Meetup and Pet Wedding
       if (!formData.location?.trim()) {
-        newErrors.location = `Location is required for ${formData.postType === 2 ? 'Meetup' : 'Pet Wedding'} posts`;
+        newErrors.location = `Location is required for ${formData.postType === 0 ? 'Meetup' : 'Pet Wedding'} posts`;
       }
     }
 
@@ -223,10 +223,10 @@ const PostForm: React.FC<PostFormProps> = ({
     }
   };
 
-  const requiresPrice = formData.postType === 1; // Buy/Sell
-  const requiresEventDate = formData.postType === 2 || formData.postType === 3; // Meetup or Pet Wedding
-  const requiresLocation = formData.postType === 1 || formData.postType === 2 || formData.postType === 3; // Buy/Sell, Meetup, Pet Wedding
-  const showCategory = formData.postType === 0 || formData.postType === 1; // Moment, Buy/Sell only
+  const requiresPrice = formData.postType === 2; // Buy/Sell
+  const requiresEventDate = formData.postType === 0 || formData.postType === 1; // Meetup or Pet Wedding
+  const requiresLocation = formData.postType === 2 || formData.postType === 0 || formData.postType === 1; // Buy/Sell, Meetup, Pet Wedding
+  const showCategory = formData.postType === 5 || formData.postType === 2; // Moment, Buy/Sell only
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>

@@ -71,7 +71,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const getTypeLabel = (type: number) => {
-    const labels = ['Moment', 'Buy/Sell', 'Meetup', 'Pet Wedding', 'Library', 'Announcement'];
+    const labels = ['Meetup', 'Pet Wedding', 'Buy/Sell', 'Library', 'Announcement', 'Moment'];
     return labels[type] || 'Unknown';
   };
 

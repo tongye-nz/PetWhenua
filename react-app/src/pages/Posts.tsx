@@ -83,24 +83,24 @@ const Posts: React.FC = () => {
   const getPostTypeDisplayName = (postType?: PostType): string => {
     if (postType === undefined) return 'All Posts';
     const typeMap: { [key: number]: string } = {
-      0: 'Moment Posts',
-      1: 'Buy & Sell Posts', 
-      2: 'Meetup Posts',
-      3: 'Pet Wedding Posts',
-      4: 'Library Posts',
-      5: 'Announcement Posts'
+      0: 'Meetup Posts',
+      1: 'Pet Wedding Posts',
+      2: 'Buy & Sell Posts', 
+      3: 'Library Posts',
+      4: 'Announcement Posts',
+      5: 'Moment Posts'
     };
     return typeMap[postType] || 'Community Posts';
   };
 
   const postTypeOptions = [
     { value: '', label: 'All Types' },
-    { value: 0, label: 'Moment' },
-    { value: 1, label: 'Buy/Sell' },
-    { value: 2, label: 'Meetup' },
-    { value: 3, label: 'Pet Wedding' },
-    { value: 4, label: 'Library' },
-    { value: 5, label: 'Announcement' },
+    { value: 0, label: 'Meetup' },
+    { value: 1, label: 'Pet Wedding' },
+    { value: 2, label: 'Buy/Sell' },
+    { value: 3, label: 'Library' },
+    { value: 4, label: 'Announcement' },
+    { value: 5, label: 'Moment' },
   ];
 
   if (loading && posts.length === 0) {
