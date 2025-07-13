@@ -31,6 +31,7 @@ export interface PostFormErrors {
   postType?: string;
   price?: string;
   eventDate?: string;
+  location?: string;
   general?: string;
 }
 
@@ -150,6 +151,10 @@ const PostForm: React.FC<PostFormProps> = ({
       if (!formData.price || formData.price <= 0) {
         newErrors.price = 'Price is required for Buy/Sell posts';
       }
+      // Location is required for Buy/Sell
+      if (!formData.location?.trim()) {
+        newErrors.location = 'Location is required for Buy/Sell posts';
+      }
     }
 
     if (formData.postType === 2 || formData.postType === 3) { // Meetup or Pet Wedding
@@ -163,6 +168,10 @@ const PostForm: React.FC<PostFormProps> = ({
         if (eventDate < today) {
           newErrors.eventDate = 'Event date cannot be in the past';
         }
+      }
+      // Location is required for Meetup and Pet Wedding
+      if (!formData.location?.trim()) {
+        newErrors.location = `Location is required for ${formData.postType === 2 ? 'Meetup' : 'Pet Wedding'} posts`;
       }
     }
 
@@ -216,6 +225,8 @@ const PostForm: React.FC<PostFormProps> = ({
 
   const requiresPrice = formData.postType === 1; // Buy/Sell
   const requiresEventDate = formData.postType === 2 || formData.postType === 3; // Meetup or Pet Wedding
+  const requiresLocation = formData.postType === 1 || formData.postType === 2 || formData.postType === 3; // Buy/Sell, Meetup, Pet Wedding
+  const showCategory = formData.postType === 0 || formData.postType === 1; // Moment, Buy/Sell only
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -314,22 +325,28 @@ const PostForm: React.FC<PostFormProps> = ({
           />
         )}
 
-        {/* Optional Fields */}
+        {/* Location Field */}
         <LocationInput
           label="Location"
           value={formData.location || ''}
           onChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
           disabled={loading}
-          placeholder="Add location (optional)"
+          placeholder={requiresLocation ? "Enter location (required)" : "Add location (optional)"}
+          error={!!errors.location}
+          helperText={errors.location}
+          required={requiresLocation}
         />
 
-        <Input
-          label="Category"
-          value={formData.category || ''}
-          onChange={handleInputChange('category')}
-          disabled={loading}
-          placeholder="Add category tags (optional)"
-        />
+        {/* Category Field - only for Moment and Buy/Sell */}
+        {showCategory && (
+          <Input
+            label="Category"
+            value={formData.category || ''}
+            onChange={handleInputChange('category')}
+            disabled={loading}
+            placeholder="Add category tags (optional)"
+          />
+        )}
 
         {/* Action Buttons */}
         <Stack direction="row" spacing={2} sx={{ mt: 3 }}>

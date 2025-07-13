@@ -21,6 +21,7 @@ export interface LocationInputProps {
   error?: boolean;
   helperText?: string;
   fullWidth?: boolean;
+  required?: boolean;
 }
 
 interface LocationSuggestion {
@@ -39,6 +40,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
   error = false,
   helperText,
   fullWidth = true,
+  required = false,
 }) => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -133,6 +135,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
           error={error}
           helperText={helperText}
           fullWidth={fullWidth}
+          required={required}
         />
         
         {isOpen && suggestions.length > 0 && (
