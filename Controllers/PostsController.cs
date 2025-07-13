@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PetWhenua.Services;
 using PetWhenua.Models.Dtos;
+using PetWhenua.Repositories.Abstract;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -326,6 +327,102 @@ public class PostsController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("expire-past-events")]
+    public async Task<IActionResult> ExpirePastEvents([FromQuery] string? userRole = null)
+    {
+        try
+        {
+            // Only allow admins to manually trigger expiry
+            if (!string.IsNullOrEmpty(userRole) && !UserRoles.IsAdmin(userRole))
+            {
+                return StatusCode(403, new { error = "Only site administrators can manually trigger post expiry." });
+            }
+
+            using var scope = HttpContext.RequestServices.CreateScope();
+            var expiryService = scope.ServiceProvider.GetRequiredService<PostExpiryService>();
+            
+            var expiredCount = await expiryService.ExpirePostsByEventDateAsync();
+            
+            return Ok(new
+            {
+                message = $"Manual expiry check completed. {expiredCount} posts expired.",
+                expiredCount = expiredCount,
+                timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while expiring posts.", details = ex.Message });
+        }
+    }
+
+    [HttpGet("expiry-stats")]
+    public async Task<IActionResult> GetExpiryStats()
+    {
+        try
+        {
+            using var scope = HttpContext.RequestServices.CreateScope();
+            var expiryService = scope.ServiceProvider.GetRequiredService<PostExpiryService>();
+            
+            var stats = await expiryService.GetExpiryStatsAsync();
+            
+            return Ok(new
+            {
+                totalExpirablePosts = stats.TotalExpirablePosts,
+                expirableByType = stats.ExpirableByType.ToDictionary(
+                    kvp => kvp.Key.ToString(),
+                    kvp => kvp.Value
+                ),
+                totalActiveTimeBasedPosts = stats.TotalActiveTimeBasedPosts,
+                checkDate = stats.CheckDate,
+                message = stats.TotalExpirablePosts > 0 
+                    ? $"{stats.TotalExpirablePosts} posts are eligible for expiration"
+                    : "No posts are currently eligible for expiration"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while getting expiry stats.", details = ex.Message });
+        }
+    }
+
+    [HttpGet("past-events")]
+    public async Task<IActionResult> GetPastEvents()
+    {
+        try
+        {
+            using var scope = HttpContext.RequestServices.CreateScope();
+            var postRepository = scope.ServiceProvider.GetRequiredService<IPostRepository>();
+            
+            var expirablePosts = await postRepository.GetExpirablePostsAsync(DateTime.UtcNow);
+            
+            var result = expirablePosts.Select(p => new
+            {
+                postId = p.PostId,
+                title = p.Title,
+                postType = p.PostType.ToString(),
+                eventDate = p.EventDate,
+                status = p.Status.ToString(),
+                daysPastEvent = p.EventDate.HasValue 
+                    ? (DateTime.UtcNow.Date - p.EventDate.Value.Date).Days 
+                    : 0
+            });
+
+            return Ok(new
+            {
+                posts = result,
+                count = result.Count(),
+                message = result.Any() 
+                    ? $"Found {result.Count()} past events that should be expired"
+                    : "No past events found that need expiration"
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while getting past events.", details = ex.Message });
         }
     }
 }

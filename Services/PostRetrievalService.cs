@@ -9,25 +9,39 @@ namespace PetWhenua.Services
     /// </summary>
     public class PostRetrievalService : BasePostService
     {
-        public PostRetrievalService(IPostRepository postRepository, IPostFactory postFactory) 
+        private readonly PostExpiryService _expiryService;
+
+        public PostRetrievalService(
+            IPostRepository postRepository, 
+            IPostFactory postFactory,
+            PostExpiryService expiryService) 
             : base(postRepository, postFactory)
         {
+            _expiryService = expiryService;
         }
 
         /// <summary>
-        /// Gets posts with optional filtering
+        /// Gets posts with optional filtering and dynamic expiry checking
         /// </summary>
         public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null)
         {
-            return await _postRepository.GetAllPostsAsync(postType, userId);
+            var posts = await _postRepository.GetAllPostsAsync(postType, userId);
+            return await ApplyDynamicExpiryAsync(posts);
         }
 
         /// <summary>
-        /// Gets a specific post by ID
+        /// Gets a specific post by ID with dynamic expiry checking
         /// </summary>
         public async Task<Post?> GetPostByIdAsync(int id)
         {
-            return await _postRepository.GetPostByIdAsync(id);
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post != null)
+            {
+                await _expiryService.ExpirePostIfNeededAsync(post);
+                // Reload the post to get the updated status
+                post = await _postRepository.GetPostByIdAsync(id);
+            }
+            return post;
         }
 
         /// <summary>
@@ -61,6 +75,45 @@ namespace PetWhenua.Services
         public async Task<bool> PostExistsAsync(int id)
         {
             return await _postRepository.PostExistsAsync(id);
+        }
+
+        /// <summary>
+        /// Applies dynamic expiry checking to a collection of posts
+        /// </summary>
+        private async Task<IEnumerable<Post>> ApplyDynamicExpiryAsync(IEnumerable<Post> posts)
+        {
+            var postList = posts.ToList();
+            var expiredAny = false;
+
+            foreach (var post in postList)
+            {
+                var wasExpired = await _expiryService.ExpirePostIfNeededAsync(post);
+                if (wasExpired)
+                {
+                    expiredAny = true;
+                }
+            }
+
+            // If any posts were expired, reload the collection to get updated statuses
+            if (expiredAny)
+            {
+                // Re-fetch with the same filters to get updated statuses
+                var postIds = postList.Select(p => p.PostId).ToList();
+                var updatedPosts = new List<Post>();
+                
+                foreach (var id in postIds)
+                {
+                    var updatedPost = await _postRepository.GetPostByIdAsync(id);
+                    if (updatedPost != null)
+                    {
+                        updatedPosts.Add(updatedPost);
+                    }
+                }
+                
+                return updatedPosts.OrderByDescending(p => p.CreatedAt);
+            }
+
+            return postList;
         }
     }
 }

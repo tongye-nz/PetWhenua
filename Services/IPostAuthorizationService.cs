@@ -37,6 +37,15 @@ namespace PetWhenua.Services
         bool CanEditPost(string userRole, int postOwnerId, int userId);
 
         /// <summary>
+        /// Checks if a user can edit a specific post (overload that considers post status)
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can edit the post</returns>
+        bool CanEditPost(string userRole, Post post, int userId);
+
+        /// <summary>
         /// Validates if a status change is allowed for a specific post type
         /// </summary>
         /// <param name="postType">The type of post</param>

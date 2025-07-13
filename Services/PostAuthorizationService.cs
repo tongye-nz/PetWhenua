@@ -114,6 +114,25 @@ namespace PetWhenua.Services
         }
 
         /// <summary>
+        /// Checks if a user can edit a specific post (overload that considers post status)
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can edit the post</returns>
+        public bool CanEditPost(string userRole, Post post, int userId)
+        {
+            // Expired posts can only be edited by admins
+            if (post.Status == PostStatus.Expired && !UserRoles.IsAdmin(userRole))
+            {
+                return false;
+            }
+
+            // Apply standard edit rules
+            return CanEditPost(userRole, post.UserId, userId);
+        }
+
+        /// <summary>
         /// Gets the roles that can activate meetup posts
         /// </summary>
         /// <returns>List of roles that can activate meetup posts</returns>

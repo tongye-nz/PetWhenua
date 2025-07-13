@@ -98,5 +98,30 @@ namespace PetWhenua.Repositories.Concrete
         {
             return await _context.Users.AnyAsync(u => u.UserId == userId);
         }
+
+        public async Task<IEnumerable<Post>> GetExpirablePostsAsync(DateTime currentDate)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => 
+                    (p.PostType == PostType.Meetup || p.PostType == PostType.PetWedding) &&
+                    p.Status == PostStatus.Active &&
+                    p.EventDate.HasValue &&
+                    p.EventDate.Value.Date < currentDate.Date)
+                .OrderBy(p => p.EventDate)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Post>> GetActiveTimeBasedPostsAsync()
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => 
+                    (p.PostType == PostType.Meetup || p.PostType == PostType.PetWedding) &&
+                    p.Status == PostStatus.Active &&
+                    p.EventDate.HasValue)
+                .OrderBy(p => p.EventDate)
+                .ToListAsync();
+        }
     }
 }

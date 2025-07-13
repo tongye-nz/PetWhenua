@@ -17,10 +17,11 @@ namespace PetWhenua.Services
         public PostService(
             IPostRepository postRepository,
             IPostFactory postFactory,
-            IPostAuthorizationService authorizationService)
+            IPostAuthorizationService authorizationService,
+            PostExpiryService expiryService)
         {
             _creationService = new PostCreationService(postRepository, postFactory, authorizationService);
-            _retrievalService = new PostRetrievalService(postRepository, postFactory);
+            _retrievalService = new PostRetrievalService(postRepository, postFactory, expiryService);
             _statusService = new PostStatusService(postRepository, postFactory, authorizationService);
             _managementService = new PostManagementService(postRepository, postFactory);
         }

@@ -147,8 +147,10 @@ namespace PetWhenua.Services.Factories
             if (post.Price.HasValue && post.Price.Value < 0)
                 throw new ArgumentException("Price cannot be negative.", nameof(post.Price));
 
-            if (post.EventDate.HasValue && post.EventDate.Value < DateTime.Now.Date)
-                throw new ArgumentException("Event date cannot be in the past.", nameof(post.EventDate));
+            // Allow past event dates for testing and admin purposes
+            // The auto-expiry service will handle expired events
+            // if (post.EventDate.HasValue && post.EventDate.Value < DateTime.Now.Date)
+            //     throw new ArgumentException("Event date cannot be in the past.", nameof(post.EventDate));
 
             // Validate post type specific rules
             ValidatePostTypeSpecificRules(post);
