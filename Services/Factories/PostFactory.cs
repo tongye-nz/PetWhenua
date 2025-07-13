@@ -197,6 +197,15 @@ namespace PetWhenua.Services.Factories
                     if (string.IsNullOrEmpty(post.Category))
                         throw new ArgumentException("Library posts must have a category.", nameof(post.Category));
                     break;
+
+                case PostType.Moment:
+                    // No additional validation required for moment posts
+                    // They just need the basic fields: title, description, content
+                    break;
+
+                case PostType.Announcement:
+                    // No additional validation required for announcements
+                    break;
             }
         }
     }

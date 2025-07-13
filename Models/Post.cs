@@ -9,7 +9,8 @@ public enum PostType
     PetWedding,
     BuySell,
     Library,
-    Announcement
+    Announcement,
+    Moment
 }
 
 public enum PostStatus
