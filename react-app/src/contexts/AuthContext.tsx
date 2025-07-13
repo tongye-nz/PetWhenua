@@ -145,13 +145,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const storedUser = authService.getStoredUser();
 
       if (storedToken && storedUser) {
-        // Verify token is still valid
+        // Verify token is still valid and get fresh user data
         try {
-          await authService.verifyToken();
+          const freshUserData = await authService.verifyToken();
+          
+          // Update localStorage with fresh user data
+          localStorage.setItem('authUser', JSON.stringify(freshUserData));
+          
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: {
-              user: storedUser,
+              user: freshUserData,
               token: storedToken,
             },
           });

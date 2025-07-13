@@ -9,7 +9,7 @@ import {
   Select, 
   MenuItem
 } from '@mui/material';
-import { Button, Input } from '../../ui';
+import { Button, Input, LocationInput } from '../../ui';
 import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -315,10 +315,10 @@ const PostForm: React.FC<PostFormProps> = ({
         )}
 
         {/* Optional Fields */}
-        <Input
+        <LocationInput
           label="Location"
           value={formData.location || ''}
-          onChange={handleInputChange('location')}
+          onChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
           disabled={loading}
           placeholder="Add location (optional)"
         />
