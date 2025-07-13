@@ -56,6 +56,35 @@ const PostForm: React.FC<PostFormProps> = ({
   const { user } = useAuth();
   const { createPost, updatePost, loading, error } = usePost();
   
+  // Role-based post type filtering
+  const getAvailablePostTypes = () => {
+    const allPostTypes = [
+      { value: 0, label: 'Moment', description: 'Share a special moment with your pet', requiredRole: 'member' },
+      { value: 1, label: 'Buy/Sell', description: 'Buy or sell pet-related items', requiredRole: 'member' },
+      { value: 2, label: 'Meetup', description: 'Organize pet meetups and playdates', requiredRole: 'member' },
+      { value: 3, label: 'Pet Wedding', description: 'Announce pet weddings and ceremonies', requiredRole: 'member' },
+      { value: 4, label: 'Library', description: 'Share educational content and resources', requiredRole: 'vet' },
+      { value: 5, label: 'Announcement', description: 'General announcements and news', requiredRole: 'site_admin' },
+    ];
+
+    // Role hierarchy for permission checks
+    const roleHierarchy: { [key: string]: number } = {
+      'member': 1,
+      'vet': 2,
+      'meetup_admin': 3,
+      'site_admin': 4
+    };
+
+    const userLevel = roleHierarchy[user?.role || 'member'] || 1;
+
+    return allPostTypes.filter(postType => {
+      const requiredLevel = roleHierarchy[postType.requiredRole] || 1;
+      return userLevel >= requiredLevel;
+    });
+  };
+
+  const postTypeOptions = getAvailablePostTypes();
+  
   const [formData, setFormData] = useState<PostFormData>({
     title: initialData?.title || '',
     description: initialData?.description || '',
@@ -65,20 +94,10 @@ const PostForm: React.FC<PostFormProps> = ({
     price: initialData?.price,
     eventDate: initialData?.eventDate || '',
     category: initialData?.category || '',
-    postType: initialData?.postType ?? 0, // Default to Moment
+    postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 0 as PostType), // Default to first available post type
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
-
-  // Post type options
-  const postTypeOptions = [
-    { value: 0, label: 'Moment', description: 'Share a special moment with your pet' },
-    { value: 1, label: 'Buy/Sell', description: 'Buy or sell pet-related items' },
-    { value: 2, label: 'Meetup', description: 'Organize pet meetups and playdates' },
-    { value: 3, label: 'Pet Wedding', description: 'Announce pet weddings and ceremonies' },
-    { value: 4, label: 'Library', description: 'Share educational content and resources' },
-    { value: 5, label: 'Announcement', description: 'General announcements and news' },
-  ];
 
   const handleInputChange = (field: keyof PostFormData) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
