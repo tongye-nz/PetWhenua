@@ -1,3 +1,5 @@
+import { PostType, PostStatus } from '../models/post.types';
+
 // User roles and permissions for PetWhenua
 
 export const USER_ROLES = {
@@ -60,4 +62,22 @@ export const canManageMeetups = (userRole: string): boolean => {
 
 export const canProvideVetServices = (userRole: string): boolean => {
   return isVet(userRole);
+};
+
+// Post-specific labels and utilities
+export const PostTypeLabels = {
+  [PostType.Moment]: "Moment",
+  [PostType.BuySell]: "Buy/Sell",
+  [PostType.Meetup]: "Meetup",
+  [PostType.PetWedding]: "Pet Wedding",
+  [PostType.Library]: "Library",
+  [PostType.Announcement]: "Announcement"
+};
+
+export const PostStatusLabels = {
+  [PostStatus.Active]: "Active",
+  [PostStatus.Sold]: "Sold",
+  [PostStatus.Expired]: "Expired",
+  [PostStatus.Inactive]: "Inactive",
+  [PostStatus.Cancelled]: "Cancelled"
 };
