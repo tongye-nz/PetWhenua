@@ -20,7 +20,7 @@ namespace PetWhenua.Services.Factories
             return post;
         }
 
-        public Post CreatePostWithDetails(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public Post CreatePostWithDetails(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null, string? address = null)
         {
             var post = new Post
             {
@@ -30,6 +30,7 @@ namespace PetWhenua.Services.Factories
                 Content = content,
                 Images = images ?? new List<string>(),
                 Location = location,
+                Address = address,
                 Price = price,
                 EventDate = eventDate,
                 Category = category,
@@ -179,11 +180,19 @@ namespace PetWhenua.Services.Factories
                     break;
 
                 case PostType.Meetup:
+                    if (!post.EventDate.HasValue)
+                        throw new ArgumentException($"{post.PostType} posts must have an event date.", nameof(post.EventDate));
+                    if (string.IsNullOrEmpty(post.Location))
+                        throw new ArgumentException($"{post.PostType} posts must have a location.", nameof(post.Location));
+                    break;
+
                 case PostType.PetWedding:
                     if (!post.EventDate.HasValue)
                         throw new ArgumentException($"{post.PostType} posts must have an event date.", nameof(post.EventDate));
                     if (string.IsNullOrEmpty(post.Location))
                         throw new ArgumentException($"{post.PostType} posts must have a location.", nameof(post.Location));
+                    if (string.IsNullOrEmpty(post.Address) || post.Address.Length < 5)
+                        throw new ArgumentException("Pet Wedding posts must have an address that is at least 5 characters long.", nameof(post.Address));
                     break;
 
                 case PostType.Library:

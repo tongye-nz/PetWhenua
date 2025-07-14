@@ -4,19 +4,26 @@ import {
   Box,
   Chip
 } from '@mui/material';
-import { Text } from '../../../ui';
+import { Text, PetConnectionButton } from '../../../ui';
 import type { Pet } from '../../../../models/pet.types';
 import { formatPetAge } from '../../../../models/pet.types';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 export interface PetCardContentProps {
   pet: Pet;
   compact: boolean;
+  currentUserPetId?: number; // ID of current user's pet for connections
+  showConnectionButton?: boolean;
 }
 
 const PetCardContent: React.FC<PetCardContentProps> = ({
   pet,
-  compact
+  compact,
+  currentUserPetId,
+  showConnectionButton = false
 }) => {
+  const { user } = useAuth();
+  const isOwnPet = user?.userId === pet.userId;
   const getAgeText = () => {
     // Use new birth year/month if available, otherwise fall back to age
     if (pet.birthYear) {
@@ -106,6 +113,18 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
           <Text variant="caption" color="text.secondary">
             Owner: {pet.user.firstName || pet.user.username}
           </Text>
+          
+          {/* Pet Connection Button - only show for other users' pets */}
+          {showConnectionButton && !isOwnPet && currentUserPetId && pet.petId && (
+            <Box sx={{ mt: 1 }}>
+              <PetConnectionButton
+                myPetId={currentUserPetId}
+                targetPetId={pet.petId}
+                size="small"
+                variant="outlined"
+              />
+            </Box>
+          )}
         </Box>
       )}
     </CardContent>

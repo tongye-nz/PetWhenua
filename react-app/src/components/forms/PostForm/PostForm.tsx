@@ -11,18 +11,22 @@ import {
 } from '@mui/material';
 import { Button, Input, LocationInput } from '../../ui';
 import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
+import type { CreatePetWeddingRequest } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
+import { petWeddingService } from '../../../api/petWedding.api';
 
 export interface PostFormData {
   title: string;
   content: string;
   images: string[];
   location?: string;
+  address?: string;
   price?: number;
   eventDate?: string;
   category?: string;
   postType: PostType;
+  selectedPetIds?: number[];
 }
 
 export interface PostFormErrors {
@@ -32,6 +36,8 @@ export interface PostFormErrors {
   price?: string;
   eventDate?: string;
   location?: string;
+  address?: string;
+  selectedPetIds?: string;
   general?: string;
 }
 
@@ -85,10 +91,12 @@ const PostForm: React.FC<PostFormProps> = ({
     content: initialData?.content || '',
     images: initialData?.images || [],
     location: initialData?.location || '',
+    address: initialData?.address || '',
     price: initialData?.price,
     eventDate: initialData?.eventDate || '',
     category: initialData?.category || '',
     postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
+    selectedPetIds: initialData?.selectedPetIds || [],
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
@@ -173,6 +181,17 @@ const PostForm: React.FC<PostFormProps> = ({
       if (!formData.location?.trim()) {
         newErrors.location = `Location is required for ${formData.postType === 0 ? 'Meetup' : 'Pet Wedding'} posts`;
       }
+      
+      // Additional validation for Pet Wedding
+      if (formData.postType === 1) { // Pet Wedding
+        if (!formData.address?.trim() || formData.address.length < 5) {
+          newErrors.address = 'Address is required and must be at least 5 characters long for Pet Wedding posts';
+        }
+        
+        if (!formData.selectedPetIds || formData.selectedPetIds.length !== 2) {
+          newErrors.selectedPetIds = 'You must select exactly 2 pets for a Pet Wedding';
+        }
+      }
     }
 
     setErrors(newErrors);
@@ -196,22 +215,48 @@ const PostForm: React.FC<PostFormProps> = ({
             content: formData.content,
             images: formData.images,
             location: formData.location || undefined,
+            address: formData.address || undefined,
             price: formData.price || undefined,
             eventDate: formData.eventDate || undefined,
             category: formData.category || undefined,
+            selectedPetIds: formData.selectedPetIds || undefined,
           } as CreatePostRequest
         : {
             title: formData.title,
             content: formData.content,
             images: formData.images,
             location: formData.location || undefined,
+            address: formData.address || undefined,
             price: formData.price || undefined,
             eventDate: formData.eventDate || undefined,
             category: formData.category || undefined,
+            selectedPetIds: formData.selectedPetIds || undefined,
           } as UpdatePostRequest;
 
       if (mode === 'create') {
-        const createdPost = await createPost(submitData as CreatePostRequest);
+        let createdPost: Post;
+        
+        // Handle Pet Wedding posts with special service
+        if (formData.postType === 1 && formData.selectedPetIds && formData.selectedPetIds.length === 2) {
+          // Pet Wedding
+          const petWeddingRequest: CreatePetWeddingRequest = {
+            title: formData.title,
+            content: formData.content,
+            petIds: formData.selectedPetIds,
+            location: formData.location || '',
+            address: formData.address || '',
+            eventDate: formData.eventDate || '',
+            images: formData.images,
+            category: formData.category
+          };
+          
+          const result = await petWeddingService.createPetWedding(petWeddingRequest);
+          createdPost = result.wedding;
+        } else {
+          // Regular post creation
+          createdPost = await createPost(submitData as CreatePostRequest);
+        }
+        
         onSubmit(submitData, createdPost);
       } else {
         // For edit mode, we'd need the post ID - this will be implemented when we have actual editing
@@ -336,6 +381,41 @@ const PostForm: React.FC<PostFormProps> = ({
           helperText={errors.location}
           required={requiresLocation}
         />
+
+        {/* Address Field - only for Pet Wedding */}
+        {formData.postType === 1 && ( // Pet Wedding
+          <Input
+            label="Address"
+            value={formData.address || ''}
+            onChange={handleInputChange('address')}
+            error={!!errors.address}
+            helperText={errors.address}
+            required
+            disabled={loading}
+            placeholder="Enter the venue address for the Pet Wedding"
+          />
+        )}
+
+        {/* Pet Selection - only for Pet Wedding */}
+        {formData.postType === 1 && ( // Pet Wedding
+          <Box>
+            <Typography variant="h6" gutterBottom>
+              Select Pets for Wedding
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Choose exactly 2 pets to participate in this wedding ceremony
+            </Typography>
+            {/* TODO: Integrate PetWeddingSelection component with proper data loading */}
+            <Alert severity="info">
+              Pet selection component will be integrated once pet data loading is implemented
+            </Alert>
+            {errors.selectedPetIds && (
+              <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                {errors.selectedPetIds}
+              </Typography>
+            )}
+          </Box>
+        )}
 
         {/* Category Field - only for Moment and Buy/Sell */}
         {showCategory && (

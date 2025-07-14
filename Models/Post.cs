@@ -19,7 +19,8 @@ public enum PostStatus
     Sold,
     Expired,
     Inactive,
-    Cancelled
+    Cancelled,
+    Pending
 }
 
 public class Post
@@ -46,6 +47,9 @@ public class Post
     [MaxLength(200)]
     public string? Location { get; set; }
 
+    [MaxLength(500)]
+    public string? Address { get; set; }
+
     [Column(TypeName = "decimal(10,2)")]
     public decimal? Price { get; set; }
 
@@ -63,4 +67,7 @@ public class Post
 
     // Navigation property
     public User User { get; set; } = null!;
+    
+    // Pet Wedding specific navigation properties
+    public List<PetWeddingParticipant> PetWeddingParticipants { get; set; } = new();
 } 

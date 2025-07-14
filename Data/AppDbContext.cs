@@ -8,6 +8,9 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Pet> Pets => Set<Pet>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<UserFollow> UserFollows => Set<UserFollow>();
+    public DbSet<PetConnection> PetConnections => Set<PetConnection>();
+    public DbSet<PetWeddingParticipant> PetWeddingParticipants => Set<PetWeddingParticipant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -21,6 +24,72 @@ public class AppDbContext : DbContext
             .WithOne(p => p.User)
             .HasForeignKey(p => p.UserId);
 
+        // Configure UserFollow relationships
+        modelBuilder.Entity<UserFollow>()
+            .HasOne(uf => uf.Follower)
+            .WithMany(u => u.Following)
+            .HasForeignKey(uf => uf.FollowerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<UserFollow>()
+            .HasOne(uf => uf.Following)
+            .WithMany(u => u.Followers)
+            .HasForeignKey(uf => uf.FollowingId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Prevent self-following
+        modelBuilder.Entity<UserFollow>()
+            .HasIndex(uf => new { uf.FollowerId, uf.FollowingId })
+            .IsUnique();
+
+        // Configure PetConnection relationships
+        modelBuilder.Entity<PetConnection>()
+            .HasOne(pc => pc.Pet1)
+            .WithMany(p => p.ConnectionsAsPet1)
+            .HasForeignKey(pc => pc.Pet1Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PetConnection>()
+            .HasOne(pc => pc.Pet2)
+            .WithMany(p => p.ConnectionsAsPet2)
+            .HasForeignKey(pc => pc.Pet2Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PetConnection>()
+            .HasOne(pc => pc.RequestedBy)
+            .WithMany()
+            .HasForeignKey(pc => pc.RequestedById)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Prevent duplicate connections and self-connections
+        modelBuilder.Entity<PetConnection>()
+            .HasIndex(pc => new { pc.Pet1Id, pc.Pet2Id })
+            .IsUnique();
+
+        // Configure PetWeddingParticipant relationships
+        modelBuilder.Entity<PetWeddingParticipant>()
+            .HasOne(pwp => pwp.Post)
+            .WithMany(p => p.PetWeddingParticipants)
+            .HasForeignKey(pwp => pwp.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PetWeddingParticipant>()
+            .HasOne(pwp => pwp.Pet)
+            .WithMany(p => p.PetWeddingParticipations)
+            .HasForeignKey(pwp => pwp.PetId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PetWeddingParticipant>()
+            .HasOne(pwp => pwp.Owner)
+            .WithMany(u => u.PetWeddingParticipations)
+            .HasForeignKey(pwp => pwp.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Ensure unique pet per wedding
+        modelBuilder.Entity<PetWeddingParticipant>()
+            .HasIndex(pwp => new { pwp.PostId, pwp.PetId })
+            .IsUnique();
+
         // Configure enum storage
         modelBuilder.Entity<Post>()
             .Property(p => p.PostType)
@@ -28,6 +97,10 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Post>()
             .Property(p => p.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<PetConnection>()
+            .Property(pc => pc.Status)
             .HasConversion<string>();
 
         // Configure Images as JSON column

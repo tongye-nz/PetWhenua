@@ -37,4 +37,11 @@ public class Pet
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Navigation properties for pet connections
+    public List<PetConnection> ConnectionsAsPet1 { get; set; } = new();
+    public List<PetConnection> ConnectionsAsPet2 { get; set; } = new();
+    
+    // Pet wedding participation
+    public List<PetWeddingParticipant> PetWeddingParticipations { get; set; } = new();
 }
