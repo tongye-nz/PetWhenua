@@ -1,85 +1,161 @@
-import React, { useState } from 'react';
-import { footerStyles } from './Footer.styles';
+import React from 'react';
+import {
+  Box,
+  Container,
+  Typography,
+  Link,
+  Stack
+} from '@mui/material';
 
 const Footer: React.FC = () => {
-  const [hoveredLinks, setHoveredLinks] = useState<{ [key: string]: boolean }>({});
-  const [hoveredSocial, setHoveredSocial] = useState<{ [key: string]: boolean }>({});
-
-  const handleLinkHover = (linkName: string, isHovered: boolean) => {
-    setHoveredLinks(prev => ({ ...prev, [linkName]: isHovered }));
-  };
-
-  const handleSocialHover = (socialName: string, isHovered: boolean) => {
-    setHoveredSocial(prev => ({ ...prev, [socialName]: isHovered }));
-  };
-
-  const getLinkStyle = (linkName: string) => ({
-    ...footerStyles.footerLink,
-    color: hoveredLinks[linkName] ? '#333' : '#666',
-  });
-
-  const getSocialStyle = (socialName: string) => ({
-    ...footerStyles.socialLink,
-    transform: hoveredSocial[socialName] ? 'scale(1.1)' : 'scale(1)',
-  });
-
   return (
-    <footer style={footerStyles.footer}>
-      <div style={footerStyles.container}>
-        <div style={footerStyles.footerContent}>
-          <div style={footerStyles.footerLeft}>
-            <div style={footerStyles.footerLogo}>
-              <img src="/logo.png" alt="PetWhenua Logo" style={footerStyles.logoImage} />
-            </div>
-            <div style={footerStyles.footerLinks}>
-              <a 
-                href="#" 
-                style={getLinkStyle('privacy')}
-                onMouseEnter={() => handleLinkHover('privacy', true)}
-                onMouseLeave={() => handleLinkHover('privacy', false)}
+    <Box
+      component="footer"
+      sx={{
+        bgcolor: 'background.paper',
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        py: { xs: 3, md: 4 },
+        mt: 'auto'
+      }}
+    >
+      <Container maxWidth="lg">
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            justifyContent: 'space-between',
+            alignItems: { xs: 'center', md: 'flex-start' },
+            gap: { xs: 3, md: 2 }
+          }}
+        >
+          {/* Left Section - Logo and Links */}
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
+              alignItems: { xs: 'center', md: 'flex-start' },
+              gap: { xs: 2, md: 4 }
+            }}
+          >
+            {/* Logo */}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <img 
+                src="/logo.png" 
+                alt="PetWhenua Logo" 
+                style={{ 
+                  height: '40px',
+                  width: 'auto'
+                }} 
+              />
+            </Box>
+
+            {/* Links */}
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={{ xs: 1, sm: 3 }}
+              alignItems="center"
+            >
+              <Link
+                href="#"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    color: 'text.primary',
+                    textDecoration: 'underline'
+                  }
+                }}
               >
                 Privacy
-              </a>
-              <a 
-                href="#" 
-                style={getLinkStyle('terms')}
-                onMouseEnter={() => handleLinkHover('terms', true)}
-                onMouseLeave={() => handleLinkHover('terms', false)}
+              </Link>
+              <Link
+                href="#"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    color: 'text.primary',
+                    textDecoration: 'underline'
+                  }
+                }}
               >
                 Terms
-              </a>
-              <a 
-                href="#" 
-                style={getLinkStyle('contact')}
-                onMouseEnter={() => handleLinkHover('contact', true)}
-                onMouseLeave={() => handleLinkHover('contact', false)}
+              </Link>
+              <Link
+                href="#"
+                sx={{
+                  color: 'text.secondary',
+                  textDecoration: 'none',
+                  fontSize: '0.875rem',
+                  '&:hover': {
+                    color: 'text.primary',
+                    textDecoration: 'underline'
+                  }
+                }}
               >
                 Contact
-              </a>
-              <span>Copyright @Tong Ye 2025 for MSA Phase 2</span>
-            </div>
-          </div>
-          <div style={footerStyles.socialLinks}>
-            <a 
-              href="#" 
-              style={getSocialStyle('instagram')}
-              onMouseEnter={() => handleSocialHover('instagram', true)}
-              onMouseLeave={() => handleSocialHover('instagram', false)}
+              </Link>
+            </Stack>
+          </Box>
+
+          {/* Right Section - Social Links */}
+          <Stack 
+            direction="row" 
+            spacing={2}
+            alignItems="center"
+          >
+            <Link
+              href="#"
+              sx={{
+                fontSize: '1.5rem',
+                textDecoration: 'none',
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)'
+                }
+              }}
             >
               📷
-            </a>
-            <a 
-              href="#" 
-              style={getSocialStyle('email')}
-              onMouseEnter={() => handleSocialHover('email', true)}
-              onMouseLeave={() => handleSocialHover('email', false)}
+            </Link>
+            <Link
+              href="#"
+              sx={{
+                fontSize: '1.5rem',
+                textDecoration: 'none',
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)'
+                }
+              }}
             >
               ✉️
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
+            </Link>
+          </Stack>
+        </Box>
+
+        {/* Copyright Section */}
+        <Box
+          sx={{
+            mt: { xs: 3, md: 4 },
+            pt: { xs: 2, md: 3 },
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            textAlign: 'center'
+          }}
+        >
+          <Typography 
+            variant="body2" 
+            color="text.secondary"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
+            Copyright © Tong Ye 2025 for MSA Phase 2
+          </Typography>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 
