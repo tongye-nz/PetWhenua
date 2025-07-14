@@ -301,7 +301,9 @@ const PetDetail: React.FC = () => {
                   {pet.user.firstName?.[0] || pet.user.username[0]}
                 </Avatar>
                 <Text variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  Pet Owner
+                  {pet.user.firstName && pet.user.lastName 
+                    ? `${pet.user.firstName} ${pet.user.lastName}`
+                    : pet.user.firstName || pet.user.lastName || pet.user.username}
                 </Text>
               </Box>
             )}
