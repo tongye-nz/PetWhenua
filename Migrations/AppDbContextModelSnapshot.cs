@@ -78,6 +78,91 @@ namespace PetWhenua.Migrations
                     b.ToTable("Pets");
                 });
 
+            modelBuilder.Entity("PetConnection", b =>
+                {
+                    b.Property<int>("PetConnectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PetConnectionId"));
+
+                    b.Property<int>("Pet1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Pet2Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequestMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequestedById")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResponseMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PetConnectionId");
+
+                    b.HasIndex("Pet2Id");
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("Pet1Id", "Pet2Id")
+                        .IsUnique();
+
+                    b.ToTable("PetConnections");
+                });
+
+            modelBuilder.Entity("PetWeddingParticipant", b =>
+                {
+                    b.Property<int>("ParticipantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ParticipantId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("HasApproved")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PetId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ParticipantId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("PetId");
+
+                    b.HasIndex("PostId", "PetId")
+                        .IsUnique();
+
+                    b.ToTable("PetWeddingParticipants");
+                });
+
             modelBuilder.Entity("Post", b =>
                 {
                     b.Property<int>("PostId")
@@ -85,6 +170,10 @@ namespace PetWhenua.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostId"));
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Category")
                         .HasMaxLength(100)
@@ -201,6 +290,33 @@ namespace PetWhenua.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("UserFollow", b =>
+                {
+                    b.Property<int>("UserFollowId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserFollowId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("FollowingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserFollowId");
+
+                    b.HasIndex("FollowingId");
+
+                    b.HasIndex("FollowerId", "FollowingId")
+                        .IsUnique();
+
+                    b.ToTable("UserFollows");
+                });
+
             modelBuilder.Entity("Pet", b =>
                 {
                     b.HasOne("User", "User")
@@ -210,6 +326,60 @@ namespace PetWhenua.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PetConnection", b =>
+                {
+                    b.HasOne("Pet", "Pet1")
+                        .WithMany("ConnectionsAsPet1")
+                        .HasForeignKey("Pet1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pet", "Pet2")
+                        .WithMany("ConnectionsAsPet2")
+                        .HasForeignKey("Pet2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Pet1");
+
+                    b.Navigation("Pet2");
+
+                    b.Navigation("RequestedBy");
+                });
+
+            modelBuilder.Entity("PetWeddingParticipant", b =>
+                {
+                    b.HasOne("User", "Owner")
+                        .WithMany("PetWeddingParticipations")
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pet", "Pet")
+                        .WithMany("PetWeddingParticipations")
+                        .HasForeignKey("PetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Post", "Post")
+                        .WithMany("PetWeddingParticipants")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
+
+                    b.Navigation("Pet");
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Post", b =>
@@ -223,8 +393,47 @@ namespace PetWhenua.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("UserFollow", b =>
+                {
+                    b.HasOne("User", "Follower")
+                        .WithMany("Following")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("User", "Following")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
+                });
+
+            modelBuilder.Entity("Pet", b =>
+                {
+                    b.Navigation("ConnectionsAsPet1");
+
+                    b.Navigation("ConnectionsAsPet2");
+
+                    b.Navigation("PetWeddingParticipations");
+                });
+
+            modelBuilder.Entity("Post", b =>
+                {
+                    b.Navigation("PetWeddingParticipants");
+                });
+
             modelBuilder.Entity("User", b =>
                 {
+                    b.Navigation("Followers");
+
+                    b.Navigation("Following");
+
+                    b.Navigation("PetWeddingParticipations");
+
                     b.Navigation("Pets");
 
                     b.Navigation("Posts");
