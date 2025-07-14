@@ -6,7 +6,7 @@ import type {
 } from '../models/userFollow.types';
 import type { User } from '../models/auth.types';
 
-const API_BASE_URL = 'https://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5295/api';
 
 // Create axios instance
 const api = axios.create({

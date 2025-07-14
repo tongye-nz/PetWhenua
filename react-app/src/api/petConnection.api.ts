@@ -7,7 +7,7 @@ import type {
 } from '../models/petConnection.types';
 import type { Pet } from '../models/pet.types';
 
-const API_BASE_URL = 'https://localhost:5001/api';
+const API_BASE_URL = 'http://localhost:5295/api';
 
 // Create axios instance
 const api = axios.create({
