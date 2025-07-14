@@ -80,10 +80,9 @@ const PetDetail: React.FC = () => {
   };
 
   const handleEditSubmit = async (formData: PetFormData) => {
-    if (!editingPet?.petId || !user?.userId) return;
-
-    console.log('Starting pet update with data:', formData);
-    console.log('Editing pet ID:', editingPet.petId);
+    if (!editingPet?.petId || !user?.userId) {
+      return;
+    }
 
     try {
       setFormLoading(true);
@@ -95,21 +94,17 @@ const PetDetail: React.FC = () => {
         ...formData,
         userId: user.userId,
         // Calculate age from birth year for backend compatibility
-        age: formData.birthYear ? calculateAgeInYears(formData.birthYear as number) : 0,
-        // Ensure birth year and month are numbers or undefined
-        birthYear: formData.birthYear ? formData.birthYear as number : undefined,
-        birthMonth: formData.birthMonth ? formData.birthMonth as number : undefined
+        age: formData.birthYear !== '' ? calculateAgeInYears(formData.birthYear as number) : 0,
+        // Ensure birth year and month are numbers or undefined - handle empty strings
+        birthYear: formData.birthYear !== '' ? formData.birthYear as number : undefined,
+        birthMonth: formData.birthMonth !== '' ? formData.birthMonth as number : undefined
       };
-
-      console.log('Sending pet data to API:', petData);
 
       // Update the pet
       await petService.updatePet(editingPet.petId, {
         ...petData,
         petId: editingPet.petId
       });
-      
-      console.log('Pet update successful, closing modal...');
       
       // Close modal first
       setEditFormOpen(false);
@@ -118,29 +113,12 @@ const PetDetail: React.FC = () => {
       // Set success message
       setSuccess('Pet Profile updated successfully!');
       
-      // Then refetch the pet details in background to update the display
-      try {
-        const updatedPet = await petService.getPetById(editingPet.petId, true);
-        console.log('Refetched pet data:', updatedPet);
-        setPet(updatedPet);
-      } catch (fetchError) {
-        console.error('Failed to refetch pet data after update:', fetchError);
-        // If refetch fails, just update the pet data we have with the form data
-        setPet(prevPet => prevPet ? { 
-          ...prevPet, 
-          ...petData,
-          // Ensure all form fields are properly updated
-          name: petData.name,
-          species: petData.species,
-          breed: petData.breed,
-          gender: petData.gender,
-          description: petData.description,
-          profilePicture: petData.profilePicture,
-          age: petData.age,
-          birthYear: petData.birthYear,
-          birthMonth: petData.birthMonth
-        } : null);
-      }
+      // Add a small delay to ensure the backend has processed the update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Then refetch the pet details to get the latest data
+      const updatedPet = await petService.getPetById(editingPet.petId, true);
+      setPet(updatedPet);
       
       // Clear success message after 5 seconds
       setTimeout(() => {

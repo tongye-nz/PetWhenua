@@ -50,10 +50,10 @@ export const useMyPets = () => {
         ...formData,
         userId: user.userId,
         // Calculate age from birth year for backend compatibility
-        age: formData.birthYear ? calculateAgeInYears(formData.birthYear as number) : 0,
+        age: formData.birthYear !== '' ? calculateAgeInYears(formData.birthYear as number) : 0,
         // Ensure birth year and month are numbers or undefined
-        birthYear: formData.birthYear ? formData.birthYear as number : undefined,
-        birthMonth: formData.birthMonth ? formData.birthMonth as number : undefined
+        birthYear: formData.birthYear !== '' ? formData.birthYear as number : undefined,
+        birthMonth: formData.birthMonth !== '' ? formData.birthMonth as number : undefined
       };
 
       if (editingPet) {

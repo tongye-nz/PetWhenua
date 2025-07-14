@@ -52,6 +52,8 @@ namespace PetWhenua.Services.Factories
             existingPet.Species = updatedPet.Species;
             existingPet.Breed = updatedPet.Breed;
             existingPet.Age = updatedPet.Age;
+            existingPet.BirthYear = updatedPet.BirthYear;
+            existingPet.BirthMonth = updatedPet.BirthMonth;
             existingPet.Gender = updatedPet.Gender;
             existingPet.Description = updatedPet.Description;
             existingPet.ProfilePicture = updatedPet.ProfilePicture;

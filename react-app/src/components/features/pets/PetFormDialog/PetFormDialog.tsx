@@ -27,16 +27,19 @@ const PetFormDialog: React.FC<PetFormDialogProps> = ({
   const getFormInitialData = (): Partial<PetFormData> => {
     if (!editingPet) return {};
     
-    return {
+    const initialData = {
       name: editingPet.name,
       species: editingPet.species || '',
       breed: editingPet.breed || '',
-      birthYear: editingPet.birthYear || '',
-      birthMonth: editingPet.birthMonth || '',
+      // Ensure proper type conversion: number or empty string only
+      birthYear: (editingPet.birthYear && typeof editingPet.birthYear === 'number') ? editingPet.birthYear : '' as number | '',
+      birthMonth: (editingPet.birthMonth && typeof editingPet.birthMonth === 'number') ? editingPet.birthMonth : '' as number | '',
       gender: editingPet.gender || '',
       description: editingPet.description || '',
       profilePicture: editingPet.profilePicture || ''
     };
+    
+    return initialData;
   };
 
   return (
