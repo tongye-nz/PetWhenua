@@ -7,8 +7,10 @@ import Home from './pages/Home.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
 import MyPets from './pages/MyPets.tsx';
+import AllPets from './pages/AllPets.tsx';
 import Posts from './pages/Posts.tsx';
 import PostDetail from './pages/PostDetail.tsx';
+import PetDetail from './pages/PetDetail.tsx';
 import CreatePost from './pages/CreatePost.tsx';
 import MyPosts from './pages/MyPosts.tsx';
 import { ProtectedRoute } from './components/common';
@@ -36,6 +38,7 @@ function App() {
                 <Route path="/posts" element={<Posts />} />
                 <Route path="/posts/:postType" element={<Posts />} />
                 <Route path="/post/:id" element={<PostDetail />} />
+                <Route path="/pet/:id" element={<PetDetail />} />
                 <Route path="/create-post" element={
                   <ProtectedRoute>
                     <CreatePost />
@@ -46,7 +49,8 @@ function App() {
                     <UserProfile />
                   </ProtectedRoute>
                 } />
-                <Route path="/pets" element={
+                <Route path="/pets" element={<AllPets />} />
+                <Route path="/my-pets" element={
                   <ProtectedRoute>
                     <MyPets />
                   </ProtectedRoute>

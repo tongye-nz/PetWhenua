@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container } from '@mui/material';
 import {
   MyPetsHeader,
@@ -13,6 +14,7 @@ import {
 import { useMyPets } from '../hooks/useMyPets';
 
 const MyPets: React.FC = () => {
+  const navigate = useNavigate();
   const {
     pets,
     loading,
@@ -37,6 +39,12 @@ const MyPets: React.FC = () => {
     return <MyPetsLoading />;
   }
 
+  const handleViewPet = (pet: any) => {
+    if (pet.petId) {
+      navigate(`/pet/${pet.petId}`);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <MyPetsHeader onAddPet={handleAddPet} />
@@ -52,6 +60,7 @@ const MyPets: React.FC = () => {
           pets={pets}
           onEditPet={handleEditPet}
           onDeletePet={handleDeletePet}
+          onViewPet={handleViewPet}
         />
       )}
 

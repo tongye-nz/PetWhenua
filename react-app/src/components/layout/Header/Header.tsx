@@ -91,7 +91,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         navigate('/profile');
         break;
       case 'pets':
-        navigate('/pets');
+        navigate('/my-pets');
         break;
       case 'posts':
         navigate('/my-posts');
@@ -143,6 +143,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
 
   const navItems = [
     { label: 'Home', href: '/', active: location.pathname === '/' },
+    { label: 'Pets', href: '/pets', active: location.pathname === '/pets' },
     { label: 'Moment', href: '/posts/moment', active: location.pathname === '/posts/moment' },
     { label: 'Meetup', href: '/posts/meetup', active: location.pathname === '/posts/meetup' },
     { label: 'Pet Wedding', href: '/posts/pet-wedding', active: location.pathname === '/posts/pet-wedding' },
