@@ -15,6 +15,7 @@ import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
+import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
@@ -79,6 +80,16 @@ const UserProfile: React.FC = () => {
       const apiUser = await userAPI.getCurrentUser();
       const { region, district } = parseLocation(apiUser.location || '');
       
+      // Load pet count
+      let petCount = 0;
+      try {
+        const userPets = await petService.getUserPets(apiUser.userId);
+        petCount = userPets.length;
+      } catch (petError) {
+        console.error('Failed to load pets count:', petError);
+        // Continue with petCount = 0 if pets can't be loaded
+      }
+      
       setProfileData({
         id: apiUser.userId.toString(),
         username: apiUser.username,
@@ -89,7 +100,7 @@ const UserProfile: React.FC = () => {
         region,
         district,
         profilePicture: apiUser.profilePicture || '',
-        petCount: 0, // TODO: Get pet count from API
+        petCount: petCount,
         joinDate: new Date(apiUser.createdAt).toLocaleDateString()
       });
     } catch (error) {
