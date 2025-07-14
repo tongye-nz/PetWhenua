@@ -15,6 +15,7 @@ export const useMyPets = () => {
   const [petToDelete, setPetToDelete] = useState<Pet | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Load user's pets
   const loadPets = async () => {
@@ -43,6 +44,7 @@ export const useMyPets = () => {
     try {
       setFormLoading(true);
       setFormError(null);
+      setSuccess(null); // Clear any previous success message
 
       const petData = {
         ...formData,
@@ -60,15 +62,23 @@ export const useMyPets = () => {
           ...petData,
           petId: editingPet.petId!
         });
+        setSuccess('Pet Profile updated successfully!');
       } else {
         // Create new pet
         await petService.createPet(petData);
+        setSuccess('Pet created successfully!');
       }
 
       // Reload pets and close form
       await loadPets();
       setFormOpen(false);
       setEditingPet(null);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 5000);
+      
     } catch (err) {
       setFormError(err instanceof Error ? err.message : 'Failed to save pet');
     } finally {
@@ -134,6 +144,7 @@ export const useMyPets = () => {
     petToDelete,
     formLoading,
     formError,
+    success,
     
     // Actions
     handleAddPet,

@@ -25,10 +25,11 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PetConnectionButton } from '../components/ui';
+import { PetFormDialog } from '../components/features/pets';
 import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
-import type { Pet } from '../models/pet.types';
-import { formatPetAge } from '../models/pet.types';
+import type { Pet, PetFormData } from '../models/pet.types';
+import { formatPetAge, calculateAgeInYears } from '../models/pet.types';
 
 const PetDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +38,13 @@ const PetDetail: React.FC = () => {
   const [pet, setPet] = useState<Pet | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Modal state for editing
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const [editingPet, setEditingPet] = useState<Pet | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPet = async () => {
@@ -67,9 +75,89 @@ const PetDetail: React.FC = () => {
   };
 
   const handleEdit = () => {
-    if (pet?.petId) {
-      navigate(`/pets/edit/${pet.petId}`);
+    setEditingPet(pet);
+    setEditFormOpen(true);
+  };
+
+  const handleEditSubmit = async (formData: PetFormData) => {
+    if (!editingPet?.petId || !user?.userId) return;
+
+    console.log('Starting pet update with data:', formData);
+    console.log('Editing pet ID:', editingPet.petId);
+
+    try {
+      setFormLoading(true);
+      setFormError(null);
+      setSuccess(null); // Clear any previous success message
+
+      // Convert form data to match backend format (same as useMyPets)
+      const petData = {
+        ...formData,
+        userId: user.userId,
+        // Calculate age from birth year for backend compatibility
+        age: formData.birthYear ? calculateAgeInYears(formData.birthYear as number) : 0,
+        // Ensure birth year and month are numbers or undefined
+        birthYear: formData.birthYear ? formData.birthYear as number : undefined,
+        birthMonth: formData.birthMonth ? formData.birthMonth as number : undefined
+      };
+
+      console.log('Sending pet data to API:', petData);
+
+      // Update the pet
+      await petService.updatePet(editingPet.petId, {
+        ...petData,
+        petId: editingPet.petId
+      });
+      
+      console.log('Pet update successful, closing modal...');
+      
+      // Close modal first
+      setEditFormOpen(false);
+      setEditingPet(null);
+      
+      // Set success message
+      setSuccess('Pet Profile updated successfully!');
+      
+      // Then refetch the pet details in background to update the display
+      try {
+        const updatedPet = await petService.getPetById(editingPet.petId, true);
+        console.log('Refetched pet data:', updatedPet);
+        setPet(updatedPet);
+      } catch (fetchError) {
+        console.error('Failed to refetch pet data after update:', fetchError);
+        // If refetch fails, just update the pet data we have with the form data
+        setPet(prevPet => prevPet ? { 
+          ...prevPet, 
+          ...petData,
+          // Ensure all form fields are properly updated
+          name: petData.name,
+          species: petData.species,
+          breed: petData.breed,
+          gender: petData.gender,
+          description: petData.description,
+          profilePicture: petData.profilePicture,
+          age: petData.age,
+          birthYear: petData.birthYear,
+          birthMonth: petData.birthMonth
+        } : null);
+      }
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 5000);
+      
+    } catch (err) {
+      console.error('Failed to update pet:', err);
+      setFormError(err instanceof Error ? err.message : 'Failed to update pet');
+    } finally {
+      setFormLoading(false);
     }
+  };
+
+  const handleEditCancel = () => {
+    setEditFormOpen(false);
+    setEditingPet(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -160,6 +248,13 @@ const PetDetail: React.FC = () => {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      {/* Success Alert */}
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
+
       {/* Header with back button */}
       <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
         <IconButton onClick={handleBack} sx={{ p: 1 }}>
@@ -326,6 +421,16 @@ const PetDetail: React.FC = () => {
           )}
         </Box>
       </Box>
+
+      {/* Edit Pet Modal */}
+      <PetFormDialog
+        open={editFormOpen}
+        editingPet={editingPet}
+        onSubmit={handleEditSubmit}
+        onClose={handleEditCancel}
+        isLoading={formLoading}
+        error={formError}
+      />
     </Container>
   );
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container } from '@mui/material';
+import { Container, Alert } from '@mui/material';
 import {
   MyPetsHeader,
   PetsEmptyState,
@@ -25,6 +25,7 @@ const MyPets: React.FC = () => {
     petToDelete,
     formLoading,
     formError,
+    success,
     handleAddPet,
     handleEditPet,
     handleDeletePet,
@@ -48,6 +49,12 @@ const MyPets: React.FC = () => {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <MyPetsHeader onAddPet={handleAddPet} />
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
 
       {error && (
         <MyPetsErrorAlert error={error} onClose={() => setError(null)} />
