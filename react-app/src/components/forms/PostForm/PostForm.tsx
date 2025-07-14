@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Box, 
   Stack, 
@@ -10,8 +10,9 @@ import {
   MenuItem
 } from '@mui/material';
 import { Button, Input, LocationInput } from '../../ui';
+import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
-import type { CreatePetWeddingRequest } from '../../../models/petWedding.types';
+import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
 import { petWeddingService } from '../../../api/petWedding.api';
@@ -100,6 +101,32 @@ const PostForm: React.FC<PostFormProps> = ({
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
+  
+  // Pet Wedding specific state
+  const [selectablePets, setSelectablePets] = useState<SelectablePet[]>([]);
+  const [petsLoading, setPetsLoading] = useState(false);
+  const [petsError, setPetsError] = useState<string>('');
+
+  // Load selectable pets when Pet Wedding is selected
+  useEffect(() => {
+    if (formData.postType === 1) { // Pet Wedding
+      loadSelectablePets();
+    }
+  }, [formData.postType]);
+
+  const loadSelectablePets = async () => {
+    try {
+      setPetsLoading(true);
+      setPetsError('');
+      const pets = await petWeddingService.getSelectablePetsForWedding();
+      setSelectablePets(pets);
+    } catch (error) {
+      console.error('Failed to load selectable pets:', error);
+      setPetsError('Failed to load available pets. Please try again.');
+    } finally {
+      setPetsLoading(false);
+    }
+  };
 
   const handleInputChange = (field: keyof PostFormData) => (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -398,23 +425,19 @@ const PostForm: React.FC<PostFormProps> = ({
 
         {/* Pet Selection - only for Pet Wedding */}
         {formData.postType === 1 && ( // Pet Wedding
-          <Box>
-            <Typography variant="h6" gutterBottom>
-              Select Pets for Wedding
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Choose exactly 2 pets to participate in this wedding ceremony
-            </Typography>
-            {/* TODO: Integrate PetWeddingSelection component with proper data loading */}
-            <Alert severity="info">
-              Pet selection component will be integrated once pet data loading is implemented
-            </Alert>
-            {errors.selectedPetIds && (
-              <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
-                {errors.selectedPetIds}
-              </Typography>
-            )}
-          </Box>
+          <PetWeddingSelection
+            selectedPetIds={formData.selectedPetIds || []}
+            onSelectedPetsChange={(petIds) => {
+              setFormData(prev => ({ ...prev, selectedPetIds: petIds }));
+              // Clear any existing error when pets are selected
+              if (petIds.length === 2 && errors.selectedPetIds) {
+                setErrors(prev => ({ ...prev, selectedPetIds: undefined }));
+              }
+            }}
+            selectablePets={selectablePets}
+            loading={petsLoading}
+            error={petsError}
+          />
         )}
 
         {/* Category Field - only for Moment and Buy/Sell */}
