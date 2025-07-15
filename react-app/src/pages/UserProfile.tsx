@@ -5,7 +5,9 @@ import {
   Paper,
   Box,
   Alert,
-  Divider
+  Divider,
+  Typography,
+  Button
 } from '@mui/material';
 import { 
   ProfileAvatarSection,
@@ -63,6 +65,10 @@ const UserProfile: React.FC = () => {
     followingCount: 0
   });
   const [postsCount, setPostsCount] = useState<number>(0);
+  const [isUserNotFound, setIsUserNotFound] = useState<boolean>(false);
+  const [hasNetworkError, setHasNetworkError] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const maxRetries = 3;
 
   // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
@@ -94,8 +100,8 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Load profile data from API
-  const loadUserProfile = async (): Promise<void> => {
+  // Load profile data from API with retry logic
+  const loadUserProfile = async (attemptNumber: number = 0): Promise<void> => {
     if (!targetUserId) {
       setError('User ID not available');
       return;
@@ -103,6 +109,8 @@ const UserProfile: React.FC = () => {
 
     setIsLoading(true);
     setError('');
+    setIsUserNotFound(false);
+    setHasNetworkError(false);
 
     try {
       let apiUser;
@@ -112,12 +120,29 @@ const UserProfile: React.FC = () => {
         apiUser = await userAPI.getCurrentUser();
       } else {
         // Load other user's profile
-        apiUser = await userAPI.getUserById(targetUserId);
+        try {
+          apiUser = await userAPI.getUserById(targetUserId);
+        } catch (userError: any) {
+          // Handle specific user not found error
+          if (userError?.response?.status === 404) {
+            setIsUserNotFound(true);
+            setError('User not found');
+            return;
+          }
+          throw userError;
+        }
+      }
+
+      // Validate that we got user data
+      if (!apiUser || !apiUser.userId) {
+        setIsUserNotFound(true);
+        setError('Invalid user data received');
+        return;
       }
 
       const { region, district } = parseLocation(apiUser.location || '');
       
-      // Load pet count
+      // Load pet count with error handling
       let petCount = 0;
       try {
         const userPets = await petService.getUserPets(apiUser.userId);
@@ -141,19 +166,58 @@ const UserProfile: React.FC = () => {
         joinDate: new Date(apiUser.createdAt).toLocaleDateString()
       });
 
-      // Load follow stats for the profile user
-      await loadFollowStats(apiUser.userId);
+      // Load follow stats with error handling
+      try {
+        await loadFollowStats(apiUser.userId);
+      } catch (followError) {
+        console.error('Failed to load follow stats:', followError);
+        // Continue without follow stats
+      }
 
-      // Load posts count for the profile user
-      await loadPostsCount(apiUser.userId);
+      // Load posts count with error handling
+      try {
+        await loadPostsCount(apiUser.userId);
+      } catch (postsError) {
+        console.error('Failed to load posts count:', postsError);
+        // Continue without posts count
+      }
 
       // Check if current user is following this profile (only if not own profile)
       if (!isOwnProfile && user?.userId) {
-        await checkFollowStatus(apiUser.userId);
+        try {
+          await checkFollowStatus(apiUser.userId);
+        } catch (followStatusError) {
+          console.error('Failed to check follow status:', followStatusError);
+          // Continue without follow status
+        }
       }
-    } catch (error) {
+
+      // Reset retry count on success
+      setRetryCount(0);
+
+    } catch (error: any) {
       console.error('Failed to load profile:', error);
-      setError(error instanceof Error ? error.message : 'Failed to load profile');
+      
+      // Check for network errors
+      if (error?.code === 'NETWORK_ERROR' || error?.message?.includes('Network') || error?.name === 'TypeError') {
+        setHasNetworkError(true);
+        setError('Network error. Please check your connection and try again.');
+      } else if (error?.response?.status === 403) {
+        setError('You do not have permission to view this profile.');
+      } else if (error?.response?.status === 500) {
+        setError('Server error. Please try again later.');
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to load profile. Please try again.');
+      }
+      
+      // Retry logic for network errors
+      if (hasNetworkError && attemptNumber < maxRetries) {
+        setRetryCount(attemptNumber + 1);
+        setTimeout(() => {
+          loadUserProfile(attemptNumber + 1);
+        }, Math.pow(2, attemptNumber) * 1000); // Exponential backoff: 1s, 2s, 4s
+        return;
+      }
       
       // Fall back to auth context data for own profile
       if (isOwnProfile && user) {
@@ -258,14 +322,164 @@ const UserProfile: React.FC = () => {
     );
   }
 
-  // Show error state
-  if (error && !isOwnProfile) {
+  // Enhanced Error States
+  if (error) {
     return (
       <Container style={userProfileStyles.container}>
         <Paper elevation={3} style={userProfileStyles.profileCard}>
-          <Alert severity="error">
-            {error}
-          </Alert>
+          {isUserNotFound ? (
+            // User Not Found Error
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              px: 3
+            }}>
+              <Box sx={{ 
+                fontSize: '4rem', 
+                mb: 2,
+                opacity: 0.5 
+              }}>
+                👤
+              </Box>
+              <Typography variant="h4" gutterBottom sx={{ 
+                fontWeight: 600,
+                color: 'text.primary',
+                mb: 2
+              }}>
+                User Not Found
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ 
+                mb: 3,
+                maxWidth: '400px',
+                margin: '0 auto 24px auto',
+                lineHeight: 1.6
+              }}>
+                The user you're looking for doesn't exist or may have been removed.
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button 
+                  variant="contained"
+                  onClick={() => window.history.back()}
+                  sx={{ minWidth: '120px' }}
+                >
+                  Go Back
+                </Button>
+                <Button 
+                  variant="outlined"
+                  onClick={() => window.location.href = '/'}
+                  sx={{ minWidth: '120px' }}
+                >
+                  Home
+                </Button>
+              </Box>
+            </Box>
+          ) : hasNetworkError ? (
+            // Network Error
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              px: 3
+            }}>
+              <Box sx={{ 
+                fontSize: '4rem', 
+                mb: 2,
+                opacity: 0.5 
+              }}>
+                📡
+              </Box>
+              <Typography variant="h4" gutterBottom sx={{ 
+                fontWeight: 600,
+                color: 'text.primary',
+                mb: 2
+              }}>
+                Connection Problem
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ 
+                mb: 3,
+                maxWidth: '400px',
+                margin: '0 auto 24px auto',
+                lineHeight: 1.6
+              }}>
+                Unable to connect to the server. Please check your internet connection and try again.
+                {retryCount > 0 && (
+                  <Box component="span" sx={{ 
+                    display: 'block', 
+                    mt: 1, 
+                    fontSize: '0.875rem',
+                    fontStyle: 'italic' 
+                  }}>
+                    Retry attempt {retryCount} of {maxRetries}
+                  </Box>
+                )}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button 
+                  variant="contained"
+                  onClick={() => loadUserProfile(0)}
+                  disabled={isLoading}
+                  sx={{ minWidth: '120px' }}
+                >
+                  {isLoading ? 'Retrying...' : 'Try Again'}
+                </Button>
+                <Button 
+                  variant="outlined"
+                  onClick={() => window.location.reload()}
+                  sx={{ minWidth: '120px' }}
+                >
+                  Refresh Page
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            // Generic Error
+            <Box sx={{ 
+              textAlign: 'center', 
+              py: 6,
+              px: 3
+            }}>
+              <Box sx={{ 
+                fontSize: '4rem', 
+                mb: 2,
+                opacity: 0.5 
+              }}>
+                ⚠️
+              </Box>
+              <Typography variant="h4" gutterBottom sx={{ 
+                fontWeight: 600,
+                color: 'text.primary',
+                mb: 2
+              }}>
+                Something Went Wrong
+              </Typography>
+              <Typography variant="body1" color="text.secondary" sx={{ 
+                mb: 3,
+                maxWidth: '400px',
+                margin: '0 auto 24px auto',
+                lineHeight: 1.6
+              }}>
+                {error}
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button 
+                  variant="contained"
+                  onClick={() => loadUserProfile(0)}
+                  disabled={isLoading}
+                  sx={{ minWidth: '120px' }}
+                >
+                  {isLoading ? 'Retrying...' : 'Try Again'}
+                </Button>
+                {!isOwnProfile && (
+                  <Button 
+                    variant="outlined"
+                    onClick={() => window.history.back()}
+                    sx={{ minWidth: '120px' }}
+                  >
+                    Go Back
+                  </Button>
+                )}
+              </Box>
+            </Box>
+          )}
         </Paper>
       </Container>
     );
