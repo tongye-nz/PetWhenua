@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -21,9 +22,14 @@ import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
 
 const UserProfile: React.FC = () => {
+  const { userId } = useParams<{ userId: string }>();
   const { user, checkAuth } = useAuth();
 
-  // Initialize profile data from authenticated user
+  // Determine if viewing own profile or another user's profile
+  const isOwnProfile = !userId || userId === user?.userId?.toString();
+  const targetUserId = userId ? parseInt(userId, 10) : user?.userId;
+
+  // Initialize profile data
   const getInitialProfileData = (): UserProfileData => {
     const { region, district } = parseLocation(user?.location || '');
     return {
@@ -43,6 +49,8 @@ const UserProfile: React.FC = () => {
 
   // Profile data state
   const [profileData, setProfileData] = useState<UserProfileData>(getInitialProfileData());
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
@@ -76,8 +84,25 @@ const UserProfile: React.FC = () => {
 
   // Load profile data from API
   const loadUserProfile = async (): Promise<void> => {
+    if (!targetUserId) {
+      setError('User ID not available');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
     try {
-      const apiUser = await userAPI.getCurrentUser();
+      let apiUser;
+      
+      if (isOwnProfile) {
+        // Load current user's profile
+        apiUser = await userAPI.getCurrentUser();
+      } else {
+        // Load other user's profile
+        apiUser = await userAPI.getUserById(targetUserId);
+      }
+
       const { region, district } = parseLocation(apiUser.location || '');
       
       // Load pet count
@@ -105,24 +130,28 @@ const UserProfile: React.FC = () => {
       });
     } catch (error) {
       console.error('Failed to load profile:', error);
-      // Fall back to auth context data
-      if (user) {
+      setError(error instanceof Error ? error.message : 'Failed to load profile');
+      
+      // Fall back to auth context data for own profile
+      if (isOwnProfile && user) {
         const currentProfile = getInitialProfileData();
         setProfileData(currentProfile);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Initialize form with custom hook
+  // Initialize form with custom hook (only for own profile)
   const form = useUserProfileForm({
     initialData: profileData,
-    onSave: saveUserProfile
+    onSave: isOwnProfile ? saveUserProfile : async () => {}
   });
 
-  // Load profile data on component mount
-  React.useEffect(() => {
+  // Load profile data on component mount and when userId changes
+  useEffect(() => {
     loadUserProfile();
-  }, []);
+  }, [userId]);
 
   // Handle profile picture change
   const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,7 +168,7 @@ const UserProfile: React.FC = () => {
   };
 
   // Show loading spinner during initial load
-  if (!profileData.id && form.loading) {
+  if (isLoading || (!profileData.id && form.loading)) {
     return (
       <Container style={userProfileStyles.container}>
         <LoadingSpinner 
@@ -147,6 +176,19 @@ const UserProfile: React.FC = () => {
           centered
           containerProps={{ minHeight: "400px" }}
         />
+      </Container>
+    );
+  }
+
+  // Show error state
+  if (error && !isOwnProfile) {
+    return (
+      <Container style={userProfileStyles.container}>
+        <Paper elevation={3} style={userProfileStyles.profileCard}>
+          <Alert severity="error">
+            {error}
+          </Alert>
+        </Paper>
       </Container>
     );
   }
@@ -160,6 +202,11 @@ const UserProfile: React.FC = () => {
             isEditing={form.isEditing}
             isLoading={form.loading}
             isValid={form.isValid}
+            isOwnProfile={isOwnProfile}
+            profileName={profileData.firstName && profileData.lastName 
+              ? `${profileData.firstName} ${profileData.lastName}`
+              : profileData.username
+            }
             onStartEditing={form.startEditing}
             onSaveForm={form.saveForm}
             onCancelEditing={form.cancelEditing}
@@ -185,7 +232,7 @@ const UserProfile: React.FC = () => {
             <ProfileAvatarSection
               profileData={profileData}
               formData={form.formData}
-              isEditing={form.isEditing}
+              isEditing={isOwnProfile && form.isEditing}
               onProfilePictureChange={handleProfilePictureChange}
               styles={userProfileStyles}
             />
@@ -194,7 +241,7 @@ const UserProfile: React.FC = () => {
             <ProfileInfoForm
               formData={form.formData}
               errors={form.errors}
-              isEditing={form.isEditing}
+              isEditing={isOwnProfile && form.isEditing}
               onInputChange={form.handleInputChange}
               styles={userProfileStyles}
             />
