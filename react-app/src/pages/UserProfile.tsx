@@ -11,12 +11,14 @@ import {
   ProfileAvatarSection,
   ProfileInfoForm,
   ProfileHeaderSection,
-  ProfileSummary
+  ProfileSummary,
+  FollowedUsersList
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
+import { userFollowService } from '../api/userFollow.api';
 import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
@@ -52,6 +54,11 @@ const UserProfile: React.FC = () => {
   const [profileData, setProfileData] = useState<UserProfileData>(getInitialProfileData());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
+  const [isFollowing, setIsFollowing] = useState<boolean>(false);
+  const [followStats, setFollowStats] = useState<{ followerCount: number; followingCount: number }>({
+    followerCount: 0,
+    followingCount: 0
+  });
 
   // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
@@ -129,6 +136,14 @@ const UserProfile: React.FC = () => {
         petCount: petCount,
         joinDate: new Date(apiUser.createdAt).toLocaleDateString()
       });
+
+      // Load follow stats for the profile user
+      await loadFollowStats(apiUser.userId);
+
+      // Check if current user is following this profile (only if not own profile)
+      if (!isOwnProfile && user?.userId) {
+        await checkFollowStatus(apiUser.userId);
+      }
     } catch (error) {
       console.error('Failed to load profile:', error);
       setError(error instanceof Error ? error.message : 'Failed to load profile');
@@ -140,6 +155,50 @@ const UserProfile: React.FC = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Load follow statistics
+  const loadFollowStats = async (userId: number) => {
+    try {
+      const stats = await userFollowService.getUserFollowStats(userId);
+      setFollowStats({
+        followerCount: stats.followerCount,
+        followingCount: stats.followingCount
+      });
+    } catch (error) {
+      console.error('Error loading follow stats:', error);
+    }
+  };
+
+  // Check if current user is following the profile user
+  const checkFollowStatus = async (profileUserId: number) => {
+    if (!user?.userId) return;
+    
+    try {
+      const status = await userFollowService.isFollowing(profileUserId);
+      setIsFollowing(status);
+    } catch (error) {
+      console.error('Error checking follow status:', error);
+    }
+  };
+
+  // Toggle follow status
+  const handleToggleFollow = async (targetUserId: number) => {
+    if (!user?.userId) return;
+
+    try {
+      if (isFollowing) {
+        await userFollowService.unfollowUser(targetUserId);
+        setIsFollowing(false);
+        setFollowStats(prev => ({ ...prev, followerCount: prev.followerCount - 1 }));
+      } else {
+        await userFollowService.followUser(targetUserId);
+        setIsFollowing(true);
+        setFollowStats(prev => ({ ...prev, followerCount: prev.followerCount + 1 }));
+      }
+    } catch (error) {
+      console.error('Error toggling follow status:', error);
     }
   };
 
@@ -241,13 +300,28 @@ const UserProfile: React.FC = () => {
               minWidth: 0
             }}>
               {!isOwnProfile || !form.isEditing ? (
-                <ProfileSummary
-                  profileData={profileData}
-                  isOwnProfile={isOwnProfile}
-                  onEditClick={form.startEditing}
-                  followerCount={0} // TODO: Load from API
-                  postsCount={0} // TODO: Load from API
-                />
+                <>
+                  <ProfileSummary
+                    profileData={profileData}
+                    isOwnProfile={isOwnProfile}
+                    onEditClick={form.startEditing}
+                    followerCount={followStats.followerCount}
+                    postsCount={0} // TODO: Load from API
+                    isFollowing={isFollowing}
+                    onFollowChange={async () => {
+                      if (targetUserId) {
+                        await handleToggleFollow(targetUserId);
+                      }
+                    }}
+                  />
+                  
+                  {/* Followed Users List */}
+                  <FollowedUsersList
+                    userId={targetUserId || 0}
+                    isOwnProfile={isOwnProfile}
+                    maxUsers={6}
+                  />
+                </>
               ) : (
                 <>
                   {/* Profile Picture Section for editing */}
