@@ -70,10 +70,22 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
 
   if (loading) {
     return (
-      <Card sx={{ mt: 2 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Following
+      <Card sx={{ 
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        mb: 2
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <PersonAdd sx={{ color: 'primary.main' }} />
+            {isOwnProfile ? 'Following' : 'Follows'}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {[...Array(3)].map((_, index) => (
@@ -93,9 +105,24 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
 
   if (error) {
     return (
-      <Card sx={{ mt: 2 }}>
-        <CardContent>
-          <Alert severity="error">
+      <Card sx={{ 
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        mb: 2
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <PersonAdd sx={{ color: 'primary.main' }} />
+            {isOwnProfile ? 'Following' : 'Follows'}
+          </Typography>
+          <Alert severity="error" sx={{ borderRadius: '12px' }}>
             {error}
           </Alert>
         </CardContent>
@@ -104,21 +131,41 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
   }
 
   return (
-    <Card sx={{ mt: 2 }}>
-      <CardContent>
+    <Card sx={{ 
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(0, 0, 0, 0.05)',
+      mb: 2,
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)'
+      }
+    }}>
+      <CardContent sx={{ p: 3 }}>
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
           mb: 2
         }}>
-          <Typography variant="h6">
-            Following {followedUsers.length > 0 && `(${followedUsers.length})`}
+          <Typography variant="h6" sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <PersonAdd sx={{ color: 'primary.main' }} />
+            {isOwnProfile ? 'Following' : 'Follows'} {followedUsers.length > 0 && `(${followedUsers.length})`}
           </Typography>
           
           {followedUsers.length > maxUsers && (
-            <IconButton size="small">
-              <MoreVert />
+            <IconButton size="small" sx={{ 
+              bgcolor: 'rgba(102, 126, 234, 0.1)',
+              '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' }
+            }}>
+              <MoreVert sx={{ color: 'primary.main' }} />
             </IconButton>
           )}
         </Box>
@@ -129,13 +176,19 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
             py: 3,
             color: 'text.secondary'
           }}>
-            <PersonAdd sx={{ fontSize: 48, opacity: 0.5, mb: 1 }} />
+            <PersonAdd sx={{ fontSize: 48, opacity: 0.5, mb: 1, color: 'primary.main' }} />
             <Text variant="body2">
               {isOwnProfile ? "You're not following anyone yet" : "Not following anyone yet"}
             </Text>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 1,
+            maxHeight: '300px',
+            overflowY: 'auto'
+          }}>
             {followedUsers.map((user) => (
               <Box 
                 key={user.userId}
@@ -143,10 +196,14 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: 2,
-                  p: 1,
-                  borderRadius: 1,
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: '1px solid rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    backgroundColor: 'grey.50'
+                    backgroundColor: 'rgba(102, 126, 234, 0.05)',
+                    borderColor: 'rgba(102, 126, 234, 0.2)',
+                    transform: 'translateX(4px)'
                   }
                 }}
               >

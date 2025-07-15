@@ -78,14 +78,32 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   // Loading state
   if (isLoading) {
     return (
-      <Box>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Article /> {isOwnProfile ? 'My Moments' : 'Moments'}
+      <Box sx={{ 
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: 3,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)'
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          mb: 3,
+          fontWeight: 600,
+          fontSize: '1.2rem'
+        }}>
+          <Article sx={{ color: 'primary.main' }} /> 
+          {isOwnProfile ? 'My Moments' : 'Moments'}
         </Typography>
         
         {[...Array(3)].map((_, index) => (
-          <Card key={index} sx={{ mb: 2 }}>
-            <CardContent>
+          <Card key={index} sx={{ 
+            mb: 2, 
+            borderRadius: '12px',
+            border: '1px solid rgba(0, 0, 0, 0.05)'
+          }}>
+            <CardContent sx={{ p: 2.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Skeleton variant="circular" width={40} height={40} />
                 <Box sx={{ flex: 1 }}>
@@ -95,7 +113,10 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
               </Box>
               <Skeleton variant="text" width="100%" />
               <Skeleton variant="text" width="80%" />
-              <Skeleton variant="rectangular" width="100%" height={200} sx={{ mt: 1 }} />
+              <Skeleton variant="rectangular" width="100%" height={200} sx={{ 
+                mt: 1, 
+                borderRadius: '8px' 
+              }} />
             </CardContent>
           </Card>
         ))}
@@ -106,12 +127,29 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   // Error state
   if (error) {
     return (
-      <Box>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Article /> {isOwnProfile ? 'My Moments' : 'Moments'}
+      <Box sx={{ 
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: 3,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)'
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          mb: 3,
+          fontWeight: 600,
+          fontSize: '1.2rem'
+        }}>
+          <Article sx={{ color: 'primary.main' }} /> 
+          {isOwnProfile ? 'My Moments' : 'Moments'}
         </Typography>
         
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ 
+          mb: 2,
+          borderRadius: '12px'
+        }}>
           {error}
         </Alert>
       </Box>
@@ -121,18 +159,49 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   // Empty state
   if (posts.length === 0) {
     return (
-      <Box>
-        <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Article /> {isOwnProfile ? 'My Moments' : 'Moments'}
+      <Box sx={{ 
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: 3,
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)'
+      }}>
+        <Typography variant="h6" gutterBottom sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1, 
+          mb: 3,
+          fontWeight: 600,
+          fontSize: '1.2rem'
+        }}>
+          <Article sx={{ color: 'primary.main' }} /> 
+          {isOwnProfile ? 'My Moments' : 'Moments'}
         </Typography>
         
-        <Card sx={{ textAlign: 'center', py: 4 }}>
+        <Card sx={{ 
+          textAlign: 'center', 
+          py: 4,
+          borderRadius: '12px',
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+          backgroundColor: 'rgba(102, 126, 234, 0.02)'
+        }}>
           <CardContent>
-            <PhotoCamera sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary" gutterBottom>
+            <PhotoCamera sx={{ 
+              fontSize: 64, 
+              color: 'primary.main', 
+              mb: 2,
+              opacity: 0.7
+            }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom sx={{
+              fontWeight: 600
+            }}>
               {isOwnProfile ? 'No moments yet' : 'No moments to show'}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{
+              maxWidth: '300px',
+              margin: '0 auto',
+              lineHeight: 1.6
+            }}>
               {isOwnProfile 
                 ? 'Share your first moment to get started!' 
                 : 'This user hasn\'t shared any moments yet.'
@@ -146,24 +215,52 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
 
   // Posts display
   return (
-    <Box>
-      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-        <Article /> {isOwnProfile ? 'My Moments' : 'Moments'} ({posts.length})
+    <Box sx={{ 
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: 3,
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(0, 0, 0, 0.05)'
+    }}>
+      <Typography variant="h6" gutterBottom sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: 1, 
+        mb: 3,
+        fontWeight: 600,
+        fontSize: '1.2rem'
+      }}>
+        <Article sx={{ color: 'primary.main' }} /> 
+        {isOwnProfile ? 'My Moments' : 'Moments'} ({posts.length})
       </Typography>
       
       {posts.map((post) => (
-        <Card key={post.postId} sx={{ mb: 2 }}>
-          <CardContent>
+        <Card key={post.postId} sx={{ 
+          mb: 2,
+          borderRadius: '12px',
+          border: '1px solid rgba(0, 0, 0, 0.05)',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            transform: 'translateY(-2px)',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)',
+            borderColor: 'rgba(102, 126, 234, 0.2)'
+          }
+        }}>
+          <CardContent sx={{ p: 2.5 }}>
             {/* Post Header */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Avatar
                 src={post.user?.profilePicture}
-                sx={{ width: 40, height: 40 }}
+                sx={{ 
+                  width: 44, 
+                  height: 44,
+                  border: '2px solid rgba(102, 126, 234, 0.1)'
+                }}
               >
                 {post.user?.firstName?.[0] || post.user?.username?.[0]}
               </Avatar>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="subtitle2" fontWeight="medium">
+                <Typography variant="subtitle2" fontWeight="600" sx={{ fontSize: '0.95rem' }}>
                   {post.user?.firstName && post.user?.lastName 
                     ? `${post.user.firstName} ${post.user.lastName}`
                     : post.user?.username

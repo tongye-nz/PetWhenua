@@ -31,29 +31,50 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({
   const displayName = fullName || profileData.username;
 
   return (
-    <Card sx={{ mb: 2, position: 'sticky', top: 16 }}>
-      <CardContent>
+    <Card sx={{ 
+      mb: 2, 
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(0, 0, 0, 0.05)',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)'
+      }
+    }}>
+      <CardContent sx={{ p: 3 }}>
         {/* Avatar and Basic Info */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Avatar
             src={profileData.profilePicture}
             sx={{ 
-              width: 120, 
-              height: 120, 
+              width: { xs: 100, md: 120 }, 
+              height: { xs: 100, md: 120 }, 
               mb: 2,
               bgcolor: 'primary.main',
-              fontSize: '2.5rem'
+              fontSize: { xs: '2rem', md: '2.5rem' },
+              border: '4px solid',
+              borderColor: 'background.paper',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
             }}
           >
             {profileData.firstName?.charAt(0)}{profileData.lastName?.charAt(0)}
           </Avatar>
           
-          <Text variant="h5" fontWeight="bold" sx={{ textAlign: 'center', mb: 1 }}>
+          <Text variant="h5" fontWeight="bold" sx={{ 
+            textAlign: 'center', 
+            mb: 1,
+            fontSize: { xs: '1.25rem', md: '1.5rem' }
+          }}>
             {displayName}
           </Text>
           
           {fullName && (
-            <Text variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            <Text variant="body2" color="text.secondary" sx={{ 
+              mb: 1,
+              fontSize: '0.9rem',
+              fontWeight: 500
+            }}>
               @{profileData.username}
             </Text>
           )}
@@ -78,47 +99,82 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({
           </Box>
         )}
 
-        {/* Stats */}
+        {/* Enhanced Stats Section */}
         <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-around', 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: 2,
           mb: 3,
-          py: 2,
-          backgroundColor: 'grey.50',
-          borderRadius: 2
+          p: 2,
+          backgroundColor: 'rgba(102, 126, 234, 0.05)',
+          borderRadius: 2,
+          border: '1px solid rgba(102, 126, 234, 0.1)'
         }}>
           <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5 }}>
-              <Pets sx={{ fontSize: 16, mr: 0.5, color: 'primary.main' }} />
-              <Text variant="h6" fontWeight="bold" color="primary">
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              mb: 0.5,
+              gap: 0.5
+            }}>
+              <Pets sx={{ fontSize: { xs: 14, md: 16 }, color: 'primary.main' }} />
+              <Text variant="h6" fontWeight="bold" color="primary" sx={{
+                fontSize: { xs: '1rem', md: '1.25rem' }
+              }}>
                 {profileData.petCount || 0}
               </Text>
             </Box>
-            <Text variant="caption" color="text.secondary">
+            <Text variant="caption" color="text.secondary" sx={{
+              fontSize: { xs: '0.7rem', md: '0.75rem' },
+              fontWeight: 500
+            }}>
               Pets
             </Text>
           </Box>
           
           <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5 }}>
-              <Article sx={{ fontSize: 16, mr: 0.5, color: 'success.main' }} />
-              <Text variant="h6" fontWeight="bold" color="success">
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              mb: 0.5,
+              gap: 0.5
+            }}>
+              <Article sx={{ fontSize: { xs: 14, md: 16 }, color: 'success.main' }} />
+              <Text variant="h6" fontWeight="bold" color="success" sx={{
+                fontSize: { xs: '1rem', md: '1.25rem' }
+              }}>
                 {postsCount}
               </Text>
             </Box>
-            <Text variant="caption" color="text.secondary">
+            <Text variant="caption" color="text.secondary" sx={{
+              fontSize: { xs: '0.7rem', md: '0.75rem' },
+              fontWeight: 500
+            }}>
               Posts
             </Text>
           </Box>
           
           <Box sx={{ textAlign: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 0.5 }}>
-              <Group sx={{ fontSize: 16, mr: 0.5, color: 'info.main' }} />
-              <Text variant="h6" fontWeight="bold" color="info">
+            <Box sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              mb: 0.5,
+              gap: 0.5
+            }}>
+              <Group sx={{ fontSize: { xs: 14, md: 16 }, color: 'info.main' }} />
+              <Text variant="h6" fontWeight="bold" color="info" sx={{
+                fontSize: { xs: '1rem', md: '1.25rem' }
+              }}>
                 {followerCount}
               </Text>
             </Box>
-            <Text variant="caption" color="text.secondary">
+            <Text variant="caption" color="text.secondary" sx={{
+              fontSize: { xs: '0.7rem', md: '0.75rem' },
+              fontWeight: 500
+            }}>
               Followers
             </Text>
           </Box>

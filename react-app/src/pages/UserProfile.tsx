@@ -305,17 +305,29 @@ const UserProfile: React.FC = () => {
             </Alert>
           )}
 
-          {/* Two-Column Layout */}
+          {/* Enhanced Two-Column Responsive Layout */}
           <Box sx={{ 
             display: 'flex',
             flexDirection: { xs: 'column', md: 'row' },
-            gap: 3,
-            alignItems: 'flex-start'
+            gap: { xs: 2, md: 3 },
+            alignItems: 'flex-start',
+            minHeight: { md: '70vh' }
           }}>
-            {/* Left Column - Profile Summary */}
+            {/* Left Column - Profile Summary & Followed Users */}
             <Box sx={{ 
-              flex: { xs: '1 1 100%', md: '0 0 350px' },
-              minWidth: 0
+              flex: { 
+                xs: '1 1 100%', 
+                md: '0 0 35%',
+                lg: '0 0 350px' 
+              },
+              minWidth: 0,
+              position: { md: 'sticky' },
+              top: { md: 16 },
+              maxHeight: { md: 'calc(100vh - 200px)' },
+              overflowY: { md: 'auto' },
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2
             }}>
               {!isOwnProfile || !form.isEditing ? (
                 <>
@@ -357,7 +369,10 @@ const UserProfile: React.FC = () => {
             {/* Right Column - Posts Feed or Edit Form */}
             <Box sx={{ 
               flex: '1 1 auto',
-              minWidth: 0
+              minWidth: 0,
+              width: { xs: '100%', md: '65%' },
+              maxHeight: { md: 'calc(100vh - 200px)' },
+              overflowY: { md: 'auto' }
             }}>
               {!isOwnProfile || !form.isEditing ? (
                 // Posts feed for viewing mode
@@ -368,13 +383,20 @@ const UserProfile: React.FC = () => {
                 />
               ) : (
                 // Edit form for own profile
-                <ProfileInfoForm
-                  formData={form.formData}
-                  errors={form.errors}
-                  isEditing={isOwnProfile && form.isEditing}
-                  onInputChange={form.handleInputChange}
-                  styles={userProfileStyles}
-                />
+                <Box sx={{ 
+                  backgroundColor: 'white',
+                  borderRadius: '12px',
+                  padding: 2,
+                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                }}>
+                  <ProfileInfoForm
+                    formData={form.formData}
+                    errors={form.errors}
+                    isEditing={isOwnProfile && form.isEditing}
+                    onInputChange={form.handleInputChange}
+                    styles={userProfileStyles}
+                  />
+                </Box>
               )}
             </Box>
           </Box>
