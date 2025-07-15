@@ -12,13 +12,16 @@ import {
   ProfileInfoForm,
   ProfileHeaderSection,
   ProfileSummary,
-  FollowedUsersList
+  FollowedUsersList,
+  UserPostsFeed
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
 import { userFollowService } from '../api/userFollow.api';
+import { postService } from '../api/post.api';
+import { PostType } from '../models/post.types';
 import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
@@ -59,6 +62,7 @@ const UserProfile: React.FC = () => {
     followerCount: 0,
     followingCount: 0
   });
+  const [postsCount, setPostsCount] = useState<number>(0);
 
   // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
@@ -140,6 +144,9 @@ const UserProfile: React.FC = () => {
       // Load follow stats for the profile user
       await loadFollowStats(apiUser.userId);
 
+      // Load posts count for the profile user
+      await loadPostsCount(apiUser.userId);
+
       // Check if current user is following this profile (only if not own profile)
       if (!isOwnProfile && user?.userId) {
         await checkFollowStatus(apiUser.userId);
@@ -199,6 +206,17 @@ const UserProfile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error toggling follow status:', error);
+    }
+  };
+
+  // Load posts count for the user
+  const loadPostsCount = async (userId: number) => {
+    try {
+      const userPosts = await postService.getUserPosts(userId);
+      const momentPosts = userPosts.filter(post => post.postType === PostType.Moment);
+      setPostsCount(momentPosts.length);
+    } catch (error) {
+      console.error('Error loading posts count:', error);
     }
   };
 
@@ -306,7 +324,7 @@ const UserProfile: React.FC = () => {
                     isOwnProfile={isOwnProfile}
                     onEditClick={form.startEditing}
                     followerCount={followStats.followerCount}
-                    postsCount={0} // TODO: Load from API
+                    postsCount={postsCount}
                     isFollowing={isFollowing}
                     onFollowChange={async () => {
                       if (targetUserId) {
@@ -343,15 +361,11 @@ const UserProfile: React.FC = () => {
             }}>
               {!isOwnProfile || !form.isEditing ? (
                 // Posts feed for viewing mode
-                <Box style={userProfileStyles.postsSection}>
-                  <Box style={userProfileStyles.postsSectionTitle}>
-                    Recent Moments
-                  </Box>
-                  <Box style={userProfileStyles.emptyPostsState}>
-                    <Box style={userProfileStyles.emptyPostsIcon}>📝</Box>
-                    <Box>No moments shared yet</Box>
-                  </Box>
-                </Box>
+                <UserPostsFeed
+                  userId={targetUserId || 0}
+                  isOwnProfile={isOwnProfile}
+                  maxPosts={20}
+                />
               ) : (
                 // Edit form for own profile
                 <ProfileInfoForm
