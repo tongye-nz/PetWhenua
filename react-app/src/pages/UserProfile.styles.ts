@@ -9,7 +9,7 @@ export const userProfileStyles: Record<string, CSSProperties> = {
   },
 
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1400px',
     margin: '0 auto',
     padding: '0 1rem',
   },
@@ -20,6 +20,26 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     padding: '2rem',
     boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
     border: '1px solid rgba(255, 255, 255, 0.2)',
+  },
+
+  // Two-column layout
+  twoColumnLayout: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 2fr',
+    gap: '2rem',
+  },
+
+  leftColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+
+  rightColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+    minHeight: '600px',
   },
 
   header: {
@@ -126,23 +146,39 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     fontSize: '0.875rem',
   },
 
-  formSection: {
-    width: '100%',
+  // Posts feed styles
+  postsSection: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
   },
 
-  nameRow: {
-    display: 'flex',
+  postsSectionTitle: {
+    marginBottom: '1rem',
+    fontWeight: 'bold',
+    color: '#333',
+  },
+
+  emptyPostsState: {
+    textAlign: 'center',
+    padding: '3rem 1rem',
+    color: '#666',
+  },
+
+  emptyPostsIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem',
+    opacity: 0.5,
+  },
+
+  // Responsive adjustments for mobile
+  mobileContainer: {
+    padding: '0 0.5rem',
+  },
+
+  mobileTwoColumn: {
+    gridTemplateColumns: '1fr',
     gap: '1rem',
-    width: '100%',
   },
-
-  halfWidth: {
-    flex: '1',
-    minWidth: '0',
-  },
-
-  textField: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    borderRadius: '8px',
-  },
-}; 
+};

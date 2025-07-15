@@ -10,7 +10,8 @@ import {
 import { 
   ProfileAvatarSection,
   ProfileInfoForm,
-  ProfileHeaderSection
+  ProfileHeaderSection,
+  ProfileSummary
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
@@ -227,24 +228,67 @@ const UserProfile: React.FC = () => {
             </Alert>
           )}
 
-          <Box style={userProfileStyles.contentContainer}>
-            {/* Profile Picture Section */}
-            <ProfileAvatarSection
-              profileData={profileData}
-              formData={form.formData}
-              isEditing={isOwnProfile && form.isEditing}
-              onProfilePictureChange={handleProfilePictureChange}
-              styles={userProfileStyles}
-            />
+          {/* Two-Column Layout */}
+          <Box sx={{ 
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 3,
+            alignItems: 'flex-start'
+          }}>
+            {/* Left Column - Profile Summary */}
+            <Box sx={{ 
+              flex: { xs: '1 1 100%', md: '0 0 350px' },
+              minWidth: 0
+            }}>
+              {!isOwnProfile || !form.isEditing ? (
+                <ProfileSummary
+                  profileData={profileData}
+                  isOwnProfile={isOwnProfile}
+                  onEditClick={form.startEditing}
+                  followerCount={0} // TODO: Load from API
+                  postsCount={0} // TODO: Load from API
+                />
+              ) : (
+                <>
+                  {/* Profile Picture Section for editing */}
+                  <ProfileAvatarSection
+                    profileData={profileData}
+                    formData={form.formData}
+                    isEditing={isOwnProfile && form.isEditing}
+                    onProfilePictureChange={handleProfilePictureChange}
+                    styles={userProfileStyles}
+                  />
+                </>
+              )}
+            </Box>
 
-            {/* Profile Information Section */}
-            <ProfileInfoForm
-              formData={form.formData}
-              errors={form.errors}
-              isEditing={isOwnProfile && form.isEditing}
-              onInputChange={form.handleInputChange}
-              styles={userProfileStyles}
-            />
+            {/* Right Column - Posts Feed or Edit Form */}
+            <Box sx={{ 
+              flex: '1 1 auto',
+              minWidth: 0
+            }}>
+              {!isOwnProfile || !form.isEditing ? (
+                // Posts feed for viewing mode
+                <Box style={userProfileStyles.postsSection}>
+                  <Box style={userProfileStyles.postsSectionTitle}>
+                    Recent Moments
+                  </Box>
+                  <Box style={userProfileStyles.emptyPostsState}>
+                    <Box style={userProfileStyles.emptyPostsIcon}>📝</Box>
+                    <Box>No moments shared yet</Box>
+                  </Box>
+                </Box>
+              ) : (
+                // Edit form for own profile
+                <ProfileInfoForm
+                  formData={form.formData}
+                  errors={form.errors}
+                  isEditing={isOwnProfile && form.isEditing}
+                  onInputChange={form.handleInputChange}
+                  styles={userProfileStyles}
+                />
+              )}
+            </Box>
           </Box>
         </Paper>
       </Container>
