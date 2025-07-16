@@ -9,7 +9,7 @@ import {
   Select, 
   MenuItem
 } from '@mui/material';
-import { Button, Input, LocationInput } from '../../ui';
+import { Button, Input, LocationInput, DateTimeInput } from '../../ui';
 import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import ImageUpload from '../../ImageUpload';
 import type { UploadedImage } from '../../ImageUpload';
@@ -53,6 +53,21 @@ export interface PostFormProps {
   onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
   onCancel?: () => void;
 }
+
+// Helper function to format datetime for datetime-local input
+const formatDateTimeForInput = (dateString?: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    // Format to YYYY-MM-DDTHH:MM (required for datetime-local input)
+    return date.toISOString().slice(0, 16);
+  } catch {
+    return '';
+  }
+};
 
 const PostForm: React.FC<PostFormProps> = ({
   mode,
@@ -100,7 +115,7 @@ const PostForm: React.FC<PostFormProps> = ({
     location: initialData?.location || '',
     address: initialData?.address || '',
     price: initialData?.price,
-    eventDate: initialData?.eventDate || '',
+    eventDate: formatDateTimeForInput(initialData?.eventDate),
     category: initialData?.category || '',
     postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
     selectedPetIds: initialData?.selectedPetIds || [],
@@ -170,6 +185,8 @@ const PostForm: React.FC<PostFormProps> = ({
     }
   };
 
+
+
   const validateForm = (): boolean => {
     const newErrors: PostFormErrors = {};
 
@@ -201,14 +218,26 @@ const PostForm: React.FC<PostFormProps> = ({
 
     if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
       if (!formData.eventDate) {
-        newErrors.eventDate = 'Event date is required for this post type';
+        newErrors.eventDate = 'Event date and time are required for this post type';
       } else {
-        const eventDate = new Date(formData.eventDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const eventDateTime = new Date(formData.eventDate);
+        const now = new Date();
         
-        if (eventDate < today) {
-          newErrors.eventDate = 'Event date cannot be in the past';
+        // Check if the selected datetime is in the past
+        if (eventDateTime <= now) {
+          newErrors.eventDate = 'Event date and time must be in the future';
+        }
+        
+        // Check if the selected datetime is too far in the future (optional - 2 years max)
+        const twoYearsFromNow = new Date();
+        twoYearsFromNow.setFullYear(now.getFullYear() + 2);
+        if (eventDateTime > twoYearsFromNow) {
+          newErrors.eventDate = 'Event date cannot be more than 2 years in the future';
+        }
+        
+        // Validate datetime format
+        if (isNaN(eventDateTime.getTime())) {
+          newErrors.eventDate = 'Please enter a valid date and time';
         }
       }
       // Location is required for Meetup and Pet Wedding
@@ -515,16 +544,42 @@ const PostForm: React.FC<PostFormProps> = ({
         )}
 
         {requiresEventDate && (
-          <Input
-            label="Event Date"
-            type="datetime-local"
+          <DateTimeInput
+            label="Event Date & Time"
             value={formData.eventDate}
-            onChange={handleInputChange('eventDate')}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, eventDate: value }));
+              
+              // Real-time validation for event date
+              if (value) {
+                const eventDateTime = new Date(value);
+                const now = new Date();
+                
+                if (eventDateTime <= now) {
+                  setErrors(prev => ({
+                    ...prev,
+                    eventDate: 'Event date and time must be in the future'
+                  }));
+                } else {
+                  // Clear error if date is valid
+                  setErrors(prev => ({
+                    ...prev,
+                    eventDate: undefined
+                  }));
+                }
+              } else {
+                // Clear error when field is empty (will be caught by required validation)
+                setErrors(prev => ({
+                  ...prev,
+                  eventDate: undefined
+                }));
+              }
+            }}
             error={!!errors.eventDate}
-            helperText={errors.eventDate}
+            helperText={errors.eventDate || 'Select a future date and time for your event'}
             required
             disabled={loading}
-            InputLabelProps={{ shrink: true }}
+            min={new Date(Date.now() + 60000).toISOString().slice(0, 16)} // Current time + 1 minute
           />
         )}
 
