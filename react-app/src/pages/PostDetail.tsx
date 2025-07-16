@@ -13,7 +13,8 @@ import {
   Divider
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner } from '../components/ui';
+import { LoadingSpinner, LikeButton } from '../components/ui';
+import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { PostType } from '../models/post.types';
@@ -289,7 +290,17 @@ const PostDetail: React.FC = () => {
               </Box>
             </Box>
           )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Like and Comment Actions */}
+          <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <LikeButton postId={currentPost.postId} size="medium" />
+          </Box>
         </CardContent>
+
+        {/* Comment Section */}
+        <CommentSection postId={currentPost.postId} />
       </Card>
     </Container>
   );

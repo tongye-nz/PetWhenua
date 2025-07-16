@@ -76,6 +76,12 @@ public class Post
     // Image metadata navigation properties
     public List<PostImage> PostImages { get; set; } = new();
     
+    // Comment navigation properties
+    public List<Comment> Comments { get; set; } = new();
+    
+    // Like navigation properties  
+    public List<Like> Likes { get; set; } = new();
+    
     // Helper property for validated image count
     [NotMapped]
     public List<string> ValidatedImages => Images?.Take(9).ToList() ?? new();

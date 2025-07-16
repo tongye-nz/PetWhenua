@@ -10,6 +10,8 @@ public class AppDbContext : DbContext
     public DbSet<Pet> Pets => Set<Pet>();
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<PostImage> PostImages => Set<PostImage>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Like> Likes => Set<Like>();
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<PetConnection> PetConnections => Set<PetConnection>();
     public DbSet<PetWeddingParticipant> PetWeddingParticipants => Set<PetWeddingParticipant>();
@@ -25,6 +27,37 @@ public class AppDbContext : DbContext
             .HasMany(u => u.Posts)
             .WithOne(p => p.User)
             .HasForeignKey(p => p.UserId);
+
+        // Configure Comment relationships
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Post)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.Comments)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Like relationships
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.Post)
+            .WithMany(p => p.Likes)
+            .HasForeignKey(l => l.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.User)
+            .WithMany(u => u.Likes)
+            .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Ensure one like per user per post
+        modelBuilder.Entity<Like>()
+            .HasIndex(l => new { l.PostId, l.UserId })
+            .IsUnique();
 
         // Configure UserFollow relationships
         modelBuilder.Entity<UserFollow>()

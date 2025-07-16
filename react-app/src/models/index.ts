@@ -7,6 +7,12 @@ export * from './pet.types';
 // Post-related types and interfaces
 export * from './post.types';
 
+// Comment-related types and interfaces
+export * from './comment.types';
+
+// Like-related types and interfaces
+export * from './like.types';
+
 // Re-export commonly used types for convenience
 export type {
   Post,

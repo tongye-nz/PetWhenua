@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
-import { MoreVert, Edit, Delete, Person } from '@mui/icons-material';
-import { Text, StatusChip, FollowButton } from '../../../ui';
+import { MoreVert, Edit, Delete, Person, ChatBubbleOutline } from '@mui/icons-material';
+import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
+import { commentService } from '../../../../api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -26,11 +27,27 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
   const { user } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [commentCount, setCommentCount] = useState(0);
   
   const isOwner = user?.userId === post.userId;
   const canEdit = isOwner && post.status === 0; // PostStatus.Active
   const canDelete = isOwner || user?.role === 'site_admin';
   const hasActions = showActions && (canEdit || canDelete);
+
+  // Load comment count for engagement display
+  useEffect(() => {
+    const loadCommentCount = async () => {
+      try {
+        const count = await commentService.getCommentCount(post.postId);
+        setCommentCount(count);
+      } catch (error) {
+        // Silently fail - comment count is not critical
+        console.debug('Failed to load comment count:', error);
+      }
+    };
+
+    loadCommentCount();
+  }, [post.postId]);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -168,7 +185,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Status and type chips */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
           <StatusChip 
             statusVariant="status"
             status={post.status}
@@ -179,6 +196,21 @@ const PostCard: React.FC<PostCardProps> = ({
             postType={post.postType}
             label={getTypeLabel(post.postType)}
           />
+        </Box>
+
+        {/* Engagement Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 1 }}>
+          <LikeButton 
+            postId={post.postId} 
+            size="small" 
+            showCount={true}
+          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <ChatBubbleOutline sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <Text variant="body2" color="text.secondary">
+              {commentCount}
+            </Text>
+          </Box>
         </Box>
       </CardContent>
 
