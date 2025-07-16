@@ -514,44 +514,6 @@ const PostForm: React.FC<PostFormProps> = ({
               Post type cannot be changed when editing
             </Typography>
           )}
-          {formData.postType === 0 && user?.role === 'member' && ( // Meetup post by member
-            <Box
-              sx={{
-                mt: 1,
-                p: 2,
-                bgcolor: 'info.light',
-                borderRadius: 1,
-                border: 1,
-                borderColor: 'info.main'
-              }}
-            >
-              <Typography variant="body2" color="info.dark" sx={{ fontWeight: 'medium' }}>
-                📅 Meetup Approval Required
-              </Typography>
-              <Typography variant="caption" color="info.dark" sx={{ mt: 0.5, display: 'block' }}>
-                Your Meetup post will be submitted for review and will be visible to other users only after approval by a Meetup Admin or Site Admin.
-              </Typography>
-            </Box>
-          )}
-          {formData.postType === 0 && (user?.role === 'meetup_admin' || user?.role === 'site_admin' || user?.role === 'vet') && ( // Meetup post by admin/vet
-            <Box
-              sx={{
-                mt: 1,
-                p: 2,
-                bgcolor: 'success.light',
-                borderRadius: 1,
-                border: 1,
-                borderColor: 'success.main'
-              }}
-            >
-              <Typography variant="body2" color="success.dark" sx={{ fontWeight: 'medium' }}>
-                ✅ Instant Meetup Activation
-              </Typography>
-              <Typography variant="caption" color="success.dark" sx={{ mt: 0.5, display: 'block' }}>
-                Your Meetup post will be immediately active and visible to all users.
-              </Typography>
-            </Box>
-          )}
         </FormControl>
 
         {/* Title */}

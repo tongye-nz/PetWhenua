@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardActions, Box, Avatar, IconButton, Tooltip } from '@mui/material';
+import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
 import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
-import { commentService, postService } from '../../../../api';
+import { commentService } from '../../../../api';
 import PostImageGallery from '../../../PostImageGallery';
-import type { Post, PostEditPermissions, PostDeletePermissions } from '../../../../models/post.types';
+import type { Post } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
 
@@ -28,13 +28,11 @@ const PostCard: React.FC<PostCardProps> = ({
   const { user } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [commentCount, setCommentCount] = useState(0);
-  const [editPermissions, setEditPermissions] = useState<PostEditPermissions | null>(null);
-  const [deletePermissions, setDeletePermissions] = useState<PostDeletePermissions | null>(null);
   
   const isOwner = user?.userId === post.userId;
-  const canEdit = editPermissions?.canEdit ?? false;
-  const canDelete = deletePermissions?.canDelete ?? false;
-  const hasActions = showActions && (canEdit || canDelete || editPermissions || deletePermissions);
+  const canEdit = isOwner && post.status === 0; // PostStatus.Active
+  const canDelete = isOwner || user?.role === 'site_admin';
+  const hasActions = showActions && (canEdit || canDelete);
 
   // Load comment count for engagement display
   useEffect(() => {
@@ -50,56 +48,6 @@ const PostCard: React.FC<PostCardProps> = ({
 
     loadCommentCount();
   }, [post.postId]);
-
-  // Load edit permissions
-  useEffect(() => {
-    const loadEditPermissions = async () => {
-      if (!user?.userId || !user?.role) return;
-      
-      try {
-        const permissions = await postService.getEditPermissions(post.postId, user.userId, user.role);
-        setEditPermissions(permissions);
-      } catch (error) {
-        console.debug('Failed to load edit permissions:', error);
-        // Fallback to basic logic
-        setEditPermissions({
-          canEdit: false,
-          reason: 'Unable to check edit permissions',
-          editableStatuses: [0, 3, 5], // Active, Inactive, Pending
-          isOwner: user.userId === post.userId,
-          isAdmin: user.role === 'site_admin',
-          currentStatus: post.status
-        });
-      }
-    };
-
-    loadEditPermissions();
-  }, [post.postId, post.userId, post.status, user?.userId, user?.role]);
-
-  // Load delete permissions
-  useEffect(() => {
-    const loadDeletePermissions = async () => {
-      if (!user?.userId || !user?.role) return;
-      
-      try {
-        const permissions = await postService.getDeletePermissions(post.postId, user.userId, user.role);
-        setDeletePermissions(permissions);
-      } catch (error) {
-        console.debug('Failed to load delete permissions:', error);
-        // Fallback to basic logic
-        setDeletePermissions({
-          canDelete: false,
-          reason: 'Unable to check delete permissions',
-          isOwner: user.userId === post.userId,
-          isAdmin: user.role === 'site_admin',
-          postType: post.postType,
-          adminDeletionAllowed: false
-        });
-      }
-    };
-
-    loadDeletePermissions();
-  }, [post.postId, post.userId, post.postType, user?.userId, user?.role]);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -398,50 +346,32 @@ const PostCard: React.FC<PostCardProps> = ({
             gap: 1
           }}
         >
-          {(canEdit || editPermissions) && (
-            <Tooltip title={editPermissions?.reason || 'Edit post'}>
-              <span>
-                <IconButton
-                  size="small"
-                  onClick={handleEdit}
-                  disabled={!canEdit}
-                  sx={{ 
-                    bgcolor: 'background.paper',
-                    boxShadow: 1,
-                    '&:hover': { bgcolor: 'action.hover' },
-                    '&:disabled': { 
-                      bgcolor: 'action.disabledBackground',
-                      color: 'action.disabled'
-                    }
-                  }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
+          {canEdit && (
+            <IconButton
+              size="small"
+              onClick={handleEdit}
+              sx={{ 
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                '&:hover': { bgcolor: 'action.hover' }
+              }}
+            >
+              <Edit fontSize="small" />
+            </IconButton>
           )}
-          {(canDelete || deletePermissions) && (
-            <Tooltip title={deletePermissions?.reason || 'Delete post'}>
-              <span>
-                <IconButton
-                  size="small"
-                  onClick={handleDelete}
-                  disabled={!canDelete}
-                  sx={{ 
-                    bgcolor: 'background.paper',
-                    boxShadow: 1,
-                    color: 'error.main',
-                    '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' },
-                    '&:disabled': { 
-                      bgcolor: 'action.disabledBackground',
-                      color: 'action.disabled'
-                    }
-                  }}
-                >
-                  <Delete fontSize="small" />
-                </IconButton>
-              </span>
-            </Tooltip>
+          {canDelete && (
+            <IconButton
+              size="small"
+              onClick={handleDelete}
+              sx={{ 
+                bgcolor: 'background.paper',
+                boxShadow: 1,
+                color: 'error.main',
+                '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
+              }}
+            >
+              <Delete fontSize="small" />
+            </IconButton>
           )}
         </CardActions>
       )}

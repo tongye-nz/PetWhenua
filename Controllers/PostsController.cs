@@ -9,13 +9,11 @@ public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
     private readonly IImageService _imageService;
-    private readonly IPostAuthorizationService _authorizationService;
 
-    public PostsController(IPostService postService, IImageService imageService, IPostAuthorizationService authorizationService)
+    public PostsController(IPostService postService, IImageService imageService)
     {
         _postService = postService;
         _imageService = imageService;
-        _authorizationService = authorizationService;
     }
 
     [HttpGet]
@@ -76,77 +74,16 @@ public class PostsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeletePost(int id, [FromQuery] int userId, [FromQuery] string userRole)
+    public async Task<IActionResult> DeletePost(int id)
     {
-        try
+        var deleted = await _postService.DeletePostAsync(id);
+        
+        if (!deleted)
         {
-            // First check if the post exists
-            var post = await _postService.GetPostByIdAsync(id);
-            if (post == null)
-            {
-                return NotFound($"Post with ID {id} not found.");
-            }
-
-            // Check if user has permission to delete this post
-            var canDelete = _authorizationService.CanDeletePost(userRole, post, userId);
-            if (!canDelete)
-            {
-                var deletePermissions = _authorizationService.GetDeletePermissions(userRole, post, userId);
-                return StatusCode(403, new { error = deletePermissions.Reason });
-            }
-
-            var deleted = await _postService.DeletePostAsync(id);
-            if (!deleted)
-            {
-                return StatusCode(500, new { error = "Failed to delete the post." });
-            }
-
-            return NoContent();
+            return NotFound($"Post with ID {id} not found.");
         }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while deleting the post.", details = ex.Message });
-        }
-    }
 
-    [HttpGet("{id}/edit-permissions")]
-    public async Task<IActionResult> GetEditPermissions(int id, [FromQuery] int userId, [FromQuery] string userRole)
-    {
-        try
-        {
-            var post = await _postService.GetPostByIdAsync(id);
-            if (post == null)
-            {
-                return NotFound($"Post with ID {id} not found.");
-            }
-
-            var permissions = _authorizationService.GetEditPermissions(userRole, post, userId);
-            return Ok(permissions);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while checking edit permissions.", details = ex.Message });
-        }
-    }
-
-    [HttpGet("{id}/delete-permissions")]
-    public async Task<IActionResult> GetDeletePermissions(int id, [FromQuery] int userId, [FromQuery] string userRole)
-    {
-        try
-        {
-            var post = await _postService.GetPostByIdAsync(id);
-            if (post == null)
-            {
-                return NotFound($"Post with ID {id} not found.");
-            }
-
-            var permissions = _authorizationService.GetDeletePermissions(userRole, post, userId);
-            return Ok(permissions);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = "An error occurred while checking delete permissions.", details = ex.Message });
-        }
+        return NoContent();
     }
 
     [HttpGet("user/{userId}")]
