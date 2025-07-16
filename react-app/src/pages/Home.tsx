@@ -1,12 +1,30 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { homeStyles } from './Home.styles';
 
 const Home: React.FC = () => {
   const [hoveredCards, setHoveredCards] = useState<{ [key: number]: boolean }>({});
   const [hoveredJoinBtn, setHoveredJoinBtn] = useState(false);
+  const navigate = useNavigate();
 
   const handleCardHover = (cardIndex: number, isHovered: boolean) => {
     setHoveredCards(prev => ({ ...prev, [cardIndex]: isHovered }));
+  };
+
+  const handleCardClick = (cardIndex: number) => {
+    switch (cardIndex) {
+      case 0: // Create your Pet Profile
+        navigate('/my-pets');
+        break;
+      case 1: // Find a pet owner near you
+        navigate('/users-near-me');
+        break;
+      case 2: // Join Meetups & Events
+        navigate('/posts/meetup');
+        break;
+      default:
+        break;
+    }
   };
 
   const getCardStyle = (cardIndex: number) => 
@@ -63,6 +81,7 @@ const Home: React.FC = () => {
                 style={getCardStyle(index)}
                 onMouseEnter={() => handleCardHover(index, true)}
                 onMouseLeave={() => handleCardHover(index, false)}
+                onClick={() => handleCardClick(index)}
               >
                 <div style={homeStyles.stepIcon}>
                   <div style={iconCircleStyles[index]}>

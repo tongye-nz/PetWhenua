@@ -51,6 +51,12 @@ export const userAPI = {
     return response.data;
   },
 
+  // Get all users
+  getAllUsers: async (): Promise<User[]> => {
+    const response = await userApi.get('/users');
+    return response.data;
+  },
+
   // Update current user profile
   updateCurrentUser: async (updateData: UpdateUserProfileRequest): Promise<User> => {
     const response = await userApi.put('/users/me', updateData);
