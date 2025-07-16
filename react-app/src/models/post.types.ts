@@ -139,3 +139,21 @@ export interface PostPermissions {
   canChangeStatus: boolean;
   availableTransitions: PostStatus[];
 }
+
+export interface PostEditPermissions {
+  canEdit: boolean;
+  reason: string;
+  editableStatuses: PostStatus[];
+  isOwner: boolean;
+  isAdmin: boolean;
+  currentStatus: PostStatus;
+}
+
+export interface PostDeletePermissions {
+  canDelete: boolean;
+  reason: string;
+  isOwner: boolean;
+  isAdmin: boolean;
+  postType: PostType;
+  adminDeletionAllowed: boolean;
+}

@@ -1,3 +1,5 @@
+using PetWhenua.Models.Dtos;
+
 namespace PetWhenua.Services
 {
     public interface IPostAuthorizationService
@@ -84,5 +86,32 @@ namespace PetWhenua.Services
         /// <param name="isOwner">Whether the user owns the post</param>
         /// <returns>Descriptive error message</returns>
         string GetStatusChangeErrorMessage(string userRole, PostType postType, bool isOwner);
+
+        /// <summary>
+        /// Checks if a user can delete a specific post
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can delete the post</returns>
+        bool CanDeletePost(string userRole, Post post, int userId);
+
+        /// <summary>
+        /// Gets detailed edit permissions for a post including reasons why editing might be disabled
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed edit permission information</returns>
+        PostEditPermissions GetEditPermissions(string userRole, Post post, int userId);
+
+        /// <summary>
+        /// Gets detailed delete permissions for a post including reasons why deletion might be disabled
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed delete permission information</returns>
+        PostDeletePermissions GetDeletePermissions(string userRole, Post post, int userId);
     }
 }

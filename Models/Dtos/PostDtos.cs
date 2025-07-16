@@ -114,4 +114,31 @@ namespace PetWhenua.Models.Dtos
         [MaxLength(50)]
         public string UserRole { get; set; } = string.Empty;
     }
+
+    public class PostEditPermissions
+    {
+        public bool CanEdit { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public List<PostStatus> EditableStatuses { get; set; } = new() 
+        { 
+            PostStatus.Active, 
+            PostStatus.Inactive, 
+            PostStatus.Pending 
+        };
+        public bool IsOwner { get; set; }
+        public bool IsAdmin { get; set; }
+        public PostStatus CurrentStatus { get; set; }
+    }
+
+    public class PostDeletePermissions
+    {
+        public bool CanDelete { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public bool IsOwner { get; set; }
+        public bool IsAdmin { get; set; }
+        public PostType PostType { get; set; }
+        public bool AdminDeletionAllowed { get; set; }
+    }
+
+
 }

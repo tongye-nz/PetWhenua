@@ -1,3 +1,5 @@
+using PetWhenua.Models.Dtos;
+
 namespace PetWhenua.Services
 {
     public class PostAuthorizationService : IPostAuthorizationService
@@ -14,7 +16,7 @@ namespace PetWhenua.Services
                 }
                 
                 // Meetup Admins, Site Admins, and Vets can create active meetup posts immediately
-                if (UserRoles.IsMeetupAdmin(userRole) || UserRoles.IsVet(userRole))
+                if (UserRoles.IsMeetupAdmin(userRole) || UserRoles.IsVet(userRole) || UserRoles.IsAdmin(userRole))
                 {
                     return PostStatus.Active;
                 }
@@ -122,14 +124,27 @@ namespace PetWhenua.Services
         /// <returns>True if the user can edit the post</returns>
         public bool CanEditPost(string userRole, Post post, int userId)
         {
-            // Expired posts can only be edited by admins
-            if (post.Status == PostStatus.Expired && !UserRoles.IsAdmin(userRole))
+            // Site admins can edit any post regardless of status
+            if (UserRoles.IsAdmin(userRole))
+            {
+                return true;
+            }
+
+            // Users can only edit their own posts
+            if (post.UserId != userId)
             {
                 return false;
             }
 
-            // Apply standard edit rules
-            return CanEditPost(userRole, post.UserId, userId);
+            // Users can only edit posts with specific statuses
+            var editableStatuses = new[] 
+            { 
+                PostStatus.Active, 
+                PostStatus.Inactive, 
+                PostStatus.Pending 
+            };
+
+            return editableStatuses.Contains(post.Status);
         }
 
         /// <summary>
@@ -360,6 +375,129 @@ namespace PetWhenua.Services
                 default:
                     return $"Your role ({roleDisplayName}) does not have permission to update {postType} post status.";
             }
+        }
+
+        /// <summary>
+        /// Checks if a user can delete a specific post
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can delete the post</returns>
+        public bool CanDeletePost(string userRole, Post post, int userId)
+        {
+            // Users can always delete their own posts
+            if (post.UserId == userId)
+            {
+                return true;
+            }
+
+            // Site admins can only delete Buy/Sell posts created by others
+            if (UserRoles.IsAdmin(userRole) && post.UserId != userId)
+            {
+                return post.PostType == PostType.BuySell;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets detailed edit permissions for a post including reasons why editing might be disabled
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed edit permission information</returns>
+        public PostEditPermissions GetEditPermissions(string userRole, Post post, int userId)
+        {
+            var permissions = new PostEditPermissions
+            {
+                IsOwner = post.UserId == userId,
+                IsAdmin = UserRoles.IsAdmin(userRole),
+                CurrentStatus = post.Status
+            };
+
+            // Site admins can edit any post regardless of status
+            if (UserRoles.IsAdmin(userRole))
+            {
+                permissions.CanEdit = true;
+                permissions.Reason = "Site administrators can edit any post.";
+                return permissions;
+            }
+
+            // Users can only edit their own posts
+            if (post.UserId != userId)
+            {
+                permissions.CanEdit = false;
+                permissions.Reason = "You can only edit your own posts.";
+                return permissions;
+            }
+
+            // Check if post status allows editing
+            var editableStatuses = new[] 
+            { 
+                PostStatus.Active, 
+                PostStatus.Inactive, 
+                PostStatus.Pending 
+            };
+
+            if (!editableStatuses.Contains(post.Status))
+            {
+                permissions.CanEdit = false;
+                permissions.Reason = $"Posts with status '{post.Status}' cannot be edited. You can only edit posts that are Active, Inactive, or Pending.";
+                return permissions;
+            }
+
+            permissions.CanEdit = true;
+            permissions.Reason = "You can edit this post.";
+            return permissions;
+        }
+
+        /// <summary>
+        /// Gets detailed delete permissions for a post including reasons why deletion might be disabled
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed delete permission information</returns>
+        public PostDeletePermissions GetDeletePermissions(string userRole, Post post, int userId)
+        {
+            var permissions = new PostDeletePermissions
+            {
+                IsOwner = post.UserId == userId,
+                IsAdmin = UserRoles.IsAdmin(userRole),
+                PostType = post.PostType,
+                AdminDeletionAllowed = UserRoles.IsAdmin(userRole) && post.PostType == PostType.BuySell && post.UserId != userId
+            };
+
+            // Users can always delete their own posts
+            if (post.UserId == userId)
+            {
+                permissions.CanDelete = true;
+                permissions.Reason = "You can delete your own posts.";
+                return permissions;
+            }
+
+            // Site admins can only delete Buy/Sell posts created by others
+            if (UserRoles.IsAdmin(userRole))
+            {
+                if (post.PostType == PostType.BuySell)
+                {
+                    permissions.CanDelete = true;
+                    permissions.Reason = "Site administrators can delete Buy/Sell posts created by other users.";
+                    return permissions;
+                }
+                else
+                {
+                    permissions.CanDelete = false;
+                    permissions.Reason = $"Site administrators can only delete Buy/Sell posts created by others, not {post.PostType} posts.";
+                    return permissions;
+                }
+            }
+
+            permissions.CanDelete = false;
+            permissions.Reason = "You can only delete your own posts.";
+            return permissions;
         }
     }
 }

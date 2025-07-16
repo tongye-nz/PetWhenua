@@ -152,5 +152,21 @@ export const postService = {
       `/posts/${postId}/status-transitions?userId=${userId}&userRole=${userRole}`
     );
     return response.data;
+  },
+
+  // Get edit permissions for a post
+  async getEditPermissions(postId: number, userId: number, userRole: string): Promise<any> {
+    const response = await postApi.get(
+      `/posts/${postId}/edit-permissions?userId=${userId}&userRole=${userRole}`
+    );
+    return response.data;
+  },
+
+  // Get delete permissions for a post
+  async getDeletePermissions(postId: number, userId: number, userRole: string): Promise<any> {
+    const response = await postApi.get(
+      `/posts/${postId}/delete-permissions?userId=${userId}&userRole=${userRole}`
+    );
+    return response.data;
   }
 };
