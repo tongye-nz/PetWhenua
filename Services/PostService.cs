@@ -25,16 +25,6 @@ namespace PetWhenua.Services
             return await _postRepository.GetAllPostsAsync(postType, userId, region, district);
         }
 
-        public async Task<IEnumerable<Post>> GetPostsWithVisibilityAsync(PostVisibility visibility, PostType? postType = null, int? userId = null, string? region = null, string? district = null)
-        {
-            return await _postRepository.GetPostsWithVisibilityAsync(visibility, postType, userId, region, district);
-        }
-
-        public async Task<IEnumerable<Post>> GetUserPostsWithStatusBreakdownAsync(int userId)
-        {
-            return await _postRepository.GetUserPostsWithStatusBreakdownAsync(userId);
-        }
-
         public async Task<Post?> GetPostByIdAsync(int id)
         {
             return await _postRepository.GetPostByIdAsync(id);

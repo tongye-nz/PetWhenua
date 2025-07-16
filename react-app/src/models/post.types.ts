@@ -20,14 +20,6 @@ export const PostStatus = {
 
 export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
 
-export const PostVisibility = {
-  Public: 0,
-  All: 1,
-  UserOwned: 2
-} as const;
-
-export type PostVisibility = typeof PostVisibility[keyof typeof PostVisibility];
-
 export interface Post {
   postId: number;
   userId: number;
@@ -139,7 +131,6 @@ export interface PostFilters {
   status?: PostStatus;
   region?: string;
   district?: string;
-  visibility?: PostVisibility;
 }
 
 export interface PostPermissions {
@@ -165,16 +156,4 @@ export interface PostDeletePermissions {
   isAdmin: boolean;
   postType: PostType;
   adminDeletionAllowed: boolean;
-}
-
-export interface PostModerationPermissions {
-  canEditContent: boolean;
-  canChangeStatus: boolean;
-  isOwner: boolean;
-  isModerator: boolean;
-  isAdmin: boolean;
-  postType: PostType;
-  availableStatusTransitions: PostStatus[];
-  contentEditReason: string;
-  statusChangeReason: string;
 }

@@ -19,7 +19,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import { NZ_REGIONS, type District } from '../data/nzLocations';
 import type { Post, PostFilters, PostType } from '../models/post.types';
-import { PostVisibility } from '../models/post.types';
 
 const Posts: React.FC = () => {
   const { postType: postTypeParam } = useParams<{ postType?: string }>();
@@ -52,10 +51,7 @@ const Posts: React.FC = () => {
 
   useEffect(() => {
     const postType = getPostTypeFromParam(postTypeParam);
-    const initialFilters: PostFilters = { 
-      visibility: PostVisibility.Public,
-      ...(postType !== undefined ? { postType } : {})
-    };
+    const initialFilters = postType !== undefined ? { postType } : {};
     setFilters(initialFilters);
     fetchPosts(initialFilters);
   }, [postTypeParam, fetchPosts, setFilters]);
@@ -255,8 +251,7 @@ const Posts: React.FC = () => {
                 postType: undefined, 
                 userId: undefined, 
                 region: undefined, 
-                district: undefined,
-                visibility: PostVisibility.Public // Maintain public visibility when clearing
+                district: undefined 
               })}
               fullWidth
             >
