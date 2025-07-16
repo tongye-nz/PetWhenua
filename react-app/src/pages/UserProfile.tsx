@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -32,7 +32,6 @@ import { userProfileStyles } from './UserProfile.styles';
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user, checkAuth } = useAuth();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Determine if viewing own profile or another user's profile
