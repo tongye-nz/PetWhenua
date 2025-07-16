@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -32,10 +32,15 @@ import { userProfileStyles } from './UserProfile.styles';
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user, checkAuth } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Determine if viewing own profile or another user's profile
   const isOwnProfile = !userId || userId === user?.userId?.toString();
   const targetUserId = userId ? parseInt(userId, 10) : user?.userId;
+  
+  // Get edit state from URL parameters
+  const isEditingFromURL = searchParams.get('edit') === 'true';
 
   // Initialize profile data
   const getInitialProfileData = (): UserProfileData => {
@@ -290,6 +295,45 @@ const UserProfile: React.FC = () => {
     onSave: isOwnProfile ? saveUserProfile : async () => {}
   });
 
+  // Override form editing state with URL-based state
+  const isEditing = isOwnProfile ? isEditingFromURL : false;
+
+  // Custom handlers that update URL parameters
+  const handleStartEditing = () => {
+    if (isOwnProfile) {
+      setSearchParams({ edit: 'true' });
+    }
+  };
+
+  const handleCancelEditing = () => {
+    if (isOwnProfile) {
+      form.cancelEditing();
+      // Remove edit parameter from URL to go back to view mode
+      setSearchParams({});
+    }
+  };
+
+  const handleSaveForm = async () => {
+    if (isOwnProfile) {
+      const success = await form.saveForm();
+      if (success) {
+        // Remove edit parameter from URL after successful save
+        setSearchParams({});
+      }
+    }
+  };
+
+  // Sync form editing state with URL parameters
+  useEffect(() => {
+    if (isOwnProfile) {
+      if (isEditingFromURL && !form.isEditing) {
+        form.startEditing();
+      } else if (!isEditingFromURL && form.isEditing) {
+        form.cancelEditing();
+      }
+    }
+  }, [isEditingFromURL, isOwnProfile]);
+
   // Load profile data on component mount and when userId changes
   useEffect(() => {
     loadUserProfile();
@@ -491,7 +535,7 @@ const UserProfile: React.FC = () => {
         <Paper elevation={3} style={userProfileStyles.profileCard}>
           {/* Header */}
           <ProfileHeaderSection
-            isEditing={form.isEditing}
+            isEditing={isEditing}
             isLoading={form.loading}
             isValid={form.isValid}
             isOwnProfile={isOwnProfile}
@@ -499,9 +543,9 @@ const UserProfile: React.FC = () => {
               ? `${profileData.firstName} ${profileData.lastName}`
               : profileData.username
             }
-            onStartEditing={form.startEditing}
-            onSaveForm={form.saveForm}
-            onCancelEditing={form.cancelEditing}
+            onStartEditing={handleStartEditing}
+            onSaveForm={handleSaveForm}
+            onCancelEditing={handleCancelEditing}
             styles={userProfileStyles}
           />
 
@@ -543,12 +587,12 @@ const UserProfile: React.FC = () => {
               flexDirection: 'column',
               gap: 2
             }}>
-              {!isOwnProfile || !form.isEditing ? (
+              {!isOwnProfile || !isEditing ? (
                 <>
                   <ProfileSummary
                     profileData={profileData}
                     isOwnProfile={isOwnProfile}
-                    onEditClick={form.startEditing}
+                    onEditClick={handleStartEditing}
                     followerCount={followStats.followerCount}
                     postsCount={postsCount}
                     isFollowing={isFollowing}
@@ -574,7 +618,7 @@ const UserProfile: React.FC = () => {
                   <ProfileAvatarSection
                     profileData={profileData}
                     formData={form.formData}
-                    isEditing={isOwnProfile && form.isEditing}
+                    isEditing={isOwnProfile && isEditing}
                     onProfilePictureChange={handleProfilePictureChange}
                     styles={userProfileStyles}
                   />
@@ -590,7 +634,7 @@ const UserProfile: React.FC = () => {
               maxHeight: { md: 'calc(100vh - 200px)' },
               overflowY: { md: 'auto' }
             }}>
-              {!isOwnProfile || !form.isEditing ? (
+              {!isOwnProfile || !isEditing ? (
                 // Posts feed for viewing mode
                 targetUserId ? (
                   <UserPostsFeed
@@ -623,7 +667,7 @@ const UserProfile: React.FC = () => {
                   <ProfileInfoForm
                     formData={form.formData}
                     errors={form.errors}
-                    isEditing={isOwnProfile && form.isEditing}
+                    isEditing={isOwnProfile && isEditing}
                     onInputChange={form.handleInputChange}
                     styles={userProfileStyles}
                   />
@@ -637,4 +681,4 @@ const UserProfile: React.FC = () => {
   );
 };
 
-export default UserProfile; 
+export default UserProfile;
