@@ -163,6 +163,51 @@ namespace PetWhenua.Migrations
                     b.ToTable("PetWeddingParticipants");
                 });
 
+            modelBuilder.Entity("PetWhenua.Models.PostImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Height")
+                        .HasColumnType("int");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UploadedBy")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Width")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UploadedBy");
+
+                    b.ToTable("PostImages");
+                });
+
             modelBuilder.Entity("Post", b =>
                 {
                     b.Property<int>("PostId")
@@ -382,6 +427,25 @@ namespace PetWhenua.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("PetWhenua.Models.PostImage", b =>
+                {
+                    b.HasOne("Post", "Post")
+                        .WithMany("PostImages")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedBy")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("Post", b =>
                 {
                     b.HasOne("User", "User")
@@ -424,6 +488,8 @@ namespace PetWhenua.Migrations
             modelBuilder.Entity("Post", b =>
                 {
                     b.Navigation("PetWeddingParticipants");
+
+                    b.Navigation("PostImages");
                 });
 
             modelBuilder.Entity("User", b =>

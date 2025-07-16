@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using PetWhenua.Models;
 
 public enum PostType
 {
@@ -70,4 +72,11 @@ public class Post
     
     // Pet Wedding specific navigation properties
     public List<PetWeddingParticipant> PetWeddingParticipants { get; set; } = new();
+    
+    // Image metadata navigation properties
+    public List<PostImage> PostImages { get; set; } = new();
+    
+    // Helper property for validated image count
+    [NotMapped]
+    public List<string> ValidatedImages => Images?.Take(9).ToList() ?? new();
 } 

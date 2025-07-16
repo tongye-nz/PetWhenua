@@ -8,10 +8,12 @@ using PetWhenua.Repositories.Abstract;
 public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
+    private readonly IImageService _imageService;
 
-    public PostsController(IPostService postService)
+    public PostsController(IPostService postService, IImageService imageService)
     {
         _postService = postService;
+        _imageService = imageService;
     }
 
     [HttpGet]
@@ -422,6 +424,64 @@ public class PostsController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { error = "An error occurred while getting past events.", details = ex.Message });
+        }
+    }
+
+    [HttpPost("with-images")]
+    public async Task<IActionResult> CreatePostWithImages([FromForm] CreatePostWithImagesRequest request)
+    {
+        try
+        {
+            // Validate image count
+            if (request.Images != null && request.Images.Count > 9)
+            {
+                return BadRequest("Maximum 9 images allowed per post.");
+            }
+
+            // Create the post first
+            var post = new Post
+            {
+                UserId = request.UserId,
+                PostType = request.PostType,
+                Title = request.Title,
+                Content = request.Content,
+                Location = request.Location,
+                Address = request.Address,
+                Price = request.Price,
+                EventDate = request.EventDate,
+                Category = request.Category
+            };
+
+            var createdPost = await _postService.CreatePostAsync(post);
+
+            // Upload images if provided
+            if (request.Images != null && request.Images.Any())
+            {
+                try
+                {
+                    var imageUrls = await _imageService.UploadImagesAsync(request.Images, request.UserId, createdPost.PostId);
+                    
+                    // Update post with image URLs
+                    createdPost.Images = imageUrls;
+                    await _postService.UpdatePostAsync(createdPost);
+                }
+                catch (Exception ex)
+                {
+                    // If image upload fails, clean up the created post
+                    await _postService.DeletePostAsync(createdPost.PostId);
+                    throw new InvalidOperationException($"Failed to upload images: {ex.Message}");
+                }
+            }
+
+            return CreatedAtAction(nameof(GetPost), new { id = createdPost.PostId }, createdPost);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, "An error occurred while creating the post with images.");
         }
     }
 }

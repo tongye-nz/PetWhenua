@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PetWhenua.Models;
 
 public class AppDbContext : DbContext
 {
@@ -8,6 +9,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Pet> Pets => Set<Pet>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<PostImage> PostImages => Set<PostImage>();
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<PetConnection> PetConnections => Set<PetConnection>();
     public DbSet<PetWeddingParticipant> PetWeddingParticipants => Set<PetWeddingParticipant>();
@@ -114,5 +116,18 @@ public class AppDbContext : DbContext
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
+
+        // Configure PostImage relationships to avoid cascade delete conflicts
+        modelBuilder.Entity<PostImage>()
+            .HasOne(pi => pi.Post)
+            .WithMany(p => p.PostImages)
+            .HasForeignKey(pi => pi.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PostImage>()
+            .HasOne(pi => pi.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(pi => pi.UploadedBy)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }
