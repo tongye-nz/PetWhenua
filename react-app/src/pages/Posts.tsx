@@ -30,12 +30,12 @@ const Posts: React.FC = () => {
     if (!param) return undefined;
     
     const typeMap: { [key: string]: PostType } = {
-      'moment': 0, // PostType.Moment
-      'buy-sell': 1, // PostType.BuySell  
-      'meetup': 2, // PostType.Meetup
-      'pet-wedding': 3, // PostType.PetWedding
-      'library': 4, // PostType.Library
-      'announcement': 5 // PostType.Announcement
+      'meetup': 0, // PostType.Meetup
+      'pet-wedding': 1, // PostType.PetWedding
+      'buy-sell': 2, // PostType.BuySell  
+      'library': 3, // PostType.Library
+      'announcement': 4, // PostType.Announcement
+      'moment': 5 // PostType.Moment
     };
     
     return typeMap[param];

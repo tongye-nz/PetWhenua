@@ -14,7 +14,8 @@ export const PostStatus = {
   Sold: 1,
   Expired: 2,
   Inactive: 3,
-  Cancelled: 4
+  Cancelled: 4,
+  Pending: 5
 } as const;
 
 export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
@@ -27,6 +28,7 @@ export interface Post {
   content: string;
   images: string[];
   location?: string;
+  address?: string;
   price?: number;
   eventDate?: string;
   category?: string;
@@ -52,9 +54,11 @@ export interface CreatePostRequest {
   content: string;
   images?: string[];
   location?: string;
+  address?: string;
   price?: number;
   eventDate?: string;
   category?: string;
+  selectedPetIds?: number[];
 }
 
 export interface UpdatePostRequest {
@@ -62,9 +66,11 @@ export interface UpdatePostRequest {
   content?: string;
   images?: string[];
   location?: string;
+  address?: string;
   price?: number;
   eventDate?: string;
   category?: string;
+  selectedPetIds?: number[];
 }
 
 export interface UpdatePostStatusRequest {

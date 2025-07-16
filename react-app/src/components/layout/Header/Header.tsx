@@ -1,10 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { IconButton } from '@mui/material';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import MenuIcon from '@mui/icons-material/Menu';
+import { 
+  AppBar,
+  Toolbar,
+  Container,
+  Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  useTheme,
+  useMediaQuery,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider
+} from '@mui/material';
+import {
+  AccountCircle,
+  Menu as MenuIcon,
+  Close as CloseIcon
+} from '@mui/icons-material';
 import { Button } from '../../ui';
-import { headerStyles } from './Header.styles';
 import { useAuth } from '../../../contexts/AuthContext';
 
 interface HeaderProps {
@@ -14,55 +33,15 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, logout } = useAuth();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-  const [isProfileHovered, setIsProfileHovered] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-
-  // Mobile detection and resize handler
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  // Close mobile menu when switching to desktop
-  useEffect(() => {
-    if (!isMobile) {
-      setIsMobileMenuOpen(false);
-    }
-  }, [isMobile]);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogoClick = () => {
     navigate('/');
-    setIsMobileMenuOpen(false);
   };
 
   const handleSignInClick = () => {
@@ -71,27 +50,35 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     } else {
       navigate('/login');
     }
-    setIsMobileMenuOpen(false);
   };
 
-  const handleProfileClick = () => {
-    setIsDropdownOpen(!isDropdownOpen);
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
   };
 
   const handleMobileMenuToggle = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleNavLinkClick = (href: string) => {
+    navigate(href);
+    setMobileMenuOpen(false);
   };
 
   const handleDropdownItemClick = (action: string) => {
-    setIsDropdownOpen(false);
-    setIsMobileMenuOpen(false);
+    setProfileAnchorEl(null);
+    setMobileMenuOpen(false);
     
     switch (action) {
       case 'details':
         navigate('/profile');
         break;
       case 'pets':
-        navigate('/pets');
+        navigate('/my-pets');
         break;
       case 'posts':
         navigate('/my-posts');
@@ -108,41 +95,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     }
   };
 
-  const handleNavLinkClick = (href: string) => {
-    navigate(href);
-    setIsMobileMenuOpen(false);
-  };
-
-  const getDropdownItemStyle = (itemKey: string, isLast: boolean = false, isSignOut: boolean = false) => {
-    let style = isMobile ? 
-      { ...headerStyles.dropdownItem, ...headerStyles.dropdownItemMobile } : 
-      headerStyles.dropdownItem;
-    
-    if (isLast) {
-      style = { ...style, ...headerStyles.dropdownItemLast };
-    }
-    
-    if (isSignOut) {
-      style = { ...style, ...headerStyles.dropdownItemSignOut };
-    }
-    
-    if (hoveredItem === itemKey) {
-      style = { ...style, ...headerStyles.dropdownItemHover };
-    }
-    
-    return style;
-  };
-
-  const dropdownItems = [
-    { key: 'details', label: 'My Details', icon: '👤' },
-    { key: 'pets', label: 'My Pets', icon: '🐾' },
-    { key: 'posts', label: 'My Posts', icon: '📝' },
-    { key: 'messages', label: 'Messages', icon: '💬' },
-    { key: 'signout', label: 'Sign Out', icon: '🚪', isSignOut: true }
-  ];
-
   const navItems = [
     { label: 'Home', href: '/', active: location.pathname === '/' },
+    { label: 'Pets', href: '/pets', active: location.pathname === '/pets' },
     { label: 'Moment', href: '/posts/moment', active: location.pathname === '/posts/moment' },
     { label: 'Meetup', href: '/posts/meetup', active: location.pathname === '/posts/meetup' },
     { label: 'Pet Wedding', href: '/posts/pet-wedding', active: location.pathname === '/posts/pet-wedding' },
@@ -151,208 +106,270 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { label: 'Announcement', href: '/posts/announcement', active: location.pathname === '/posts/announcement' }
   ];
 
-  return (
-    <>
-      <header style={headerStyles.header}>
-        <div style={headerStyles.container}>
-          <div style={headerStyles.headerContent}>
-            {/* Logo */}
-            <div 
-              style={{ 
-                ...headerStyles.logoImage, 
-                cursor: 'pointer',
-                ...(isMobile ? headerStyles.logoImageMobile : {})
-              }}
-              onClick={handleLogoClick}
-            >
-              <img 
-                src="/logo.png" 
-                alt="PetWhenua Logo" 
-                style={isMobile ? 
-                  { ...headerStyles.logoImage, ...headerStyles.logoImageMobile } : 
-                  headerStyles.logoImage
-                } 
-              />
-            </div>
+  const dropdownItems = [
+    { key: 'details', label: 'My Details', icon: '👤' },
+    { key: 'pets', label: 'My Pets', icon: '🐾' },
+    { key: 'posts', label: 'My Posts', icon: '📝' },
+    { key: 'messages', label: 'Messages', icon: '💬' },
+    { key: 'signout', label: 'Sign Out', icon: '🚪' }
+  ];
 
-            {/* Desktop Navigation */}
-            {!isMobile && (
-              <nav style={headerStyles.navDesktop}>
-                {navItems.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    style={item.active ? headerStyles.navLinkActive : headerStyles.navLink}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleNavLinkClick(item.href);
+  return (
+    <AppBar 
+      position="static" 
+      elevation={1}
+      sx={{ 
+        bgcolor: 'background.paper',
+        color: 'text.primary'
+      }}
+    >
+      <Container maxWidth="lg">
+        <Toolbar 
+          disableGutters
+          sx={{ 
+            justifyContent: 'space-between',
+            py: 1
+          }}
+        >
+          {/* Logo */}
+          <Box 
+            onClick={handleLogoClick}
+            sx={{ 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            <img 
+              src="/logo.png" 
+              alt="PetWhenua Logo" 
+              style={{ 
+                height: isMobile ? '48px' : '64px',
+                width: 'auto'
+              }} 
+            />
+          </Box>
+
+          {/* Desktop Navigation */}
+          <Box sx={{ 
+            display: { xs: 'none', md: 'flex' },
+            gap: 3,
+            alignItems: 'center'
+          }}>
+            {navItems.map((item) => (
+              <Typography
+                key={item.label}
+                component="a"
+                href={item.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavLinkClick(item.href);
+                }}
+                sx={{
+                  textDecoration: 'none',
+                  color: item.active ? 'text.primary' : 'text.secondary',
+                  fontWeight: item.active ? 600 : 500,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    color: 'text.primary'
+                  },
+                  transition: 'color 0.2s ease'
+                }}
+              >
+                {item.label}
+              </Typography>
+            ))}
+          </Box>
+
+          {/* Right Section */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Desktop Profile/Sign In */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+              {isAuthenticated ? (
+                <>
+                  <IconButton
+                    onClick={handleProfileClick}
+                    sx={{
+                      '&:hover': {
+                        bgcolor: 'action.hover'
+                      }
                     }}
                   >
-                    {item.label}
-                  </a>
+                    <AccountCircle 
+                      sx={{ 
+                        fontSize: 40,
+                        color: 'primary.main'
+                      }} 
+                    />
+                  </IconButton>
+                  <Menu
+                    anchorEl={profileAnchorEl}
+                    open={Boolean(profileAnchorEl)}
+                    onClose={handleProfileClose}
+                    transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                    anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                    PaperProps={{
+                      sx: {
+                        minWidth: 180,
+                        mt: 1
+                      }
+                    }}
+                  >
+                    {dropdownItems.map((item) => (
+                      <MenuItem 
+                        key={item.key}
+                        onClick={() => handleDropdownItemClick(item.key)}
+                        sx={{
+                          gap: 1,
+                          ...(item.key === 'signout' && {
+                            color: 'error.main',
+                            borderTop: '1px solid',
+                            borderColor: 'divider'
+                          })
+                        }}
+                      >
+                        <span>{item.icon}</span>
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </>
+              ) : (
+                <Button variant="primary" onClick={handleSignInClick}>
+                  Sign In
+                </Button>
+              )}
+            </Box>
+
+            {/* Mobile Menu Button */}
+            <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+              <IconButton
+                onClick={handleMobileMenuToggle}
+                sx={{ color: 'text.primary' }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </Toolbar>
+      </Container>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="right"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        PaperProps={{
+          sx: {
+            width: 280,
+            bgcolor: 'background.paper'
+          }
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          {/* Mobile Header */}
+          <Box sx={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            mb: 2
+          }}>
+            <img 
+              src="/logo.png" 
+              alt="PetWhenua Logo" 
+              style={{ height: '40px', width: 'auto' }}
+            />
+            <IconButton onClick={() => setMobileMenuOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+
+          {/* Mobile Navigation */}
+          <List>
+            {navItems.map((item) => (
+              <ListItem 
+                key={item.label}
+                onClick={() => handleNavLinkClick(item.href)}
+                sx={{
+                  cursor: 'pointer',
+                  borderRadius: 1,
+                  mb: 0.5,
+                  bgcolor: item.active ? 'action.selected' : 'transparent',
+                  '&:hover': {
+                    bgcolor: 'action.hover'
+                  }
+                }}
+              >
+                <ListItemText 
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontWeight: item.active ? 600 : 400,
+                    color: item.active ? 'primary.main' : 'text.primary'
+                  }}
+                />
+              </ListItem>
+            ))}
+          </List>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Mobile Profile Section */}
+          {isAuthenticated ? (
+            <Box>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1.5, 
+                mb: 2,
+                p: 1,
+                bgcolor: 'action.hover',
+                borderRadius: 1
+              }}>
+                <AccountCircle sx={{ fontSize: 36, color: 'primary.main' }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  My Account
+                </Typography>
+              </Box>
+              <List>
+                {dropdownItems.map((item) => (
+                  <ListItem 
+                    key={item.key}
+                    onClick={() => handleDropdownItemClick(item.key)}
+                    sx={{
+                      cursor: 'pointer',
+                      borderRadius: 1,
+                      '&:hover': {
+                        bgcolor: 'action.hover'
+                      },
+                      ...(item.key === 'signout' && {
+                        color: 'error.main',
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        mt: 1
+                      })
+                    }}
+                  >
+                    <ListItemIcon sx={{ minWidth: 32 }}>
+                      <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                    </ListItemIcon>
+                    <ListItemText primary={item.label} />
+                  </ListItem>
                 ))}
-              </nav>
-            )}
-
-                         {/* Header Right Section */}
-             <div style={isMobile ? headerStyles.headerRightMobile : headerStyles.headerRightDesktop}>
-               {/* Mobile Menu Button */}
-               {isMobile && (
-                 <div style={headerStyles.mobileMenuContainer} ref={mobileMenuRef}>
-                   <IconButton
-                     style={headerStyles.menuButton}
-                     onClick={handleMobileMenuToggle}
-                     aria-label="Toggle mobile menu"
-                   >
-                     <MenuIcon />
-                   </IconButton>
-                   
-                   {/* Mobile Dropdown Menu */}
-                   <div
-                     style={{
-                       ...headerStyles.mobileMenu,
-                       ...(isMobileMenuOpen ? headerStyles.mobileMenuOpen : {})
-                     }}
-                   >
-                     {/* Mobile Menu Header */}
-                     <div style={headerStyles.mobileMenuHeader}>
-                       <img 
-                         src="/logo.png" 
-                         alt="PetWhenua Logo" 
-                         style={headerStyles.logoImageMobile}
-                       />
-                       <button
-                         style={headerStyles.mobileMenuClose}
-                         onClick={() => setIsMobileMenuOpen(false)}
-                         aria-label="Close mobile menu"
-                       >
-                         ×
-                       </button>
-                     </div>
-
-                     {/* Mobile Navigation Links */}
-                     <div style={headerStyles.mobileNavLinks}>
-                       {navItems.map((item) => (
-                         <a
-                           key={item.label}
-                           href={item.href}
-                           style={{
-                             ...headerStyles.mobileNavLink,
-                             ...(item.active ? headerStyles.mobileNavLinkActive : {}),
-                             ...(hoveredItem === item.label ? headerStyles.mobileNavLinkHover : {})
-                           }}
-                           onClick={(e) => {
-                             e.preventDefault();
-                             handleNavLinkClick(item.href);
-                           }}
-                           onMouseEnter={() => setHoveredItem(item.label)}
-                           onMouseLeave={() => setHoveredItem(null)}
-                         >
-                           {item.label}
-                         </a>
-                       ))}
-                     </div>
-
-                     {/* Mobile Profile Section */}
-                     <div style={headerStyles.mobileProfileSection}>
-                       {isAuthenticated ? (
-                         <div>
-                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                             <AccountCircleIcon
-                               style={{
-                                 ...headerStyles.profileImage,
-                                 ...headerStyles.profileImageMobile,
-                                 fontSize: '36px',
-                                 color: '#667eea',
-                               }}
-                             />
-                             <span style={{ fontWeight: 600, color: '#333' }}>My Account</span>
-                           </div>
-                           <div style={{ ...headerStyles.dropdown, ...headerStyles.dropdownMobile }}>
-                             {dropdownItems.map((item, index) => (
-                               <div
-                                 key={item.key}
-                                 style={getDropdownItemStyle(
-                                   item.key, 
-                                   index === dropdownItems.length - 1,
-                                   item.isSignOut
-                                 )}
-                                 onClick={() => handleDropdownItemClick(item.key)}
-                                 onMouseEnter={() => setHoveredItem(item.key)}
-                                 onMouseLeave={() => setHoveredItem(null)}
-                               >
-                                 <span>{item.icon}</span>
-                                 <span>{item.label}</span>
-                               </div>
-                             ))}
-                           </div>
-                         </div>
-                       ) : (
-                         <Button 
-                           variant="primary" 
-                           onClick={handleSignInClick}
-                           fullWidth
-                         >
-                           Sign In
-                         </Button>
-                       )}
-                     </div>
-                   </div>
-                 </div>
-               )}
-
-               {/* Desktop Profile/Sign In */}
-               {!isMobile && (
-                 <>
-                   {isAuthenticated ? (
-                     <div style={headerStyles.profileContainer} ref={dropdownRef}>
-                       <AccountCircleIcon
-                         style={{
-                           ...headerStyles.profileImage,
-                           ...(isProfileHovered ? headerStyles.profileImageHover : {}),
-                           fontSize: '40px',
-                           color: '#667eea',
-                           cursor: 'pointer',
-                         }}
-                         onClick={handleProfileClick}
-                         onMouseEnter={() => setIsProfileHovered(true)}
-                         onMouseLeave={() => setIsProfileHovered(false)}
-                       />
-                       {isDropdownOpen && (
-                         <div style={headerStyles.dropdown}>
-                           {dropdownItems.map((item, index) => (
-                             <div
-                               key={item.key}
-                               style={getDropdownItemStyle(
-                                 item.key, 
-                                 index === dropdownItems.length - 1,
-                                 item.isSignOut
-                               )}
-                               onClick={() => handleDropdownItemClick(item.key)}
-                               onMouseEnter={() => setHoveredItem(item.key)}
-                               onMouseLeave={() => setHoveredItem(null)}
-                             >
-                               <span>{item.icon}</span>
-                               <span>{item.label}</span>
-                             </div>
-                           ))}
-                         </div>
-                       )}
-                     </div>
-                   ) : (
-                     <Button variant="primary" onClick={handleSignInClick}>
-                       Sign In
-                     </Button>
-                   )}
-                 </>
-               )}
-             </div>
-          </div>
-        </div>
-      </header>
-
-
-    </>
+              </List>
+            </Box>
+          ) : (
+            <Button 
+              variant="primary" 
+              onClick={handleSignInClick}
+              fullWidth
+            >
+              Sign In
+            </Button>
+          )}
+        </Box>
+      </Drawer>
+    </AppBar>
   );
 };
 

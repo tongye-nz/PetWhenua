@@ -1,5 +1,6 @@
 import React from 'react';
-import { Container } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Container, Alert } from '@mui/material';
 import {
   MyPetsHeader,
   PetsEmptyState,
@@ -13,6 +14,7 @@ import {
 import { useMyPets } from '../hooks/useMyPets';
 
 const MyPets: React.FC = () => {
+  const navigate = useNavigate();
   const {
     pets,
     loading,
@@ -23,6 +25,7 @@ const MyPets: React.FC = () => {
     petToDelete,
     formLoading,
     formError,
+    success,
     handleAddPet,
     handleEditPet,
     handleDeletePet,
@@ -37,9 +40,21 @@ const MyPets: React.FC = () => {
     return <MyPetsLoading />;
   }
 
+  const handleViewPet = (pet: any) => {
+    if (pet.petId) {
+      navigate(`/pet/${pet.petId}`);
+    }
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <MyPetsHeader onAddPet={handleAddPet} />
+
+      {success && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          {success}
+        </Alert>
+      )}
 
       {error && (
         <MyPetsErrorAlert error={error} onClose={() => setError(null)} />
@@ -52,6 +67,7 @@ const MyPets: React.FC = () => {
           pets={pets}
           onEditPet={handleEditPet}
           onDeletePet={handleDeletePet}
+          onViewPet={handleViewPet}
         />
       )}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
 import { MoreVert, Edit, Delete, Person } from '@mui/icons-material';
-import { Text, StatusChip } from '../../../ui';
+import { Text, StatusChip, FollowButton } from '../../../ui';
 import type { Post } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
@@ -105,7 +105,7 @@ const PostCard: React.FC<PostCardProps> = ({
           <Avatar sx={{ width: 32, height: 32 }}>
             {post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />}
           </Avatar>
-          <Box>
+          <Box sx={{ flexGrow: 1 }}>
             <Text variant="body2" fontWeight="medium">
               {post.user?.username || 'Unknown User'}
             </Text>
@@ -113,6 +113,16 @@ const PostCard: React.FC<PostCardProps> = ({
               {formatDate(post.createdAt)}
             </Text>
           </Box>
+          
+          {/* Follow button - only show for other users' posts */}
+          {!isOwner && post.user && (
+            <FollowButton
+              userId={post.user.userId}
+              isFollowing={false} // TODO: Get actual follow status
+              size="small"
+              variant="outlined"
+            />
+          )}
         </Box>
 
         {hasActions && (

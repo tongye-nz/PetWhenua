@@ -9,7 +9,7 @@ export const userProfileStyles: Record<string, CSSProperties> = {
   },
 
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1400px',
     margin: '0 auto',
     padding: '0 1rem',
   },
@@ -46,28 +46,13 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     borderRadius: '8px',
   },
 
-  contentContainer: {
-    display: 'flex',
-    gap: '2rem',
-    flexWrap: 'wrap',
-  },
-
-  leftSection: {
-    flex: '1',
-    minWidth: '300px',
-    maxWidth: '400px',
-  },
-
-  rightSection: {
-    flex: '2',
-    minWidth: '400px',
-  },
-
+  // Enhanced Avatar Section
   avatarSection: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
+    marginBottom: '1.5rem',
   },
 
   avatar: {
@@ -100,12 +85,14 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     fontSize: '0.75rem',
   },
 
+  // Profile Summary Stats
   stats: {
     backgroundColor: 'rgba(102, 126, 234, 0.05)',
     padding: '1.5rem',
     borderRadius: '12px',
     border: '1px solid rgba(102, 126, 234, 0.1)',
     width: '100%',
+    marginBottom: '1rem',
   },
 
   statNumber: {
@@ -126,23 +113,131 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     fontSize: '0.875rem',
   },
 
-  formSection: {
-    width: '100%',
+  // Followed Users Section
+  followedUsersSection: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    maxHeight: '400px',
+    overflowY: 'auto',
   },
 
-  nameRow: {
+  followedUsersTitle: {
+    marginBottom: '1rem',
+    fontWeight: 'bold',
+    color: '#333',
+    fontSize: '1.1rem',
+  },
+
+  // Posts Feed Section
+  postsSection: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    height: 'fit-content',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+  },
+
+  postsSectionTitle: {
+    marginBottom: '1rem',
+    fontWeight: 'bold',
+    color: '#333',
+    fontSize: '1.2rem',
     display: 'flex',
-    gap: '1rem',
-    width: '100%',
+    alignItems: 'center',
+    gap: '0.5rem',
   },
 
-  halfWidth: {
-    flex: '1',
-    minWidth: '0',
+  emptyPostsState: {
+    textAlign: 'center',
+    padding: '3rem 1rem',
+    color: '#666',
   },
 
-  textField: {
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+  emptyPostsIcon: {
+    fontSize: '3rem',
+    marginBottom: '1rem',
+    opacity: 0.5,
+  },
+
+  // Post Card Styles
+  postCard: {
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    padding: '1.5rem',
+    marginBottom: '1rem',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+    border: '1px solid rgba(0, 0, 0, 0.05)',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  },
+
+  postCardHover: {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
+  },
+
+  postHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginBottom: '1rem',
+  },
+
+  postAvatar: {
+    width: '40px',
+    height: '40px',
+  },
+
+  postUserInfo: {
+    flex: 1,
+  },
+
+  postUsername: {
+    fontWeight: '600',
+    color: '#333',
+    fontSize: '0.9rem',
+  },
+
+  postDate: {
+    color: '#666',
+    fontSize: '0.75rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.25rem',
+  },
+
+  postContent: {
+    color: '#444',
+    lineHeight: '1.6',
+    marginBottom: '1rem',
+  },
+
+  postImages: {
     borderRadius: '8px',
+    overflow: 'hidden',
+    marginBottom: '1rem',
   },
-}; 
+
+  postImage: {
+    width: '100%',
+    height: 'auto',
+    maxHeight: '400px',
+    objectFit: 'cover',
+  },
+
+  postImageGrid: {
+    display: 'grid',
+    gap: '0.5rem',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+  },
+
+  postLocation: {
+    color: '#666',
+    fontSize: '0.8rem',
+    fontStyle: 'italic',
+    marginTop: '0.5rem',
+  },
+};
