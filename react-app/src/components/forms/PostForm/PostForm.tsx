@@ -418,7 +418,7 @@ const PostForm: React.FC<PostFormProps> = ({
             onChange={handleSelectChange('postType')}
             label="Post Type"
             error={!!errors.postType}
-            disabled={loading}
+            disabled={loading || mode === 'edit'}
           >
             {postTypeOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -434,6 +434,11 @@ const PostForm: React.FC<PostFormProps> = ({
           {errors.postType && (
             <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
               {errors.postType}
+            </Typography>
+          )}
+          {mode === 'edit' && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              Post type cannot be changed when editing
             </Typography>
           )}
         </FormControl>
