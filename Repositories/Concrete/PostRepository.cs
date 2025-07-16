@@ -66,6 +66,7 @@ namespace PetWhenua.Repositories.Concrete
         public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
         {
             return await _context.Posts
+                .Include(p => p.User)
                 .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
