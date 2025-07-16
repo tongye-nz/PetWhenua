@@ -19,10 +19,10 @@ import {
   Divider
 } from '@mui/material';
 import {
-  AccountCircle,
   Menu as MenuIcon,
   Close as CloseIcon
 } from '@mui/icons-material';
+import { Avatar } from '@mui/material';
 import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -35,7 +35,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   
   const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -190,17 +190,28 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                   <IconButton
                     onClick={handleProfileClick}
                     sx={{
+                      p: 0,
                       '&:hover': {
-                        bgcolor: 'action.hover'
+                        bgcolor: 'transparent'
                       }
                     }}
                   >
-                    <AccountCircle 
+                    <Avatar
+                      src={user?.profilePicture}
                       sx={{ 
-                        fontSize: 40,
-                        color: 'primary.main'
-                      }} 
-                    />
+                        width: 40,
+                        height: 40,
+                        bgcolor: 'primary.main',
+                        fontSize: '1.2rem',
+                        fontWeight: 600,
+                        transition: 'transform 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)'
+                        }
+                      }}
+                    >
+                      {user?.firstName?.[0] || user?.username?.[0] || '?'}
+                    </Avatar>
                   </IconButton>
                   <Menu
                     anchorEl={profileAnchorEl}
@@ -325,7 +336,18 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                 bgcolor: 'action.hover',
                 borderRadius: 1
               }}>
-                <AccountCircle sx={{ fontSize: 36, color: 'primary.main' }} />
+                <Avatar 
+                  src={user?.profilePicture}
+                  sx={{ 
+                    width: 36, 
+                    height: 36, 
+                    bgcolor: 'primary.main',
+                    fontSize: '1rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {user?.firstName?.[0] || user?.username?.[0] || '?'}
+                </Avatar>
                 <Typography variant="subtitle1" fontWeight={600}>
                   My Account
                 </Typography>
