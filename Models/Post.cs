@@ -25,6 +25,13 @@ public enum PostStatus
     Pending
 }
 
+public enum PostVisibility
+{
+    Public,
+    All,
+    UserOwned
+}
+
 public class Post
 {
     [Key]

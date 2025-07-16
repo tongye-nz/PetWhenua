@@ -25,6 +25,7 @@ export const postService = {
     if (filters.status !== undefined) params.append('status', filters.status.toString());
     if (filters.region) params.append('region', filters.region);
     if (filters.district) params.append('district', filters.district);
+    if (filters.visibility !== undefined) params.append('visibility', filters.visibility.toString());
     
     const response = await postApi.get(`/posts?${params.toString()}`);
     return response.data;
@@ -134,6 +135,12 @@ export const postService = {
     return response.data;
   },
 
+  // Get user's posts with status breakdown (for my-posts page)
+  async getMyPosts(userId: number): Promise<{ posts: Post[]; statusBreakdown: Record<string, number>; totalPosts: number }> {
+    const response = await postApi.get(`/posts/my-posts/${userId}`);
+    return response.data;
+  },
+
   // Get posts by type
   async getPostsByType(postType: number): Promise<Post[]> {
     const response = await postApi.get(`/posts/type/${postType}`);
@@ -167,6 +174,24 @@ export const postService = {
     const response = await postApi.get(
       `/posts/${postId}/delete-permissions?userId=${userId}&userRole=${userRole}`
     );
+    return response.data;
+  },
+
+  // Get moderation permissions for a post
+  async getModerationPermissions(postId: number, userId: number, userRole: string): Promise<any> {
+    const response = await postApi.get(
+      `/posts/${postId}/moderation-permissions?userId=${userId}&userRole=${userRole}`
+    );
+    return response.data;
+  },
+
+  // Change post status only (for moderators)
+  async changePostStatusOnly(postId: number, newStatus: number, userId: number, userRole: string): Promise<any> {
+    const response = await postApi.patch(`/posts/${postId}/status-only`, {
+      newStatus: newStatus,
+      requestingUserId: userId,
+      requestingUserRole: userRole
+    });
     return response.data;
   }
 };

@@ -499,5 +499,106 @@ namespace PetWhenua.Services
             permissions.Reason = "You can only delete your own posts.";
             return permissions;
         }
+
+        /// <summary>
+        /// Checks if a user can only change status of a post (not edit content)
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can only change status, not edit content</returns>
+        public bool CanOnlyChangeStatus(string userRole, Post post, int userId)
+        {
+            // If the user is the owner, they can edit content (not just status)
+            if (post.UserId == userId)
+            {
+                return false;
+            }
+
+            // For Meetup posts, Meetup Admins and Site Admins can only change status, not edit content
+            if (post.PostType == PostType.Meetup)
+            {
+                return UserRoles.IsMeetupAdmin(userRole) || UserRoles.IsAdmin(userRole);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets detailed moderation permissions for a post
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed moderation permission information</returns>
+        public PostModerationPermissions GetModerationPermissions(string userRole, Post post, int userId)
+        {
+            var permissions = new PostModerationPermissions
+            {
+                IsOwner = post.UserId == userId,
+                IsAdmin = UserRoles.IsAdmin(userRole),
+                IsModerator = UserRoles.IsMeetupAdmin(userRole) || UserRoles.IsAdmin(userRole),
+                PostType = post.PostType
+            };
+
+            // Site admins can always edit content and change status
+            if (UserRoles.IsAdmin(userRole))
+            {
+                permissions.CanEditContent = true;
+                permissions.CanChangeStatus = true;
+                permissions.ContentEditReason = "Site administrators can edit any post content.";
+                permissions.StatusChangeReason = "Site administrators can change any post status.";
+                permissions.AvailableStatusTransitions = GetAllowedStatusTransitions(post.PostType);
+                return permissions;
+            }
+
+            // Post owners can edit content and change status (depending on post type rules)
+            if (post.UserId == userId)
+            {
+                permissions.CanEditContent = CanEditPost(userRole, post, userId);
+                permissions.CanChangeStatus = CanChangePostStatus(userRole, post.PostType, true);
+                
+                if (permissions.CanEditContent)
+                {
+                    permissions.ContentEditReason = "You can edit your own posts.";
+                }
+                else
+                {
+                    var editPerms = GetEditPermissions(userRole, post, userId);
+                    permissions.ContentEditReason = editPerms.Reason;
+                }
+
+                if (permissions.CanChangeStatus)
+                {
+                    permissions.StatusChangeReason = "You can change the status of your own posts.";
+                    permissions.AvailableStatusTransitions = GetAllowedStatusTransitions(post.PostType);
+                }
+                else
+                {
+                    permissions.StatusChangeReason = GetStatusChangeErrorMessage(userRole, post.PostType, true);
+                }
+                
+                return permissions;
+            }
+
+            // For Meetup posts, Meetup Admins can change status but not edit content
+            if (post.PostType == PostType.Meetup && UserRoles.IsMeetupAdmin(userRole))
+            {
+                permissions.CanEditContent = false;
+                permissions.CanChangeStatus = true;
+                permissions.ContentEditReason = "Meetup administrators can only change status of Meetup posts, not edit content. Only the post creator can edit content.";
+                permissions.StatusChangeReason = "Meetup administrators can change the status of Meetup posts.";
+                permissions.AvailableStatusTransitions = GetAllowedStatusTransitions(post.PostType);
+                return permissions;
+            }
+
+            // Default: no permissions for other users
+            permissions.CanEditContent = false;
+            permissions.CanChangeStatus = false;
+            permissions.ContentEditReason = "You can only edit your own posts.";
+            permissions.StatusChangeReason = "You can only change the status of your own posts.";
+            
+            return permissions;
+        }
     }
 }

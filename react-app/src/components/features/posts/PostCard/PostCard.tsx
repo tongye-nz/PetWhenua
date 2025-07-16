@@ -4,7 +4,7 @@ import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } 
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService, postService } from '../../../../api';
 import PostImageGallery from '../../../PostImageGallery';
-import type { Post, PostEditPermissions, PostDeletePermissions } from '../../../../models/post.types';
+import type { Post, PostEditPermissions, PostDeletePermissions, PostModerationPermissions } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
 
@@ -30,11 +30,13 @@ const PostCard: React.FC<PostCardProps> = ({
   const [commentCount, setCommentCount] = useState(0);
   const [editPermissions, setEditPermissions] = useState<PostEditPermissions | null>(null);
   const [deletePermissions, setDeletePermissions] = useState<PostDeletePermissions | null>(null);
+  const [moderationPermissions, setModerationPermissions] = useState<PostModerationPermissions | null>(null);
   
   const isOwner = user?.userId === post.userId;
-  const canEdit = editPermissions?.canEdit ?? false;
+  const canEditContent = moderationPermissions?.canEditContent ?? editPermissions?.canEdit ?? false;
+  const canChangeStatus = moderationPermissions?.canChangeStatus ?? false;
   const canDelete = deletePermissions?.canDelete ?? false;
-  const hasActions = showActions && (canEdit || canDelete || editPermissions || deletePermissions);
+  const hasActions = showActions && (canEditContent || canChangeStatus || canDelete || editPermissions || deletePermissions || moderationPermissions);
 
   // Load comment count for engagement display
   useEffect(() => {
@@ -101,6 +103,34 @@ const PostCard: React.FC<PostCardProps> = ({
     loadDeletePermissions();
   }, [post.postId, post.userId, post.postType, user?.userId, user?.role]);
 
+  // Load moderation permissions
+  useEffect(() => {
+    const loadModerationPermissions = async () => {
+      if (!user?.userId || !user?.role) return;
+      
+      try {
+        const permissions = await postService.getModerationPermissions(post.postId, user.userId, user.role);
+        setModerationPermissions(permissions);
+      } catch (error) {
+        console.debug('Failed to load moderation permissions:', error);
+        // Fallback to basic logic
+        setModerationPermissions({
+          canEditContent: false,
+          canChangeStatus: false,
+          isOwner: user.userId === post.userId,
+          isModerator: user.role === 'meetup_admin' || user.role === 'site_admin',
+          isAdmin: user.role === 'site_admin',
+          postType: post.postType,
+          availableStatusTransitions: [],
+          contentEditReason: 'Unable to check moderation permissions',
+          statusChangeReason: 'Unable to check moderation permissions'
+        });
+      }
+    };
+
+    loadModerationPermissions();
+  }, [post.postId, post.userId, post.postType, user?.userId, user?.role]);
+
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
     setAnchorEl(event.currentTarget);
@@ -127,6 +157,20 @@ const PostCard: React.FC<PostCardProps> = ({
     handleMenuClose();
     if (onDelete) {
       onDelete(post);
+    }
+  };
+
+  const handleStatusChange = async () => {
+    handleMenuClose();
+    if (!user?.userId || !user?.role || !moderationPermissions?.canChangeStatus) return;
+
+    // For simplicity, cycle through available statuses or show a modal
+    // Here we'll just show an alert for demonstration
+    const availableStatuses = moderationPermissions.availableStatusTransitions;
+    if (availableStatuses.length > 0) {
+      const statusNames = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled', 'Pending'];
+      const options = availableStatuses.map(status => statusNames[status]).join(', ');
+      alert(`Available status changes: ${options}\n\nThis would show a status selection dialog.`);
     }
   };
 
@@ -398,13 +442,13 @@ const PostCard: React.FC<PostCardProps> = ({
             gap: 1
           }}
         >
-          {(canEdit || editPermissions) && (
-            <Tooltip title={editPermissions?.reason || 'Edit post'}>
+          {(canEditContent || editPermissions) && (
+            <Tooltip title={editPermissions?.reason || moderationPermissions?.contentEditReason || 'Edit post'}>
               <span>
                 <IconButton
                   size="small"
                   onClick={handleEdit}
-                  disabled={!canEdit}
+                  disabled={!canEditContent}
                   sx={{ 
                     bgcolor: 'background.paper',
                     boxShadow: 1,
@@ -416,6 +460,24 @@ const PostCard: React.FC<PostCardProps> = ({
                   }}
                 >
                   <Edit fontSize="small" />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          {canChangeStatus && !canEditContent && moderationPermissions && (
+            <Tooltip title={moderationPermissions.statusChangeReason || 'Change post status'}>
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={handleStatusChange}
+                  sx={{ 
+                    bgcolor: 'background.paper',
+                    boxShadow: 1,
+                    color: 'warning.main',
+                    '&:hover': { bgcolor: 'warning.light', color: 'warning.contrastText' }
+                  }}
+                >
+                  <div style={{ fontSize: '12px', fontWeight: 'bold' }}>STATUS</div>
                 </IconButton>
               </span>
             </Tooltip>

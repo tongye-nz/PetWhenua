@@ -23,9 +23,10 @@ public class PostsController : ControllerBase
         [FromQuery] PostType? postType = null, 
         [FromQuery] int? userId = null, 
         [FromQuery] string? region = null, 
-        [FromQuery] string? district = null)
+        [FromQuery] string? district = null,
+        [FromQuery] PostVisibility visibility = PostVisibility.Public)
     {
-        var posts = await _postService.GetPostsAsync(postType, userId, region, district);
+        var posts = await _postService.GetPostsWithVisibilityAsync(visibility, postType, userId, region, district);
         return Ok(posts);
     }
 
@@ -149,6 +150,76 @@ public class PostsController : ControllerBase
         }
     }
 
+    [HttpGet("{id}/moderation-permissions")]
+    public async Task<IActionResult> GetModerationPermissions(int id, [FromQuery] int userId, [FromQuery] string userRole)
+    {
+        try
+        {
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            var permissions = _authorizationService.GetModerationPermissions(userRole, post, userId);
+            return Ok(permissions);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while checking moderation permissions.", details = ex.Message });
+        }
+    }
+
+    [HttpPatch("{id}/status-only")]
+    public async Task<IActionResult> ChangePostStatusOnly(int id, [FromBody] ChangePostStatusRequest request)
+    {
+        try
+        {
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            // Verify this is a status-only change (not content editing)
+            var canOnlyChangeStatus = _authorizationService.CanOnlyChangeStatus(request.RequestingUserRole, post, request.RequestingUserId);
+            var canChangeStatus = _authorizationService.CanChangePostStatus(request.RequestingUserRole, post.PostType, post.UserId == request.RequestingUserId);
+
+            if (!canChangeStatus)
+            {
+                var moderationPerms = _authorizationService.GetModerationPermissions(request.RequestingUserRole, post, request.RequestingUserId);
+                return StatusCode(403, new { error = moderationPerms.StatusChangeReason });
+            }
+
+            var updatedPost = await _postService.ChangePostStatusAsync(id, request.NewStatus, request.RequestingUserId, request.RequestingUserRole);
+            
+            var result = new
+            {
+                postId = updatedPost.PostId,
+                newStatus = updatedPost.Status,
+                message = canOnlyChangeStatus 
+                    ? $"Post status changed to {updatedPost.Status} (status-only change as moderator)"
+                    : $"Post status changed to {updatedPost.Status}",
+                statusOnlyChange = canOnlyChangeStatus,
+                updatedAt = updatedPost.UpdatedAt
+            };
+
+            return Ok(result);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return StatusCode(403, new { error = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (Exception)
+        {
+            return StatusCode(500, new { error = "An unexpected error occurred while updating post status." });
+        }
+    }
+
     [HttpGet("user/{userId}")]
     public async Task<IActionResult> GetPostsByUser(int userId)
     {
@@ -160,6 +231,32 @@ public class PostsController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return NotFound(ex.Message);
+        }
+    }
+
+    [HttpGet("my-posts/{userId}")]
+    public async Task<IActionResult> GetMyPosts(int userId)
+    {
+        try
+        {
+            var posts = await _postService.GetUserPostsWithStatusBreakdownAsync(userId);
+            
+            // Group posts by status for easy frontend consumption
+            var statusBreakdown = posts.GroupBy(p => p.Status)
+                .ToDictionary(g => g.Key.ToString(), g => g.Count());
+            
+            var result = new
+            {
+                posts = posts,
+                statusBreakdown = statusBreakdown,
+                totalPosts = posts.Count()
+            };
+            
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = "An error occurred while retrieving user posts.", details = ex.Message });
         }
     }
 

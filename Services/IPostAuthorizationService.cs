@@ -113,5 +113,23 @@ namespace PetWhenua.Services
         /// <param name="userId">The ID of the current user</param>
         /// <returns>Detailed delete permission information</returns>
         PostDeletePermissions GetDeletePermissions(string userRole, Post post, int userId);
+
+        /// <summary>
+        /// Checks if a user can only change status of a post (not edit content)
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>True if the user can only change status, not edit content</returns>
+        bool CanOnlyChangeStatus(string userRole, Post post, int userId);
+
+        /// <summary>
+        /// Gets detailed moderation permissions for a post
+        /// </summary>
+        /// <param name="userRole">The role of the user</param>
+        /// <param name="post">The post to check</param>
+        /// <param name="userId">The ID of the current user</param>
+        /// <returns>Detailed moderation permission information</returns>
+        PostModerationPermissions GetModerationPermissions(string userRole, Post post, int userId);
     }
 }

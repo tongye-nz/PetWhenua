@@ -10,14 +10,17 @@ import {
   Avatar,
   Button,
   Alert,
-  Divider
+  Divider,
+  Tooltip,
+  IconButton
 } from '@mui/material';
-import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
+import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney, AdminPanelSettings } from '@mui/icons-material';
 import { LoadingSpinner, LikeButton } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
-import type { PostType } from '../models/post.types';
+import { postService } from '../api';
+import type { PostType, PostStatus, PostEditPermissions, PostDeletePermissions, PostModerationPermissions } from '../models/post.types';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,12 +28,45 @@ const PostDetail: React.FC = () => {
   const { user } = useAuth();
   const { currentPost, loading, error, fetchPost, deletePost } = usePost();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editPermissions, setEditPermissions] = useState<PostEditPermissions | null>(null);
+  const [deletePermissions, setDeletePermissions] = useState<PostDeletePermissions | null>(null);
+  const [moderationPermissions, setModerationPermissions] = useState<PostModerationPermissions | null>(null);
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [isChangingStatus, setIsChangingStatus] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchPost(parseInt(id));
     }
   }, [id, fetchPost]);
+
+  // Load permissions when post is loaded
+  useEffect(() => {
+    if (currentPost && user) {
+      loadPermissions();
+    }
+  }, [currentPost, user]);
+
+  const loadPermissions = async () => {
+    if (!currentPost || !user?.userId || !user?.role) return;
+
+    setPermissionsLoading(true);
+    try {
+      const [editPerms, deletePerms, moderationPerms] = await Promise.all([
+        postService.getEditPermissions(currentPost.postId, user.userId, user.role),
+        postService.getDeletePermissions(currentPost.postId, user.userId, user.role),
+        postService.getModerationPermissions(currentPost.postId, user.userId, user.role)
+      ]);
+
+      setEditPermissions(editPerms);
+      setDeletePermissions(deletePerms);
+      setModerationPermissions(moderationPerms);
+    } catch (error) {
+      console.error('Failed to load permissions:', error);
+    } finally {
+      setPermissionsLoading(false);
+    }
+  };
 
   const getPostTypeLabel = (postType: PostType): string => {
     const typeMap: { [key: number]: string } = {
@@ -57,14 +93,13 @@ const PostDetail: React.FC = () => {
   };
 
   const handleEdit = () => {
-    if (currentPost?.postId) {
-      // Navigate to edit mode
+    if (currentPost?.postId && editPermissions?.canEdit) {
       navigate(`/edit-post/${currentPost.postId}`);
     }
   };
 
   const handleDelete = async () => {
-    if (!currentPost || !user) return;
+    if (!currentPost || !user || !deletePermissions?.canDelete) return;
 
     const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
     if (!confirmed) return;
@@ -79,11 +114,54 @@ const PostDetail: React.FC = () => {
     }
   };
 
-  const canEditOrDelete = user && currentPost && (
-    user.userId === currentPost.userId || 
-    user.role === 'site_admin' || 
-    user.role === 'meetup_admin'
-  );
+  const handleStatusOnlyChange = async () => {
+    if (!currentPost || !user?.userId || !user?.role || !moderationPermissions?.canChangeStatus) return;
+
+    // For demo purposes, toggle between Active and Inactive
+    // In a real app, you might want a proper status selection dialog
+    const newStatus = currentPost.status === 0 ? 3 : 0; // Active: 0, Inactive: 3
+    const statusName = newStatus === 0 ? 'Active' : 'Inactive';
+    const confirmed = window.confirm(`Change post status to ${statusName}?`);
+    
+    if (!confirmed) return;
+
+    try {
+      setIsChangingStatus(true);
+      await postService.changePostStatusOnly(currentPost.postId, newStatus, user.userId, user.role);
+      // Refresh the post to get updated status
+      await fetchPost(currentPost.postId);
+      // Reload permissions as they might have changed
+      await loadPermissions();
+    } catch (error) {
+      console.error('Failed to change post status:', error);
+    } finally {
+      setIsChangingStatus(false);
+    }
+  };
+
+  const getStatusLabel = (status: PostStatus): string => {
+    const statusMap: { [key: number]: string } = {
+      0: 'Active',
+      1: 'Sold',
+      2: 'Expired',
+      3: 'Inactive',
+      4: 'Cancelled',
+      5: 'Pending'
+    };
+    return statusMap[status] || 'Unknown';
+  };
+
+  const getStatusColor = (status: PostStatus): 'success' | 'info' | 'warning' | 'default' | 'error' => {
+    const colorMap: { [key: number]: 'success' | 'info' | 'warning' | 'default' | 'error' } = {
+      0: 'success',   // Active
+      1: 'info',      // Sold
+      2: 'warning',   // Expired
+      3: 'default',   // Inactive
+      4: 'error',     // Cancelled
+      5: 'warning'    // Pending
+    };
+    return colorMap[status] || 'default';
+  };
 
   if (loading && !currentPost) {
     return (
@@ -141,6 +219,9 @@ const PostDetail: React.FC = () => {
     });
   };
 
+  // Show action buttons if user is logged in and permissions are loaded
+  const showActionButtons = user && !permissionsLoading && (editPermissions || deletePermissions || moderationPermissions);
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Header with back button */}
@@ -153,26 +234,67 @@ const PostDetail: React.FC = () => {
           Back to Posts
         </Button>
         
-        {canEditOrDelete && (
+        {showActionButtons && (
           <Box ml="auto" display="flex" gap={1}>
-            <Button
-              startIcon={<Edit />}
-              onClick={handleEdit}
-              variant="outlined"
-              size="small"
-            >
-              Edit
-            </Button>
-            <Button
-              startIcon={<Delete />}
-              onClick={handleDelete}
-              variant="outlined"
-              color="error"
-              size="small"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
+            {/* Edit Button */}
+            {editPermissions && (
+              <Tooltip 
+                title={editPermissions.canEdit ? '' : editPermissions.reason}
+                placement="top"
+              >
+                <span>
+                  <Button
+                    startIcon={<Edit />}
+                    onClick={handleEdit}
+                    variant="outlined"
+                    size="small"
+                    disabled={!editPermissions.canEdit}
+                  >
+                    Edit
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+
+            {/* Status-Only Change Button (for Meetup Admins) */}
+            {moderationPermissions?.canChangeStatus && (
+              <Tooltip title="Change post status (Meetup Admin)" placement="top">
+                <IconButton
+                  onClick={handleStatusOnlyChange}
+                  color="primary"
+                  size="small"
+                  disabled={isChangingStatus}
+                  sx={{ 
+                    border: '1px solid',
+                    borderColor: 'primary.main',
+                    borderRadius: 1
+                  }}
+                >
+                  <AdminPanelSettings fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* Delete Button */}
+            {deletePermissions && (
+              <Tooltip 
+                title={deletePermissions.canDelete ? '' : deletePermissions.reason}
+                placement="top"
+              >
+                <span>
+                  <Button
+                    startIcon={<Delete />}
+                    onClick={handleDelete}
+                    variant="outlined"
+                    color="error"
+                    size="small"
+                    disabled={!deletePermissions.canDelete || isDeleting}
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
           </Box>
         )}
       </Box>
@@ -180,12 +302,18 @@ const PostDetail: React.FC = () => {
       {/* Post Content */}
       <Card>
         <CardContent sx={{ p: 4 }}>
-          {/* Post Type Badge */}
-          <Box mb={2}>
+          {/* Post Type Badge and Status */}
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
             <Chip 
               label={getPostTypeLabel(currentPost.postType)}
               color={getPostTypeColor(currentPost.postType)}
               variant="filled"
+              size="small"
+            />
+            <Chip 
+              label={getStatusLabel(currentPost.status)}
+              color={getStatusColor(currentPost.status)}
+              variant="outlined"
               size="small"
             />
           </Box>

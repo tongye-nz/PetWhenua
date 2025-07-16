@@ -12,20 +12,40 @@ import { Add } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PostsGrid } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
-import { usePost } from '../contexts/PostContext';
+import { postService } from '../api/post.api';
 import type { Post, PostStatus } from '../models/post.types';
 
 const MyPosts: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { posts, loading, error, fetchPosts, clearError } = usePost();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [statusBreakdown, setStatusBreakdown] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState(0);
 
+  const clearError = () => setError(null);
+
   useEffect(() => {
-    if (user) {
-      fetchPosts({ userId: user.userId });
-    }
-  }, [user, fetchPosts]);
+    const fetchMyPosts = async () => {
+      if (!user?.userId) return;
+      
+      setLoading(true);
+      try {
+        const data = await postService.getMyPosts(user.userId);
+        setPosts(data.posts);
+        setStatusBreakdown(data.statusBreakdown);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch your posts');
+        console.error('Error fetching my posts:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyPosts();
+  }, [user?.userId]);
 
   const filterPostsByStatus = (status?: PostStatus): Post[] => {
     if (status === undefined) return posts;
@@ -35,21 +55,23 @@ const MyPosts: React.FC = () => {
   const getTabCounts = () => {
     return {
       all: posts.length,
-      active: posts.filter(p => p.status === 0).length, // PostStatus.Active
-      inactive: posts.filter(p => p.status === 3).length, // PostStatus.Inactive
-      sold: posts.filter(p => p.status === 1).length, // PostStatus.Sold
-      expired: posts.filter(p => p.status === 2).length, // PostStatus.Expired
-      cancelled: posts.filter(p => p.status === 4).length, // PostStatus.Cancelled
+      active: statusBreakdown['Active'] || 0,
+      inactive: statusBreakdown['Inactive'] || 0,
+      sold: statusBreakdown['Sold'] || 0,
+      expired: statusBreakdown['Expired'] || 0,
+      cancelled: statusBreakdown['Cancelled'] || 0,
+      pending: statusBreakdown['Pending'] || 0,
     };
   };
 
   const tabs = [
-    { label: 'All', status: undefined },
-    { label: 'Active', status: 0 as PostStatus }, // PostStatus.Active
-    { label: 'Inactive', status: 3 as PostStatus }, // PostStatus.Inactive
-    { label: 'Sold', status: 1 as PostStatus }, // PostStatus.Sold
-    { label: 'Expired', status: 2 as PostStatus }, // PostStatus.Expired
-    { label: 'Cancelled', status: 4 as PostStatus }, // PostStatus.Cancelled
+    { label: 'All', status: undefined, key: 'all' },
+    { label: 'Active', status: 0 as PostStatus, key: 'active' }, // PostStatus.Active
+    { label: 'Inactive', status: 3 as PostStatus, key: 'inactive' }, // PostStatus.Inactive
+    { label: 'Pending', status: 5 as PostStatus, key: 'pending' }, // PostStatus.Pending
+    { label: 'Sold', status: 1 as PostStatus, key: 'sold' }, // PostStatus.Sold
+    { label: 'Expired', status: 2 as PostStatus, key: 'expired' }, // PostStatus.Expired
+    { label: 'Cancelled', status: 4 as PostStatus, key: 'cancelled' }, // PostStatus.Cancelled
   ];
 
   const counts = getTabCounts();
@@ -135,12 +157,12 @@ const MyPosts: React.FC = () => {
           scrollButtons="auto"
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label={`All (${counts.all})`} />
-          <Tab label={`Active (${counts.active})`} />
-          <Tab label={`Inactive (${counts.inactive})`} />
-          <Tab label={`Sold (${counts.sold})`} />
-          <Tab label={`Expired (${counts.expired})`} />
-          <Tab label={`Cancelled (${counts.cancelled})`} />
+          {tabs.map((tab) => (
+            <Tab 
+              key={tab.key} 
+              label={`${tab.label} (${counts[tab.key as keyof typeof counts] || 0})`} 
+            />
+          ))}
         </Tabs>
       </Card>
 

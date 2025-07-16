@@ -140,5 +140,18 @@ namespace PetWhenua.Models.Dtos
         public bool AdminDeletionAllowed { get; set; }
     }
 
+    public class PostModerationPermissions
+    {
+        public bool CanEditContent { get; set; }
+        public bool CanChangeStatus { get; set; }
+        public bool IsOwner { get; set; }
+        public bool IsModerator { get; set; }
+        public bool IsAdmin { get; set; }
+        public PostType PostType { get; set; }
+        public List<PostStatus> AvailableStatusTransitions { get; set; } = new();
+        public string ContentEditReason { get; set; } = string.Empty;
+        public string StatusChangeReason { get; set; } = string.Empty;
+    }
+
 
 }
