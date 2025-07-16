@@ -28,7 +28,7 @@ import { validateImageFile, compressImage, formatFileSize } from '../utils/image
 
 export interface UploadedImage {
   id: string;
-  file: File;
+  file?: File; // Optional for existing images
   preview: string;
   compressed?: File;
   uploading?: boolean;
@@ -36,6 +36,8 @@ export interface UploadedImage {
   error?: string;
   size: number;
   compressedSize?: number;
+  isExisting?: boolean; // Flag for existing images from server
+  originalUrl?: string; // Original server URL for existing images
 }
 
 export interface ImageUploadProps {
@@ -115,7 +117,17 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
         updatedImages[imageIndex] = { ...updatedImages[imageIndex], uploading: true };
         setImages([...updatedImages]);
 
-        const compressedFile = await compressImage(newImages[i].file);
+        // Skip compression for existing images that don't have File objects
+        if (!newImages[i].file) {
+          updatedImages[imageIndex] = {
+            ...updatedImages[imageIndex],
+            uploading: false,
+            uploaded: true,
+          };
+          continue;
+        }
+
+        const compressedFile = await compressImage(newImages[i].file!);
         
         updatedImages[imageIndex] = {
           ...updatedImages[imageIndex],
@@ -311,7 +323,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
                 <CardContent sx={{ p: 1, '&:last-child': { pb: 1 } }}>
                   <Typography variant="caption" display="block" noWrap>
-                    {image.file.name}
+                    {image.file?.name || `Existing Image ${index + 1}`}
                   </Typography>
                   
                   <Box display="flex" justifyContent="space-between" alignItems="center">

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import type { CreatePostRequest, UpdatePostRequest, Post } from '../models/post.types';
 import type { PostFormData } from '../components/forms/PostForm/PostForm';
+import type { UploadedImage } from '../components/ImageUpload';
 
 const CreatePost: React.FC = () => {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ const CreatePost: React.FC = () => {
   const { currentPost, fetchPost, updatePost } = usePost();
   
   const [initialData, setInitialData] = useState<Partial<PostFormData> | undefined>(undefined);
+  const [initialImages, setInitialImages] = useState<UploadedImage[]>([]);
   const [loadingPost, setLoadingPost] = useState(false);
   const [fetchError, setFetchError] = useState<string>('');
 
@@ -44,6 +46,24 @@ const CreatePost: React.FC = () => {
   // Set initial form data when post is loaded
   useEffect(() => {
     if (isEditMode && currentPost && currentPost.postId === parseInt(id!)) {
+      // Convert existing image URLs to UploadedImage objects
+      const existingImages = (currentPost.images || []).map((imageUrl, index) => {
+        const fullImageUrl = imageUrl.startsWith('http') 
+          ? imageUrl 
+          : `http://localhost:5295${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+        
+        return {
+          id: `existing_${index}_${Date.now()}`,
+          preview: fullImageUrl,
+          size: 0, // Unknown size for existing images
+          uploaded: true,
+          isExisting: true,
+          originalUrl: imageUrl,
+        };
+      });
+
+             setInitialImages(existingImages);
+      
       setInitialData({
         title: currentPost.title,
         content: currentPost.content,
@@ -161,6 +181,7 @@ const CreatePost: React.FC = () => {
       <PostForm
         mode={isEditMode ? "edit" : "create"}
         initialData={initialData}
+        initialImages={initialImages}
         onSubmit={handleFormSubmit}
         onCancel={handleCancel}
       />

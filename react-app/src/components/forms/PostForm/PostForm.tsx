@@ -49,6 +49,7 @@ export interface PostFormErrors {
 export interface PostFormProps {
   mode: 'create' | 'edit';
   initialData?: Partial<PostFormData>;
+  initialImages?: UploadedImage[];
   onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
   onCancel?: () => void;
 }
@@ -56,6 +57,7 @@ export interface PostFormProps {
 const PostForm: React.FC<PostFormProps> = ({
   mode,
   initialData,
+  initialImages = [],
   onSubmit,
   onCancel,
 }) => {
@@ -105,7 +107,7 @@ const PostForm: React.FC<PostFormProps> = ({
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(initialImages);
   
   // Pet Wedding specific state
   const [selectablePets, setSelectablePets] = useState<SelectablePet[]>([]);
@@ -253,45 +255,56 @@ const PostForm: React.FC<PostFormProps> = ({
       let uploadedImageUrls: string[] = [];
       if (uploadedImages.length > 0) {
         console.log('Uploading images:', uploadedImages.length);
-        const imagesToUpload = uploadedImages
-          .filter(img => img.compressed || img.file)
-          .map((img, index) => {
-            const file = img.compressed || img.file!;
+        // Separate existing images from new uploads
+        const existingImages = uploadedImages.filter(img => img.isExisting && img.originalUrl);
+        const newFileUploads = uploadedImages.filter(img => img.compressed || img.file);
+        
+        const imagesToUpload = newFileUploads.map((img, index) => {
+          const file = img.compressed || img.file!;
+          
+          // Ensure file has a valid name
+          if (!file.name || file.name === 'blob' || !file.name.includes('.')) {
+            const originalName = img.file?.name || 'image';
+            const extension = originalName.split('.').pop() || 'jpg';
+            const newName = `image_${Date.now()}_${index}.${extension}`;
             
-            // Ensure file has a valid name
-            if (!file.name || file.name === 'blob' || !file.name.includes('.')) {
-              const originalName = img.file.name;
-              const extension = originalName.split('.').pop() || 'jpg';
-              const newName = `image_${Date.now()}_${index}.${extension}`;
-              
-              console.warn(`File had invalid name "${file.name}", renaming to "${newName}"`);
-              
-              return new File([file], newName, {
-                type: file.type || 'image/jpeg',
-                lastModified: file.lastModified || Date.now(),
-              });
-            }
+            console.warn(`File had invalid name "${file.name}", renaming to "${newName}"`);
             
-            return file;
-          });
+            return new File([file], newName, {
+              type: file.type || 'image/jpeg',
+              lastModified: file.lastModified || Date.now(),
+            });
+          }
+          
+          return file;
+        });
         
-        console.log('Images to upload:', imagesToUpload.length);
-        console.log('File details:', imagesToUpload.map(file => ({
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          lastModified: file.lastModified
-        })));
+        // Combine existing image URLs with newly uploaded URLs
+        const existingImageUrls = existingImages.map(img => img.originalUrl!);
         
-        const uploadResult = await imageApi.uploadImages(imagesToUpload, user.userId);
-        console.log('Upload result:', uploadResult);
-        
-        if (uploadResult.success) {
-          uploadedImageUrls = uploadResult.imageUrls;
-          console.log('Uploaded image URLs:', uploadedImageUrls);
+        if (imagesToUpload.length > 0) {
+          console.log('Images to upload:', imagesToUpload.length);
+          console.log('File details:', imagesToUpload.map(file => ({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            lastModified: file.lastModified
+          })));
+          
+          const uploadResult = await imageApi.uploadImages(imagesToUpload, user.userId);
+          console.log('Upload result:', uploadResult);
+          
+          if (uploadResult.success) {
+            uploadedImageUrls = [...existingImageUrls, ...uploadResult.imageUrls];
+            console.log('All image URLs (existing + new):', uploadedImageUrls);
+          } else {
+            console.error('Image upload failed:', uploadResult.errorMessage);
+            throw new Error(uploadResult.errorMessage || 'Failed to upload images');
+          }
         } else {
-          console.error('Image upload failed:', uploadResult.errorMessage);
-          throw new Error(uploadResult.errorMessage || 'Failed to upload images');
+          // Only existing images, no new uploads
+          uploadedImageUrls = existingImageUrls;
+          console.log('Using existing images only:', uploadedImageUrls);
         }
       }
 
