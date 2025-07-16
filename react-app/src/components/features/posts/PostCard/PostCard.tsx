@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
 import { MoreVert, Edit, Delete, Person } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton } from '../../../ui';
+import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
@@ -156,6 +157,15 @@ const PostCard: React.FC<PostCardProps> = ({
         >
           {truncateContent(post.content, compact ? 100 : 200)}
         </Text>
+
+        {/* Image Gallery */}
+        {post.images && post.images.length > 0 && (
+          <PostImageGallery 
+            images={post.images} 
+            maxDisplay={compact ? 2 : 4}
+            compact={compact}
+          />
+        )}
 
         {/* Status and type chips */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>

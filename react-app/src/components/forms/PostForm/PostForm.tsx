@@ -11,6 +11,9 @@ import {
 } from '@mui/material';
 import { Button, Input, LocationInput } from '../../ui';
 import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
+import ImageUpload from '../../ImageUpload';
+import type { UploadedImage } from '../../ImageUpload';
+import { imageApi } from '../../../api/imageApi';
 import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -33,6 +36,7 @@ export interface PostFormData {
 export interface PostFormErrors {
   title?: string;
   content?: string;
+  images?: string;
   postType?: string;
   price?: string;
   eventDate?: string;
@@ -101,6 +105,7 @@ const PostForm: React.FC<PostFormProps> = ({
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   
   // Pet Wedding specific state
   const [selectablePets, setSelectablePets] = useState<SelectablePet[]>([]);
@@ -221,6 +226,17 @@ const PostForm: React.FC<PostFormProps> = ({
       }
     }
 
+    // Image validation
+    if (uploadedImages.length > 9) {
+      newErrors.images = 'Maximum 9 images allowed per post';
+    }
+
+    // Check for any images with errors
+    const imagesWithErrors = uploadedImages.filter(img => img.error);
+    if (imagesWithErrors.length > 0) {
+      newErrors.images = `${imagesWithErrors.length} image(s) have errors. Please fix or remove them.`;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -233,6 +249,22 @@ const PostForm: React.FC<PostFormProps> = ({
     }
 
     try {
+      // Step 1: Upload images if any
+      let uploadedImageUrls: string[] = [];
+      if (uploadedImages.length > 0) {
+        const imagesToUpload = uploadedImages
+          .filter(img => img.compressed || img.file)
+          .map(img => img.compressed || img.file!);
+        
+        const uploadResult = await imageApi.uploadImages(imagesToUpload, user.userId);
+        if (uploadResult.success) {
+          uploadedImageUrls = uploadResult.imageUrls;
+        } else {
+          throw new Error(uploadResult.errorMessage || 'Failed to upload images');
+        }
+      }
+
+      // Step 2: Create the post with uploaded image URLs
       const submitData = mode === 'create' 
         ? {
             userId: user.userId,
@@ -240,7 +272,7 @@ const PostForm: React.FC<PostFormProps> = ({
             postType: formData.postType,
             title: formData.title,
             content: formData.content,
-            images: formData.images,
+            images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
             price: formData.price || undefined,
@@ -251,7 +283,7 @@ const PostForm: React.FC<PostFormProps> = ({
         : {
             title: formData.title,
             content: formData.content,
-            images: formData.images,
+            images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
             price: formData.price || undefined,
@@ -366,6 +398,35 @@ const PostForm: React.FC<PostFormProps> = ({
           disabled={loading}
           placeholder="Tell us more about your post..."
         />
+
+        {/* Image Upload - new feature */}
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Upload Images
+          </Typography>
+          <ImageUpload
+            maxImages={9}
+            onImagesChange={(images: UploadedImage[]) => {
+              setUploadedImages(images);
+              setFormData(prev => ({
+                ...prev,
+                images: images.map(img => img.preview)
+              }));
+              // Clear image errors when images are uploaded
+              if (images.length > 0 && errors.images) {
+                setErrors(prev => ({ ...prev, images: undefined }));
+              }
+            }}
+            initialImages={uploadedImages}
+            disabled={loading}
+            showCompression={true}
+          />
+          {errors.images && (
+            <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
+              {errors.images}
+            </Typography>
+          )}
+        </Box>
 
         {/* Conditional Fields */}
         {requiresPrice && (
