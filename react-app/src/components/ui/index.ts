@@ -5,7 +5,9 @@ export { default as Logo } from './Logo';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as StatusChip } from './StatusChip';
 export { default as LocationInput } from './LocationInput';
+export { default as DateTimeInput } from './DateTimeInput';
 export { default as FollowButton } from './FollowButton';
+export { LikeButton } from './LikeButton';
 export { default as PetConnectionButton } from './PetConnectionButton';
 
 export type { ButtonProps } from './Button';
@@ -15,5 +17,7 @@ export type { LogoProps } from './Logo';
 export type { LoadingSpinnerProps } from './LoadingSpinner';
 export type { StatusChipProps } from './StatusChip';
 export type { LocationInputProps } from './LocationInput';
+export type { DateTimeInputProps } from './DateTimeInput';
 export type { FollowButtonProps } from './FollowButton';
+export type { LikeButtonProps } from './LikeButton';
 export type { PetConnectionButtonProps } from './PetConnectionButton';

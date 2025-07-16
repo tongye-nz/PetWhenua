@@ -64,6 +64,7 @@ export const homeStyles: { [key: string]: CSSProperties } = {
     textAlign: 'center',
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.3s ease',
+    cursor: 'pointer',
   },
   stepCardHover: {
     background: 'white',
@@ -73,6 +74,7 @@ export const homeStyles: { [key: string]: CSSProperties } = {
     boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
     transition: 'transform 0.3s ease',
     transform: 'translateY(-5px)',
+    cursor: 'pointer',
   },
   stepIcon: {
     marginBottom: '1.5rem',

@@ -83,6 +83,7 @@ const UserProfile: React.FC = () => {
         email: data.email,
         bio: data.bio,
         location: combineLocation(data.region, data.district),
+        profilePicture: data.profilePicture,
         // Don't include phoneNumber for now as it's not in the profile form
       };
 
@@ -94,6 +95,7 @@ const UserProfile: React.FC = () => {
         ...data,
         region,
         district,
+        profilePicture: updatedUser.profilePicture || data.profilePicture,
       });
 
       // Refresh auth context to update user data

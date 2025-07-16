@@ -49,6 +49,8 @@ public class User
     // Navigation properties
     public List<Pet> Pets { get; set; } = new();
     public List<Post> Posts { get; set; } = new();
+    public List<Comment> Comments { get; set; } = new();
+    public List<Like> Likes { get; set; } = new();
     
     // Follow relationships
     public List<UserFollow> Following { get; set; } = new();

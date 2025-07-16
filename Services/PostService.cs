@@ -20,9 +20,9 @@ namespace PetWhenua.Services
             _postFactory = postFactory;
         }
 
-        public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null)
+        public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null)
         {
-            return await _postRepository.GetAllPostsAsync(postType, userId);
+            return await _postRepository.GetAllPostsAsync(postType, userId, region, district);
         }
 
         public async Task<Post?> GetPostByIdAsync(int id)

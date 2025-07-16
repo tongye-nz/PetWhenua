@@ -8,4 +8,7 @@ export * from './profile';
 export * from './pets';
 
 // Post Features
-export * from './posts'; 
+export * from './posts';
+
+// Comment Features
+export * from './comments'; 

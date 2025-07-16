@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -17,6 +17,7 @@ import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PostsGrid } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
+import { NZ_REGIONS, type District } from '../data/nzLocations';
 import type { Post, PostFilters, PostType } from '../models/post.types';
 
 const Posts: React.FC = () => {
@@ -24,6 +25,13 @@ const Posts: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
+  const [availableDistricts, setAvailableDistricts] = useState<District[]>([]);
+
+  // Get districts for a selected region
+  const getDistrictsForRegion = (regionName: string): District[] => {
+    const region = NZ_REGIONS.find(r => r.Name === regionName);
+    return region ? region.Districts : [];
+  };
 
   // Map URL parameter to PostType
   const getPostTypeFromParam = (param?: string): PostType | undefined => {
@@ -48,11 +56,26 @@ const Posts: React.FC = () => {
     fetchPosts(initialFilters);
   }, [postTypeParam, fetchPosts, setFilters]);
 
-  const handleFilterChange = (newFilters: Partial<PostFilters>) => {
+  const handleFilterChange = useCallback((newFilters: Partial<PostFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
     fetchPosts(updatedFilters);
-  };
+  }, [filters, fetchPosts, setFilters]);
+
+  // Update available districts when region changes
+  useEffect(() => {
+    if (filters.region) {
+      const districts = getDistrictsForRegion(filters.region);
+      setAvailableDistricts(districts);
+      
+      // Clear district filter if it's no longer valid for the new region
+      if (filters.district && !districts.some(d => d.Name === filters.district)) {
+        handleFilterChange({ district: undefined });
+      }
+    } else {
+      setAvailableDistricts([]);
+    }
+  }, [filters.region, filters.district, handleFilterChange]);
 
   const handleCreatePost = () => {
     // Navigate to create post page
@@ -141,7 +164,7 @@ const Posts: React.FC = () => {
           <Box 
             sx={{ 
               display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(5, 1fr)' },
               gap: 2,
               alignItems: 'end'
             }}
@@ -165,6 +188,50 @@ const Posts: React.FC = () => {
                 ))}
               </Select>
             </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Region</InputLabel>
+              <Select
+                value={filters.region ?? ''}
+                label="Region"
+                onChange={(e) => {
+                  const value = String(e.target.value);
+                  handleFilterChange({ 
+                    region: value === '' ? undefined : value,
+                    district: undefined // Clear district when region changes
+                  });
+                }}
+              >
+                <MenuItem value="">All Regions</MenuItem>
+                {NZ_REGIONS.map((region) => (
+                  <MenuItem key={region.LocalityId} value={region.Name}>
+                    {region.Name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>District</InputLabel>
+              <Select
+                value={filters.district ?? ''}
+                label="District"
+                disabled={!filters.region}
+                onChange={(e) => {
+                  const value = String(e.target.value);
+                  handleFilterChange({ 
+                    district: value === '' ? undefined : value
+                  });
+                }}
+              >
+                <MenuItem value="">All Districts</MenuItem>
+                {availableDistricts.map((district) => (
+                  <MenuItem key={district.DistrictId} value={district.Name}>
+                    {district.Name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             
             {user && (
               <Button 
@@ -180,7 +247,12 @@ const Posts: React.FC = () => {
             
             <Button 
               variant="outline" 
-              onClick={() => handleFilterChange({ postType: undefined, userId: undefined })}
+              onClick={() => handleFilterChange({ 
+                postType: undefined, 
+                userId: undefined, 
+                region: undefined, 
+                district: undefined 
+              })}
               fullWidth
             >
               Clear Filters

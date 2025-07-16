@@ -41,12 +41,19 @@ export interface UpdateUserProfileRequest {
   bio?: string;
   location?: string;
   phoneNumber?: string;
+  profilePicture?: string;
 }
 
 export const userAPI = {
   // Get current user profile
   getCurrentUser: async (): Promise<User> => {
     const response = await userApi.get('/users/me');
+    return response.data;
+  },
+
+  // Get all users
+  getAllUsers: async (): Promise<User[]> => {
+    const response = await userApi.get('/users');
     return response.data;
   },
 

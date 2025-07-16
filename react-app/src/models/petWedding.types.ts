@@ -6,7 +6,21 @@ export interface PetWeddingParticipant {
   hasApproved: boolean;
   approvedAt?: string;
   createdAt: string;
-  pet?: Pet;
+  pet?: {
+    petId: number;
+    userId: number;
+    name: string;
+    species?: string;
+    breed?: string;
+    age: number;
+    birthYear?: number;
+    birthMonth?: number;
+    gender?: string;
+    description?: string;
+    profilePicture?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  };
   owner?: User;
 }
 
@@ -32,6 +46,6 @@ export interface SelectablePet extends Pet {
   connectionOwner?: User;
 }
 
-import type { Pet } from './pet.types';
 import type { User } from './auth.types';
 import type { Post } from './post.types';
+import type { Pet } from './pet.types';

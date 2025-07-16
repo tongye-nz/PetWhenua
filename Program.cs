@@ -7,6 +7,7 @@ using PetWhenua.Services.Abstract;
 using PetWhenua.Repositories.Abstract;
 using PetWhenua.Repositories.Concrete;
 using PetWhenua.Services.Factories;
+using PetWhenua.Models.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,12 @@ builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IPetConnectionService, PetConnectionService>();
 builder.Services.AddScoped<IPetWeddingService, PetWeddingService>();
 builder.Services.AddScoped<IUserFollowService, UserFollowService>();
+builder.Services.AddScoped<IImageService, ImageService>();
+
+// Configure Image Upload Settings
+builder.Services.Configure<ImageUploadSettings>(
+    builder.Configuration.GetSection("ImageUpload"));
+
 // builder.Services.AddScoped<IPostAuthorizationService, PostAuthorizationService>();
 // builder.Services.AddScoped<PostExpiryService>();
 // builder.Services.AddHostedService<PostExpiryBackgroundService>();
@@ -100,6 +107,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Serve static files (for uploaded images)
+app.UseStaticFiles();
 
 // Use CORS
 app.UseCors("AllowReactApp");

@@ -13,6 +13,8 @@ import PostDetail from './pages/PostDetail.tsx';
 import PetDetail from './pages/PetDetail.tsx';
 import CreatePost from './pages/CreatePost.tsx';
 import MyPosts from './pages/MyPosts.tsx';
+import UsersNearMe from './pages/UsersNearMe.tsx';
+import ImageUploadDemo from './components/ImageUploadDemo.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
 
@@ -44,6 +46,11 @@ function App() {
                     <CreatePost />
                   </ProtectedRoute>
                 } />
+                <Route path="/edit-post/:id" element={
+                  <ProtectedRoute>
+                    <CreatePost />
+                  </ProtectedRoute>
+                } />
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <UserProfile />
@@ -65,8 +72,10 @@ function App() {
                     <MyPosts />
                   </ProtectedRoute>
                 } />
+                <Route path="/users-near-me" element={<UsersNearMe />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
               </Routes>
             </Suspense>
           </Layout>

@@ -53,7 +53,27 @@ namespace PetWhenua.Controllers
                 if (!success)
                     return NotFound("No pending approval found for this user");
 
-                return Ok(new { message = "Pet wedding participation approved successfully" });
+                return Ok(new { message = "Participation approved successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("{postId}/participants")]
+        public async Task<IActionResult> UpdatePetWeddingParticipants(int postId, [FromBody] UpdatePetWeddingParticipantsDto request)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var updatedPost = await _petWeddingService.UpdatePetWeddingParticipantsAsync(postId, request.PetIds, currentUserId);
+                
+                return Ok(new { message = "Pet wedding participants updated successfully", post = updatedPost });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
             }
             catch (InvalidOperationException ex)
             {
@@ -106,5 +126,10 @@ namespace PetWhenua.Controllers
         public DateTime EventDate { get; set; }
         public List<string>? Images { get; set; }
         public string? Category { get; set; }
+    }
+
+    public class UpdatePetWeddingParticipantsDto
+    {
+        public List<int> PetIds { get; set; } = new();
     }
 }

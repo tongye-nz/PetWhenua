@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using PetWhenua.Models;
 
 public class AppDbContext : DbContext
 {
@@ -8,6 +9,9 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Pet> Pets => Set<Pet>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<PostImage> PostImages => Set<PostImage>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Like> Likes => Set<Like>();
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<PetConnection> PetConnections => Set<PetConnection>();
     public DbSet<PetWeddingParticipant> PetWeddingParticipants => Set<PetWeddingParticipant>();
@@ -23,6 +27,37 @@ public class AppDbContext : DbContext
             .HasMany(u => u.Posts)
             .WithOne(p => p.User)
             .HasForeignKey(p => p.UserId);
+
+        // Configure Comment relationships
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Post)
+            .WithMany(p => p.Comments)
+            .HasForeignKey(c => c.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.User)
+            .WithMany(u => u.Comments)
+            .HasForeignKey(c => c.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure Like relationships
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.Post)
+            .WithMany(p => p.Likes)
+            .HasForeignKey(l => l.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.User)
+            .WithMany(u => u.Likes)
+            .HasForeignKey(l => l.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Ensure one like per user per post
+        modelBuilder.Entity<Like>()
+            .HasIndex(l => new { l.PostId, l.UserId })
+            .IsUnique();
 
         // Configure UserFollow relationships
         modelBuilder.Entity<UserFollow>()
@@ -114,5 +149,18 @@ public class AppDbContext : DbContext
                     (c1, c2) => c1!.SequenceEqual(c2!),
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
+
+        // Configure PostImage relationships to avoid cascade delete conflicts
+        modelBuilder.Entity<PostImage>()
+            .HasOne(pi => pi.Post)
+            .WithMany(p => p.PostImages)
+            .HasForeignKey(pi => pi.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PostImage>()
+            .HasOne(pi => pi.UploadedByUser)
+            .WithMany()
+            .HasForeignKey(pi => pi.UploadedBy)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

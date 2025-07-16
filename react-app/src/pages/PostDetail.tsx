@@ -13,7 +13,8 @@ import {
   Divider
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner } from '../components/ui';
+import { LoadingSpinner, LikeButton } from '../components/ui';
+import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { PostType } from '../models/post.types';
@@ -56,8 +57,10 @@ const PostDetail: React.FC = () => {
   };
 
   const handleEdit = () => {
-    // Navigate to edit mode - you can implement this later
-    console.log('Edit post:', currentPost?.postId);
+    if (currentPost?.postId) {
+      // Navigate to edit mode
+      navigate(`/edit-post/${currentPost.postId}`);
+    }
   };
 
   const handleDelete = async () => {
@@ -243,6 +246,16 @@ const PostDetail: React.FC = () => {
               </Box>
             )}
 
+            {/* Address - for Meetup and Pet Wedding posts */}
+            {currentPost.address && (currentPost.postType === 0 || currentPost.postType === 1) && (
+              <Box display="flex" alignItems="center" mb={2}>
+                <LocationOn color="primary" sx={{ mr: 1 }} />
+                <Typography variant="body1" fontWeight="medium">
+                  Address: {currentPost.address}
+                </Typography>
+              </Box>
+            )}
+
             {currentPost.category && (
               <Box mt={3}>
                 <Typography variant="body2" color="text.secondary">
@@ -259,26 +272,45 @@ const PostDetail: React.FC = () => {
                 Images
               </Typography>
               <Box display="flex" gap={2} flexWrap="wrap">
-                {currentPost.images.map((image, index) => (
-                  <Box
-                    key={index}
-                    component="img"
-                    src={image}
-                    alt={`${currentPost.title} - Image ${index + 1}`}
-                    sx={{
-                      width: 200,
-                      height: 150,
-                      objectFit: 'cover',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  />
-                ))}
+                {currentPost.images.map((image, index) => {
+                  // Construct proper image URL
+                  const imageUrl = image.startsWith('http') 
+                    ? image 
+                    : `http://localhost:5295${image.startsWith('/') ? '' : '/'}${image}`;
+                  
+                  return (
+                    <Box
+                      key={index}
+                      component="img"
+                      src={imageUrl}
+                      alt={`${currentPost.title} - Image ${index + 1}`}
+                      sx={{
+                        width: 200,
+                        height: 150,
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(imageUrl, '_blank')}
+                    />
+                  );
+                })}
               </Box>
             </Box>
           )}
+
+          <Divider sx={{ my: 3 }} />
+
+          {/* Like and Comment Actions */}
+          <Box display="flex" alignItems="center" gap={2} mb={2}>
+            <LikeButton postId={currentPost.postId} size="medium" />
+          </Box>
         </CardContent>
+
+        {/* Comment Section */}
+        <CommentSection postId={currentPost.postId} />
       </Card>
     </Container>
   );

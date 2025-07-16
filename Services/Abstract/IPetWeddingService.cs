@@ -9,5 +9,6 @@ namespace PetWhenua.Services.Abstract
         Task<bool> CanUserSelectPetForWeddingAsync(int userId, int petId);
         Task<IEnumerable<Pet>> GetSelectablePetsForWeddingAsync(int userId);
         Task<Post> UpdateWeddingStatusBasedOnApprovalsAsync(int postId);
+        Task<Post> UpdatePetWeddingParticipantsAsync(int postId, List<int> newPetIds, int requestingUserId);
     }
 }

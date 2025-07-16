@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
-import { MoreVert, Edit, Delete, Person } from '@mui/icons-material';
-import { Text, StatusChip, FollowButton } from '../../../ui';
+import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
+import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
+import { commentService } from '../../../../api';
+import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
@@ -25,11 +27,27 @@ const PostCard: React.FC<PostCardProps> = ({
 }) => {
   const { user } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [commentCount, setCommentCount] = useState(0);
   
   const isOwner = user?.userId === post.userId;
   const canEdit = isOwner && post.status === 0; // PostStatus.Active
   const canDelete = isOwner || user?.role === 'site_admin';
   const hasActions = showActions && (canEdit || canDelete);
+
+  // Load comment count for engagement display
+  useEffect(() => {
+    const loadCommentCount = async () => {
+      try {
+        const count = await commentService.getCommentCount(post.postId);
+        setCommentCount(count);
+      } catch (error) {
+        // Silently fail - comment count is not critical
+        console.debug('Failed to load comment count:', error);
+      }
+    };
+
+    loadCommentCount();
+  }, [post.postId]);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -78,12 +96,12 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <Card 
       sx={{ 
-        height: compact ? 280 : 350,
         display: 'flex',
         flexDirection: 'column',
         cursor: onView ? 'pointer' : 'default',
         transition: 'all 0.3s ease',
         position: 'relative',
+        minHeight: compact ? 280 : 350,
         '&:hover': {
           transform: onView ? 'translateY(-4px)' : 'none',
           boxShadow: onView ? 3 : 1,
@@ -157,8 +175,126 @@ const PostCard: React.FC<PostCardProps> = ({
           {truncateContent(post.content, compact ? 100 : 200)}
         </Text>
 
+        {/* Pet Wedding Participants - show the two pets */}
+        {post.postType === 1 && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
+          <Box sx={{ mb: 2, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
+            <Text variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              💍 Pet Wedding Participants
+            </Text>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              {post.petWeddingParticipants.map((participant) => (
+                <Box key={participant.participantId} sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5,
+                  bgcolor: 'background.paper',
+                  borderRadius: 1,
+                  p: 0.5,
+                  flex: 1,
+                  minWidth: 0 // Allow content to shrink
+                }}>
+                  {/* Pet Profile Picture */}
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.light',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}
+                  >
+                    {participant.pet?.profilePicture ? (
+                      <Box
+                        component="img"
+                        src={participant.pet.profilePicture.startsWith('http') 
+                          ? participant.pet.profilePicture 
+                          : `http://localhost:5295${participant.pet.profilePicture.startsWith('/') ? '' : '/'}${participant.pet.profilePicture}`}
+                        alt={participant.pet.name}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <Text variant="caption" fontWeight="bold" sx={{ color: 'primary.contrastText' }}>
+                        {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                      </Text>
+                    )}
+                  </Box>
+                  
+                  {/* Pet Info */}
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Text variant="caption" fontWeight="medium" sx={{ 
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {participant.pet?.name || 'Unknown Pet'}
+                    </Text>
+                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                      {participant.pet?.gender && (
+                        <span>
+                          {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️' : 
+                           participant.pet.gender === 'Female' || participant.pet.gender === 'F' ? '♀️' : ''}
+                          {' '}
+                        </span>
+                      )}
+                      {participant.pet?.species || 'Pet'}
+                    </Text>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
+        {/* Location and Address info for Meetup and Wedding posts */}
+        {(post.postType === 0 || post.postType === 1) && (
+          <Box sx={{ mb: 2 }}>
+            {post.location && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Text variant="caption" color="text.secondary">
+                  {post.location}
+                </Text>
+              </Box>
+            )}
+            {post.address && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <LocationOn sx={{ fontSize: 16, color: 'primary.main' }} />
+                <Text variant="caption" color="text.primary" fontWeight="medium">
+                  {post.address}
+                </Text>
+              </Box>
+            )}
+            {post.eventDate && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Event sx={{ fontSize: 16, color: 'primary.main' }} />
+                <Text variant="caption" color="text.primary" fontWeight="medium">
+                  {formatDate(post.eventDate)}
+                </Text>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Image Gallery */}
+        {post.images && post.images.length > 0 && (
+          <PostImageGallery 
+            images={post.images} 
+            maxDisplay={compact ? 2 : 4}
+            compact={compact}
+          />
+        )}
+
         {/* Status and type chips */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
           <StatusChip 
             statusVariant="status"
             status={post.status}
@@ -172,23 +308,32 @@ const PostCard: React.FC<PostCardProps> = ({
         </Box>
       </CardContent>
 
-      {/* Footer with additional info */}
-      {!compact && (
-        <Box sx={{ px: 2, pb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {post.eventDate && (
-              <Text variant="caption" color="text.secondary">
-                Event: {formatDate(post.eventDate)}
-              </Text>
-            )}
-            {post.updatedAt !== post.createdAt && (
-              <Text variant="caption" color="text.secondary">
-                Updated: {formatDate(post.updatedAt)}
-              </Text>
-            )}
+      {/* Bottom Section - Engagement and Footer */}
+      <Box sx={{ px: 2, pb: 2 }}>
+        {/* Engagement Section */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 1, pb: 1 }}>
+          <LikeButton 
+            postId={post.postId} 
+            size="small" 
+            showCount={true}
+          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <ChatBubbleOutline sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <Text variant="body2" color="text.secondary">
+              {commentCount}
+            </Text>
           </Box>
         </Box>
-      )}
+
+        {/* Footer with additional info */}
+        {!compact && post.updatedAt !== post.createdAt && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+            <Text variant="caption" color="text.secondary">
+              Updated: {formatDate(post.updatedAt)}
+            </Text>
+          </Box>
+        )}
+      </Box>
 
       {/* Action menu */}
       {hasActions && (

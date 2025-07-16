@@ -9,9 +9,12 @@ import {
   Select, 
   MenuItem
 } from '@mui/material';
-import { Button, Input, LocationInput } from '../../ui';
+import { Button, Input, LocationInput, DateTimeInput } from '../../ui';
 import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
-import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
+import ImageUpload from '../../ImageUpload';
+import type { UploadedImage } from '../../ImageUpload';
+import { imageApi } from '../../../api/imageApi';
+import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus } from '../../../models/post.types';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -28,11 +31,14 @@ export interface PostFormData {
   category?: string;
   postType: PostType;
   selectedPetIds?: number[];
+  status?: PostStatus;
+  createdAt?: string;
 }
 
 export interface PostFormErrors {
   title?: string;
   content?: string;
+  images?: string;
   postType?: string;
   price?: string;
   eventDate?: string;
@@ -44,14 +50,33 @@ export interface PostFormErrors {
 
 export interface PostFormProps {
   mode: 'create' | 'edit';
+  postId?: number; // Required for edit mode
   initialData?: Partial<PostFormData>;
+  initialImages?: UploadedImage[];
   onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
   onCancel?: () => void;
 }
 
+// Helper function to format datetime for datetime-local input
+const formatDateTimeForInput = (dateString?: string): string => {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '';
+    
+    // Format to YYYY-MM-DDTHH:MM (required for datetime-local input)
+    return date.toISOString().slice(0, 16);
+  } catch {
+    return '';
+  }
+};
+
 const PostForm: React.FC<PostFormProps> = ({
   mode,
+  postId,
   initialData,
+  initialImages = [],
   onSubmit,
   onCancel,
 }) => {
@@ -94,13 +119,16 @@ const PostForm: React.FC<PostFormProps> = ({
     location: initialData?.location || '',
     address: initialData?.address || '',
     price: initialData?.price,
-    eventDate: initialData?.eventDate || '',
+    eventDate: formatDateTimeForInput(initialData?.eventDate),
     category: initialData?.category || '',
     postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
     selectedPetIds: initialData?.selectedPetIds || [],
+    status: initialData?.status,
+    createdAt: initialData?.createdAt,
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(initialImages);
   
   // Pet Wedding specific state
   const [selectablePets, setSelectablePets] = useState<SelectablePet[]>([]);
@@ -163,6 +191,8 @@ const PostForm: React.FC<PostFormProps> = ({
     }
   };
 
+
+
   const validateForm = (): boolean => {
     const newErrors: PostFormErrors = {};
 
@@ -194,14 +224,26 @@ const PostForm: React.FC<PostFormProps> = ({
 
     if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
       if (!formData.eventDate) {
-        newErrors.eventDate = 'Event date is required for this post type';
+        newErrors.eventDate = 'Event date and time are required for this post type';
       } else {
-        const eventDate = new Date(formData.eventDate);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const eventDateTime = new Date(formData.eventDate);
+        const now = new Date();
         
-        if (eventDate < today) {
-          newErrors.eventDate = 'Event date cannot be in the past';
+        // Check if the selected datetime is in the past
+        if (eventDateTime <= now) {
+          newErrors.eventDate = 'Event date and time must be in the future';
+        }
+        
+        // Check if the selected datetime is too far in the future (optional - 2 years max)
+        const twoYearsFromNow = new Date();
+        twoYearsFromNow.setFullYear(now.getFullYear() + 2);
+        if (eventDateTime > twoYearsFromNow) {
+          newErrors.eventDate = 'Event date cannot be more than 2 years in the future';
+        }
+        
+        // Validate datetime format
+        if (isNaN(eventDateTime.getTime())) {
+          newErrors.eventDate = 'Please enter a valid date and time';
         }
       }
       // Location is required for Meetup and Pet Wedding
@@ -209,16 +251,31 @@ const PostForm: React.FC<PostFormProps> = ({
         newErrors.location = `Location is required for ${formData.postType === 0 ? 'Meetup' : 'Pet Wedding'} posts`;
       }
       
-      // Additional validation for Pet Wedding
-      if (formData.postType === 1) { // Pet Wedding
+      // Additional validation for Meetup and Pet Wedding
+      if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
         if (!formData.address?.trim() || formData.address.length < 5) {
-          newErrors.address = 'Address is required and must be at least 5 characters long for Pet Wedding posts';
+          const postTypeName = formData.postType === 0 ? 'Meetup' : 'Pet Wedding';
+          newErrors.address = `Address is required and must be at least 5 characters long for ${postTypeName} posts`;
         }
-        
+      }
+      
+      // Additional validation specifically for Pet Wedding
+      if (formData.postType === 1) { // Pet Wedding
         if (!formData.selectedPetIds || formData.selectedPetIds.length !== 2) {
           newErrors.selectedPetIds = 'You must select exactly 2 pets for a Pet Wedding';
         }
       }
+    }
+
+    // Image validation
+    if (uploadedImages.length > 9) {
+      newErrors.images = 'Maximum 9 images allowed per post';
+    }
+
+    // Check for any images with errors
+    const imagesWithErrors = uploadedImages.filter(img => img.error);
+    if (imagesWithErrors.length > 0) {
+      newErrors.images = `${imagesWithErrors.length} image(s) have errors. Please fix or remove them.`;
     }
 
     setErrors(newErrors);
@@ -233,14 +290,71 @@ const PostForm: React.FC<PostFormProps> = ({
     }
 
     try {
-      const submitData = mode === 'create' 
+      // Step 1: Upload images if any
+      let uploadedImageUrls: string[] = [];
+      if (uploadedImages.length > 0) {
+        console.log('Uploading images:', uploadedImages.length);
+        // Separate existing images from new uploads
+        const existingImages = uploadedImages.filter(img => img.isExisting && img.originalUrl);
+        const newFileUploads = uploadedImages.filter(img => img.compressed || img.file);
+        
+        const imagesToUpload = newFileUploads.map((img, index) => {
+          const file = img.compressed || img.file!;
+          
+          // Ensure file has a valid name
+          if (!file.name || file.name === 'blob' || !file.name.includes('.')) {
+            const originalName = img.file?.name || 'image';
+            const extension = originalName.split('.').pop() || 'jpg';
+            const newName = `image_${Date.now()}_${index}.${extension}`;
+            
+            console.warn(`File had invalid name "${file.name}", renaming to "${newName}"`);
+            
+            return new File([file], newName, {
+              type: file.type || 'image/jpeg',
+              lastModified: file.lastModified || Date.now(),
+            });
+          }
+          
+          return file;
+        });
+        
+        // Combine existing image URLs with newly uploaded URLs
+        const existingImageUrls = existingImages.map(img => img.originalUrl!);
+        
+        if (imagesToUpload.length > 0) {
+          console.log('Images to upload:', imagesToUpload.length);
+          console.log('File details:', imagesToUpload.map(file => ({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            lastModified: file.lastModified
+          })));
+          
+          const uploadResult = await imageApi.uploadImages(imagesToUpload, user.userId);
+          console.log('Upload result:', uploadResult);
+          
+          if (uploadResult.success) {
+            uploadedImageUrls = [...existingImageUrls, ...uploadResult.imageUrls];
+            console.log('All image URLs (existing + new):', uploadedImageUrls);
+          } else {
+            console.error('Image upload failed:', uploadResult.errorMessage);
+            throw new Error(uploadResult.errorMessage || 'Failed to upload images');
+          }
+        } else {
+          // Only existing images, no new uploads
+          uploadedImageUrls = existingImageUrls;
+          console.log('Using existing images only:', uploadedImageUrls);
+        }
+      }
+
+      // Prepare data for submission
+      const submitData: CreatePostRequest | UpdatePostRequest = mode === 'create' 
         ? {
-            userId: user.userId,
-            userRole: user.role,
+            userId: user?.userId,
             postType: formData.postType,
             title: formData.title,
             content: formData.content,
-            images: formData.images,
+            images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
             price: formData.price || undefined,
@@ -249,16 +363,23 @@ const PostForm: React.FC<PostFormProps> = ({
             selectedPetIds: formData.selectedPetIds || undefined,
           } as CreatePostRequest
         : {
+            userId: user?.userId,
+            postType: formData.postType,
             title: formData.title,
             content: formData.content,
-            images: formData.images,
+            status: formData.status,
+            images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
             price: formData.price || undefined,
             eventDate: formData.eventDate || undefined,
             category: formData.category || undefined,
             selectedPetIds: formData.selectedPetIds || undefined,
+            createdAt: formData.createdAt,
+            updatedAt: new Date().toISOString(),
           } as UpdatePostRequest;
+
+      console.log('Submit data:', submitData);
 
       if (mode === 'create') {
         let createdPost: Post;
@@ -273,7 +394,7 @@ const PostForm: React.FC<PostFormProps> = ({
             location: formData.location || '',
             address: formData.address || '',
             eventDate: formData.eventDate || '',
-            images: formData.images,
+            images: uploadedImageUrls,
             category: formData.category
           };
           
@@ -286,12 +407,55 @@ const PostForm: React.FC<PostFormProps> = ({
         
         onSubmit(submitData, createdPost);
       } else {
-        // For edit mode, we'd need the post ID - this will be implemented when we have actual editing
-        console.log('Edit mode submit:', submitData);
+        // Edit mode - update existing post
+        if (!postId) {
+          throw new Error('Post ID is required for edit mode');
+        }
+
+        if (!user?.userId) {
+          throw new Error('User ID is required for post update');
+        }
+
+        // Import and use the post service to update the post
+        const { postService } = await import('../../../api/post.api');
+        await postService.updatePost(postId, submitData);
+        
         onSubmit(submitData);
       }
     } catch (error) {
       console.error('Form submission error:', error);
+      
+      // Log more detailed error information for debugging
+      if (error && typeof error === 'object' && (error as any).response) {
+        console.error('Response status:', (error as any).response.status);
+        console.error('Response data:', (error as any).response.data);
+        console.error('Response headers:', (error as any).response.headers);
+      }
+      
+      // Set a more specific error message
+      let errorMessage = mode === 'create' ? 'Failed to create post' : 'Failed to update post';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        // Try to get the most specific error message from the response
+        const responseError = (error as any).response?.data;
+        if (typeof responseError === 'string') {
+          errorMessage = responseError;
+        } else if (responseError?.message) {
+          errorMessage = responseError.message;
+        } else if (responseError?.error) {
+          errorMessage = responseError.error;
+        } else if ((error as any).message) {
+          errorMessage = (error as any).message;
+        } else {
+          errorMessage = 'Unknown error occurred';
+        }
+      }
+      
+      setErrors(prev => ({
+        ...prev,
+        general: errorMessage
+      }));
     }
   };
 
@@ -312,6 +476,12 @@ const PostForm: React.FC<PostFormProps> = ({
         </Alert>
       )}
 
+      {errors.general && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errors.general}
+        </Alert>
+      )}
+
       <Stack spacing={3}>
         {/* Post Type Selection */}
         <FormControl fullWidth required>
@@ -321,7 +491,7 @@ const PostForm: React.FC<PostFormProps> = ({
             onChange={handleSelectChange('postType')}
             label="Post Type"
             error={!!errors.postType}
-            disabled={loading}
+            disabled={loading || mode === 'edit'}
           >
             {postTypeOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>
@@ -337,6 +507,11 @@ const PostForm: React.FC<PostFormProps> = ({
           {errors.postType && (
             <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
               {errors.postType}
+            </Typography>
+          )}
+          {mode === 'edit' && (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+              Post type cannot be changed when editing
             </Typography>
           )}
         </FormControl>
@@ -367,6 +542,35 @@ const PostForm: React.FC<PostFormProps> = ({
           placeholder="Tell us more about your post..."
         />
 
+        {/* Image Upload - new feature */}
+        <Box>
+          <Typography variant="h6" gutterBottom>
+            Upload Images
+          </Typography>
+          <ImageUpload
+            maxImages={9}
+            onImagesChange={(images: UploadedImage[]) => {
+              setUploadedImages(images);
+              setFormData(prev => ({
+                ...prev,
+                images: images.map(img => img.preview)
+              }));
+              // Clear image errors when images are uploaded
+              if (images.length > 0 && errors.images) {
+                setErrors(prev => ({ ...prev, images: undefined }));
+              }
+            }}
+            initialImages={uploadedImages}
+            disabled={loading}
+            showCompression={true}
+          />
+          {errors.images && (
+            <Typography variant="caption" color="error" display="block" sx={{ mt: 1 }}>
+              {errors.images}
+            </Typography>
+          )}
+        </Box>
+
         {/* Conditional Fields */}
         {requiresPrice && (
           <Input
@@ -384,16 +588,42 @@ const PostForm: React.FC<PostFormProps> = ({
         )}
 
         {requiresEventDate && (
-          <Input
-            label="Event Date"
-            type="datetime-local"
+          <DateTimeInput
+            label="Event Date & Time"
             value={formData.eventDate}
-            onChange={handleInputChange('eventDate')}
+            onChange={(value) => {
+              setFormData(prev => ({ ...prev, eventDate: value }));
+              
+              // Real-time validation for event date
+              if (value) {
+                const eventDateTime = new Date(value);
+                const now = new Date();
+                
+                if (eventDateTime <= now) {
+                  setErrors(prev => ({
+                    ...prev,
+                    eventDate: 'Event date and time must be in the future'
+                  }));
+                } else {
+                  // Clear error if date is valid
+                  setErrors(prev => ({
+                    ...prev,
+                    eventDate: undefined
+                  }));
+                }
+              } else {
+                // Clear error when field is empty (will be caught by required validation)
+                setErrors(prev => ({
+                  ...prev,
+                  eventDate: undefined
+                }));
+              }
+            }}
             error={!!errors.eventDate}
-            helperText={errors.eventDate}
+            helperText={errors.eventDate || 'Select a future date and time for your event'}
             required
             disabled={loading}
-            InputLabelProps={{ shrink: true }}
+            min={new Date(Date.now() + 60000).toISOString().slice(0, 16)} // Current time + 1 minute
           />
         )}
 
@@ -409,8 +639,8 @@ const PostForm: React.FC<PostFormProps> = ({
           required={requiresLocation}
         />
 
-        {/* Address Field - only for Pet Wedding */}
-        {formData.postType === 1 && ( // Pet Wedding
+        {/* Address Field - for Meetup and Pet Wedding */}
+        {(formData.postType === 0 || formData.postType === 1) && ( // Meetup or Pet Wedding
           <Input
             label="Address"
             value={formData.address || ''}
@@ -419,7 +649,11 @@ const PostForm: React.FC<PostFormProps> = ({
             helperText={errors.address}
             required
             disabled={loading}
-            placeholder="Enter the venue address for the Pet Wedding"
+            placeholder={
+              formData.postType === 0 
+                ? "Enter the venue address for the Meetup" 
+                : "Enter the venue address for the Pet Wedding"
+            }
           />
         )}
 
