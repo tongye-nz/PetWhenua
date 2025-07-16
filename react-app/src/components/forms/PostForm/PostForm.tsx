@@ -245,12 +245,16 @@ const PostForm: React.FC<PostFormProps> = ({
         newErrors.location = `Location is required for ${formData.postType === 0 ? 'Meetup' : 'Pet Wedding'} posts`;
       }
       
-      // Additional validation for Pet Wedding
-      if (formData.postType === 1) { // Pet Wedding
+      // Additional validation for Meetup and Pet Wedding
+      if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
         if (!formData.address?.trim() || formData.address.length < 5) {
-          newErrors.address = 'Address is required and must be at least 5 characters long for Pet Wedding posts';
+          const postTypeName = formData.postType === 0 ? 'Meetup' : 'Pet Wedding';
+          newErrors.address = `Address is required and must be at least 5 characters long for ${postTypeName} posts`;
         }
-        
+      }
+      
+      // Additional validation specifically for Pet Wedding
+      if (formData.postType === 1) { // Pet Wedding
         if (!formData.selectedPetIds || formData.selectedPetIds.length !== 2) {
           newErrors.selectedPetIds = 'You must select exactly 2 pets for a Pet Wedding';
         }
@@ -595,8 +599,8 @@ const PostForm: React.FC<PostFormProps> = ({
           required={requiresLocation}
         />
 
-        {/* Address Field - only for Pet Wedding */}
-        {formData.postType === 1 && ( // Pet Wedding
+        {/* Address Field - for Meetup and Pet Wedding */}
+        {(formData.postType === 0 || formData.postType === 1) && ( // Meetup or Pet Wedding
           <Input
             label="Address"
             value={formData.address || ''}
@@ -605,7 +609,11 @@ const PostForm: React.FC<PostFormProps> = ({
             helperText={errors.address}
             required
             disabled={loading}
-            placeholder="Enter the venue address for the Pet Wedding"
+            placeholder={
+              formData.postType === 0 
+                ? "Enter the venue address for the Meetup" 
+                : "Enter the venue address for the Pet Wedding"
+            }
           />
         )}
 
