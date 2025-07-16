@@ -54,5 +54,11 @@ export const petWeddingService = {
   async canSelectPetForWedding(petId: number): Promise<boolean> {
     const response = await api.get<{ canSelect: boolean }>(`/petwedding/can-select-pet/${petId}`);
     return response.data.canSelect;
-  }
+  },
+
+  // Update pet wedding participants
+  async updatePetWeddingParticipants(postId: number, petIds: number[]): Promise<{ message: string; post: Post }> {
+    const response = await api.put(`/petwedding/${postId}/participants`, { petIds });
+    return response.data;
+  },
 };

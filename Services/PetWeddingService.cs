@@ -179,5 +179,71 @@ namespace PetWhenua.Services
 
             return post;
         }
+
+        public async Task<Post> UpdatePetWeddingParticipantsAsync(int postId, List<int> newPetIds, int requestingUserId)
+        {
+            if (newPetIds.Count != 2)
+                throw new InvalidOperationException("Exactly two pets must be selected for a pet wedding");
+
+            // Get the existing post with participants
+            var post = await _context.Posts
+                .Include(p => p.PetWeddingParticipants)
+                .FirstOrDefaultAsync(p => p.PostId == postId);
+
+            if (post == null || post.PostType != PostType.PetWedding)
+                throw new InvalidOperationException("Post not found or not a pet wedding");
+
+            // Check if user is authorized to update this wedding
+            if (post.UserId != requestingUserId)
+                throw new UnauthorizedAccessException("Only the wedding creator can update participants");
+
+            // Check if post status allows updates
+            if (post.Status == PostStatus.Active)
+                throw new InvalidOperationException("Cannot update participants of an active pet wedding");
+
+            // Validate that user can select these pets
+            foreach (var petId in newPetIds)
+            {
+                if (!await CanUserSelectPetForWeddingAsync(requestingUserId, petId))
+                    throw new InvalidOperationException($"You cannot select pet {petId} for this wedding");
+            }
+
+            // Remove existing participants
+            var existingParticipants = post.PetWeddingParticipants.ToList();
+            foreach (var participant in existingParticipants)
+            {
+                _context.PetWeddingParticipants.Remove(participant);
+            }
+
+            // Add new participants
+            foreach (var petId in newPetIds)
+            {
+                var pet = await _context.Pets.FindAsync(petId);
+                if (pet == null) continue;
+
+                var participant = new PetWeddingParticipant
+                {
+                    PostId = postId,
+                    PetId = petId,
+                    OwnerId = pet.UserId,
+                    HasApproved = pet.UserId == requestingUserId, // Auto-approve if user owns the pet
+                    ApprovedAt = pet.UserId == requestingUserId ? DateTime.UtcNow : null,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.PetWeddingParticipants.Add(participant);
+            }
+
+            // Update post timestamp and reset status to pending if needed
+            post.UpdatedAt = DateTime.UtcNow;
+            post.Status = PostStatus.Pending; // Reset to pending when participants change
+
+            await _context.SaveChangesAsync();
+
+            // Update wedding status based on new approvals
+            await UpdateWeddingStatusBasedOnApprovalsAsync(postId);
+
+            return post;
+        }
     }
 }

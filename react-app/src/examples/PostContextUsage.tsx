@@ -48,8 +48,6 @@ export const ExampleCreatePost: React.FC = () => {
   const handleSubmit = async (formData: any) => {
     try {
       await createPost({
-        userId: 1,
-        userRole: 'member',
         postType: PostType.Moment,
         title: formData.title,
         content: formData.content

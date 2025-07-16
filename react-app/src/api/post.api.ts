@@ -43,7 +43,14 @@ export const postService = {
   },
 
   // Update post
-  async updatePost(id: number, postData: Partial<Post>): Promise<void> {
+  async updatePost(id: number, postData: Partial<Post> & { selectedPetIds?: number[] }): Promise<void> {
+    // Check if this is a pet wedding update with participants
+    if (postData.postType === 1 && postData.selectedPetIds && postData.selectedPetIds.length > 0) {
+      // Update participants using the dedicated pet wedding endpoint
+      const petWeddingService = await import('./petWedding.api');
+      await petWeddingService.petWeddingService.updatePetWeddingParticipants(id, postData.selectedPetIds);
+    }
+
     // Backend expects only the core Post properties, no navigation properties
     const updatePayload: any = {
       PostId: id, // Required: must match the ID in URL
@@ -83,7 +90,7 @@ export const postService = {
       };
     }
 
-    // Remove other navigation properties that might cause issues
+    // Remove navigation properties that might cause issues
     delete updatePayload.PetWeddingParticipants;
     delete updatePayload.PostImages;
     delete updatePayload.ValidatedImages;

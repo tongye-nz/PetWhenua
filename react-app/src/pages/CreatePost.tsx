@@ -74,7 +74,9 @@ const CreatePost: React.FC = () => {
         eventDate: currentPost.eventDate,
         category: currentPost.category,
         postType: currentPost.postType,
-        selectedPetIds: [], // TODO: Add pet IDs if available in post data
+        selectedPetIds: currentPost.petWeddingParticipants?.map(p => p.petId) || [], // Extract pet IDs from participants
+        status: currentPost.status,
+        createdAt: currentPost.createdAt,
       });
     }
   }, [currentPost, isEditMode, id]);
@@ -209,6 +211,7 @@ const CreatePost: React.FC = () => {
       {/* Post Form */}
       <PostForm
         mode={isEditMode ? "edit" : "create"}
+        postId={isEditMode ? parseInt(id!) : undefined}
         initialData={initialData}
         initialImages={initialImages}
         onSubmit={handleFormSubmit}

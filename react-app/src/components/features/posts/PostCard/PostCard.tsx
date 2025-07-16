@@ -175,6 +175,85 @@ const PostCard: React.FC<PostCardProps> = ({
           {truncateContent(post.content, compact ? 100 : 200)}
         </Text>
 
+        {/* Pet Wedding Participants - show the two pets */}
+        {post.postType === 1 && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
+          <Box sx={{ mb: 2, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
+            <Text variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
+              💍 Pet Wedding Participants
+            </Text>
+            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+              {post.petWeddingParticipants.map((participant) => (
+                <Box key={participant.participantId} sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 0.5,
+                  bgcolor: 'background.paper',
+                  borderRadius: 1,
+                  p: 0.5,
+                  flex: 1,
+                  minWidth: 0 // Allow content to shrink
+                }}>
+                  {/* Pet Profile Picture */}
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: '50%',
+                      bgcolor: 'primary.light',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      overflow: 'hidden',
+                      flexShrink: 0
+                    }}
+                  >
+                    {participant.pet?.profilePicture ? (
+                      <Box
+                        component="img"
+                        src={participant.pet.profilePicture.startsWith('http') 
+                          ? participant.pet.profilePicture 
+                          : `http://localhost:5295${participant.pet.profilePicture.startsWith('/') ? '' : '/'}${participant.pet.profilePicture}`}
+                        alt={participant.pet.name}
+                        sx={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <Text variant="caption" fontWeight="bold" sx={{ color: 'primary.contrastText' }}>
+                        {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                      </Text>
+                    )}
+                  </Box>
+                  
+                  {/* Pet Info */}
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Text variant="caption" fontWeight="medium" sx={{ 
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {participant.pet?.name || 'Unknown Pet'}
+                    </Text>
+                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                      {participant.pet?.gender && (
+                        <span>
+                          {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️' : 
+                           participant.pet.gender === 'Female' || participant.pet.gender === 'F' ? '♀️' : ''}
+                          {' '}
+                        </span>
+                      )}
+                      {participant.pet?.species || 'Pet'}
+                    </Text>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+          </Box>
+        )}
+
         {/* Location and Address info for Meetup and Wedding posts */}
         {(post.postType === 0 || post.postType === 1) && (
           <Box sx={{ mb: 2 }}>

@@ -44,11 +44,34 @@ export interface Post {
     location?: string;
     role: string;
   };
+  petWeddingParticipants?: {
+    participantId: number;
+    postId: number;
+    petId: number;
+    ownerId: number;
+    hasApproved: boolean;
+    approvedAt?: string;
+    createdAt: string;
+    pet?: {
+      petId: number;
+      userId: number;
+      name: string;
+      species?: string;
+      breed?: string;
+      age: number;
+      birthYear?: number;
+      birthMonth?: number;
+      gender?: string;
+      description?: string;
+      profilePicture?: string;
+      createdAt?: string;
+      updatedAt?: string;
+    };
+  }[];
 }
 
 export interface CreatePostRequest {
-  userId: number;
-  userRole: string;
+  userId?: number;
   postType: PostType;
   title: string;
   content: string;
@@ -59,11 +82,23 @@ export interface CreatePostRequest {
   eventDate?: string;
   category?: string;
   selectedPetIds?: number[];
+  petWeddingParticipants?: {
+    participantId: number;
+    postId: number;
+    petId: number;
+    ownerId: number;
+    hasApproved: boolean;
+    approvedAt?: string;
+    createdAt: string;
+  }[];
 }
 
 export interface UpdatePostRequest {
+  userId?: number;
+  postType?: PostType;
   title?: string;
   content?: string;
+  status?: PostStatus;
   images?: string[];
   location?: string;
   address?: string;
@@ -71,6 +106,17 @@ export interface UpdatePostRequest {
   eventDate?: string;
   category?: string;
   selectedPetIds?: number[];
+  createdAt?: string;
+  updatedAt?: string;
+  petWeddingParticipants?: {
+    participantId: number;
+    postId: number;
+    petId: number;
+    ownerId: number;
+    hasApproved: boolean;
+    approvedAt?: string;
+    createdAt: string;
+  }[];
 }
 
 export interface UpdatePostStatusRequest {

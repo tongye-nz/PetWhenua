@@ -14,7 +14,7 @@ import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import ImageUpload from '../../ImageUpload';
 import type { UploadedImage } from '../../ImageUpload';
 import { imageApi } from '../../../api/imageApi';
-import type { CreatePostRequest, UpdatePostRequest, PostType, Post } from '../../../models/post.types';
+import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus } from '../../../models/post.types';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -31,6 +31,8 @@ export interface PostFormData {
   category?: string;
   postType: PostType;
   selectedPetIds?: number[];
+  status?: PostStatus;
+  createdAt?: string;
 }
 
 export interface PostFormErrors {
@@ -48,6 +50,7 @@ export interface PostFormErrors {
 
 export interface PostFormProps {
   mode: 'create' | 'edit';
+  postId?: number; // Required for edit mode
   initialData?: Partial<PostFormData>;
   initialImages?: UploadedImage[];
   onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
@@ -71,6 +74,7 @@ const formatDateTimeForInput = (dateString?: string): string => {
 
 const PostForm: React.FC<PostFormProps> = ({
   mode,
+  postId,
   initialData,
   initialImages = [],
   onSubmit,
@@ -119,6 +123,8 @@ const PostForm: React.FC<PostFormProps> = ({
     category: initialData?.category || '',
     postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
     selectedPetIds: initialData?.selectedPetIds || [],
+    status: initialData?.status,
+    createdAt: initialData?.createdAt,
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
@@ -341,11 +347,10 @@ const PostForm: React.FC<PostFormProps> = ({
         }
       }
 
-      // Step 2: Create the post with uploaded image URLs
-      const submitData = mode === 'create' 
+      // Prepare data for submission
+      const submitData: CreatePostRequest | UpdatePostRequest = mode === 'create' 
         ? {
-            userId: user.userId,
-            userRole: user.role,
+            userId: user?.userId,
             postType: formData.postType,
             title: formData.title,
             content: formData.content,
@@ -358,8 +363,11 @@ const PostForm: React.FC<PostFormProps> = ({
             selectedPetIds: formData.selectedPetIds || undefined,
           } as CreatePostRequest
         : {
+            userId: user?.userId,
+            postType: formData.postType,
             title: formData.title,
             content: formData.content,
+            status: formData.status,
             images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
@@ -367,6 +375,8 @@ const PostForm: React.FC<PostFormProps> = ({
             eventDate: formData.eventDate || undefined,
             category: formData.category || undefined,
             selectedPetIds: formData.selectedPetIds || undefined,
+            createdAt: formData.createdAt,
+            updatedAt: new Date().toISOString(),
           } as UpdatePostRequest;
 
       console.log('Submit data:', submitData);
@@ -397,19 +407,49 @@ const PostForm: React.FC<PostFormProps> = ({
         
         onSubmit(submitData, createdPost);
       } else {
-        // For edit mode, we'd need the post ID - this will be implemented when we have actual editing
-        console.log('Edit mode submit:', submitData);
+        // Edit mode - update existing post
+        if (!postId) {
+          throw new Error('Post ID is required for edit mode');
+        }
+
+        if (!user?.userId) {
+          throw new Error('User ID is required for post update');
+        }
+
+        // Import and use the post service to update the post
+        const { postService } = await import('../../../api/post.api');
+        await postService.updatePost(postId, submitData);
+        
         onSubmit(submitData);
       }
     } catch (error) {
       console.error('Form submission error:', error);
       
+      // Log more detailed error information for debugging
+      if (error && typeof error === 'object' && (error as any).response) {
+        console.error('Response status:', (error as any).response.status);
+        console.error('Response data:', (error as any).response.data);
+        console.error('Response headers:', (error as any).response.headers);
+      }
+      
       // Set a more specific error message
-      let errorMessage = 'Failed to create post';
+      let errorMessage = mode === 'create' ? 'Failed to create post' : 'Failed to update post';
       if (error instanceof Error) {
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null) {
-        errorMessage = (error as any).response?.data?.message || (error as any).message || 'Unknown error occurred';
+        // Try to get the most specific error message from the response
+        const responseError = (error as any).response?.data;
+        if (typeof responseError === 'string') {
+          errorMessage = responseError;
+        } else if (responseError?.message) {
+          errorMessage = responseError.message;
+        } else if (responseError?.error) {
+          errorMessage = responseError.error;
+        } else if ((error as any).message) {
+          errorMessage = (error as any).message;
+        } else {
+          errorMessage = 'Unknown error occurred';
+        }
       }
       
       setErrors(prev => ({
