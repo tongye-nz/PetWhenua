@@ -83,6 +83,8 @@ export interface PostFilters {
   postType?: PostType;
   userId?: number;
   status?: PostStatus;
+  region?: string;
+  district?: string;
 }
 
 export interface PostPermissions {

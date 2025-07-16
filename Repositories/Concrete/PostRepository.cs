@@ -12,7 +12,7 @@ namespace PetWhenua.Repositories.Concrete
             _context = context;
         }
 
-        public async Task<IEnumerable<Post>> GetAllPostsAsync(PostType? postType = null, int? userId = null)
+        public async Task<IEnumerable<Post>> GetAllPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null)
         {
             var query = _context.Posts.Include(p => p.User).AsQueryable();
 
@@ -24,6 +24,16 @@ namespace PetWhenua.Repositories.Concrete
             if (userId.HasValue)
             {
                 query = query.Where(p => p.UserId == userId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(region))
+            {
+                query = query.Where(p => p.Location != null && p.Location.Contains(region));
+            }
+
+            if (!string.IsNullOrEmpty(district))
+            {
+                query = query.Where(p => p.Location != null && p.Location.Contains(district));
             }
 
             return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();

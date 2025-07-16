@@ -23,6 +23,8 @@ export const postService = {
     if (filters.postType !== undefined) params.append('postType', filters.postType.toString());
     if (filters.userId) params.append('userId', filters.userId.toString());
     if (filters.status !== undefined) params.append('status', filters.status.toString());
+    if (filters.region) params.append('region', filters.region);
+    if (filters.district) params.append('district', filters.district);
     
     const response = await postApi.get(`/posts?${params.toString()}`);
     return response.data;

@@ -17,9 +17,13 @@ public class PostsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetPosts([FromQuery] PostType? postType = null, [FromQuery] int? userId = null)
+    public async Task<IActionResult> GetPosts(
+        [FromQuery] PostType? postType = null, 
+        [FromQuery] int? userId = null, 
+        [FromQuery] string? region = null, 
+        [FromQuery] string? district = null)
     {
-        var posts = await _postService.GetPostsAsync(postType, userId);
+        var posts = await _postService.GetPostsAsync(postType, userId, region, district);
         return Ok(posts);
     }
 
