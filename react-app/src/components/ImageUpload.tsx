@@ -14,6 +14,7 @@ import {
   CardContent,
   Badge,
   CircularProgress,
+  Snackbar,
 } from '@mui/material';
 import {
   CloudUpload,
@@ -54,6 +55,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const [images, setImages] = useState<UploadedImage[]>(initialImages);
   const [errors, setErrors] = useState<string[]>([]);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const remainingSlots = maxImages - images.length;
 
@@ -132,6 +135,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           error: 'Compression failed',
         };
         setImages([...updatedImages]);
+        setSnackbarMessage('Image compression failed. Please try again.');
+        setSnackbarOpen(true);
       }
     }
   }, [onImagesChange]);
@@ -158,6 +163,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const onDrop = useCallback((acceptedFiles: File[]) => {
     processFiles(acceptedFiles);
   }, [processFiles]);
+
+  const handleSnackbarClose = (_event?: React.SyntheticEvent | Event, reason?: string) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setSnackbarOpen(false);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -376,6 +389,13 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </Paper>
         </Box>
       )}
+
+      <Snackbar
+        open={snackbarOpen}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        autoHideDuration={6000}
+      />
     </Box>
   );
 };
