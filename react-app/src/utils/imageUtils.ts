@@ -60,10 +60,17 @@ export const compressImage = async (
   try {
     const compressedFile = await imageCompression(file, defaultOptions);
     
-    // Log compression results
-    console.log(`Image compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+    // Preserve the original filename by creating a new File object with the correct name
+    const renamedFile = new File([compressedFile], file.name, {
+      type: compressedFile.type,
+      lastModified: compressedFile.lastModified,
+    });
     
-    return compressedFile;
+    // Log compression results
+    console.log(`Image compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(renamedFile.size / 1024 / 1024).toFixed(2)}MB`);
+    console.log(`Filename preserved: ${file.name} → ${renamedFile.name}`);
+    
+    return renamedFile;
   } catch (error) {
     console.error('Image compression failed:', error);
     throw new Error('Failed to compress image');

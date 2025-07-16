@@ -252,14 +252,45 @@ const PostForm: React.FC<PostFormProps> = ({
       // Step 1: Upload images if any
       let uploadedImageUrls: string[] = [];
       if (uploadedImages.length > 0) {
+        console.log('Uploading images:', uploadedImages.length);
         const imagesToUpload = uploadedImages
           .filter(img => img.compressed || img.file)
-          .map(img => img.compressed || img.file!);
+          .map((img, index) => {
+            const file = img.compressed || img.file!;
+            
+            // Ensure file has a valid name
+            if (!file.name || file.name === 'blob' || !file.name.includes('.')) {
+              const originalName = img.file.name;
+              const extension = originalName.split('.').pop() || 'jpg';
+              const newName = `image_${Date.now()}_${index}.${extension}`;
+              
+              console.warn(`File had invalid name "${file.name}", renaming to "${newName}"`);
+              
+              return new File([file], newName, {
+                type: file.type || 'image/jpeg',
+                lastModified: file.lastModified || Date.now(),
+              });
+            }
+            
+            return file;
+          });
+        
+        console.log('Images to upload:', imagesToUpload.length);
+        console.log('File details:', imagesToUpload.map(file => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
+        })));
         
         const uploadResult = await imageApi.uploadImages(imagesToUpload, user.userId);
+        console.log('Upload result:', uploadResult);
+        
         if (uploadResult.success) {
           uploadedImageUrls = uploadResult.imageUrls;
+          console.log('Uploaded image URLs:', uploadedImageUrls);
         } else {
+          console.error('Image upload failed:', uploadResult.errorMessage);
           throw new Error(uploadResult.errorMessage || 'Failed to upload images');
         }
       }
@@ -292,6 +323,8 @@ const PostForm: React.FC<PostFormProps> = ({
             selectedPetIds: formData.selectedPetIds || undefined,
           } as UpdatePostRequest;
 
+      console.log('Submit data:', submitData);
+
       if (mode === 'create') {
         let createdPost: Post;
         
@@ -305,7 +338,7 @@ const PostForm: React.FC<PostFormProps> = ({
             location: formData.location || '',
             address: formData.address || '',
             eventDate: formData.eventDate || '',
-            images: formData.images,
+            images: uploadedImageUrls,
             category: formData.category
           };
           
@@ -324,6 +357,19 @@ const PostForm: React.FC<PostFormProps> = ({
       }
     } catch (error) {
       console.error('Form submission error:', error);
+      
+      // Set a more specific error message
+      let errorMessage = 'Failed to create post';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = (error as any).response?.data?.message || (error as any).message || 'Unknown error occurred';
+      }
+      
+      setErrors(prev => ({
+        ...prev,
+        general: errorMessage
+      }));
     }
   };
 
@@ -341,6 +387,12 @@ const PostForm: React.FC<PostFormProps> = ({
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
+        </Alert>
+      )}
+
+      {errors.general && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errors.general}
         </Alert>
       )}
 
