@@ -81,9 +81,28 @@ const CreatePost: React.FC = () => {
 
   const handleFormSubmit = async (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => {
     try {
-      if (isEditMode && id) {
-        // Handle update
-        await updatePost(parseInt(id), data as UpdatePostRequest);
+      if (isEditMode && id && currentPost) {
+        // Handle update - merge with existing post data, ensuring all required fields are present
+        // Only include core Post properties, exclude navigation properties
+        const fullPostData = {
+          postId: parseInt(id),
+          userId: currentPost.userId,
+          postType: currentPost.postType, // Keep original post type
+          title: data.title ?? currentPost.title,
+          content: data.content ?? currentPost.content,
+          status: currentPost.status,
+          images: data.images ?? currentPost.images,
+          location: data.location ?? currentPost.location,
+          address: data.address ?? currentPost.address,
+          price: data.price ?? currentPost.price,
+          eventDate: data.eventDate ?? currentPost.eventDate,
+          category: data.category ?? currentPost.category,
+          createdAt: currentPost.createdAt,
+          updatedAt: currentPost.updatedAt,
+          user: currentPost.user, // Include user object for backend validation
+        };
+        console.log('Updating post with data:', fullPostData);
+        await updatePost(parseInt(id), fullPostData);
         navigate(`/post/${id}`);
       } else {
         // Handle create - if a post was created, navigate to its detail page
@@ -94,8 +113,18 @@ const CreatePost: React.FC = () => {
           navigate('/posts');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to submit post:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Validation errors:', error.response?.data?.errors);
+      // Log specific validation error messages
+      if (error.response?.data?.errors) {
+        Object.keys(error.response.data.errors).forEach(field => {
+          console.error(`${field} validation error:`, error.response.data.errors[field]);
+        });
+      }
+      console.error('Error status:', error.response?.status);
+      console.error('Error message:', error.message);
       // Error will be handled by the PostForm component
     }
   };

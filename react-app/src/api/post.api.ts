@@ -42,7 +42,70 @@ export const postService = {
 
   // Update post
   async updatePost(id: number, postData: Partial<Post>): Promise<void> {
-    await postApi.put(`/posts/${id}`, postData);
+    // Backend expects only the core Post properties, no navigation properties
+    const updatePayload: any = {
+      PostId: id, // Required: must match the ID in URL
+      UserId: postData.userId, // Required: user ID
+      PostType: postData.postType, // Required: post type
+      Title: postData.title || '', // Required: title
+      Content: postData.content || '', // Required: content
+      Status: postData.status, // Required: preserve original status
+      Images: postData.images || [], // List of image URLs
+      Location: postData.location || null,
+      Address: postData.address || null,
+      Price: postData.price || null,
+      EventDate: postData.eventDate || null,
+      Category: postData.category || null,
+      CreatedAt: postData.createdAt ? new Date(postData.createdAt).toISOString() : new Date().toISOString(), // Ensure proper ISO format
+      UpdatedAt: new Date().toISOString() // Always update timestamp
+    };
+
+    // Include User object from original post data if available  
+    if (postData.user) {
+      // Convert frontend user object to backend format
+      updatePayload.User = {
+        UserId: postData.user.userId,
+        Username: postData.user.username,
+        Email: (postData.user as any).email || '',
+        FirstName: postData.user.firstName || '',
+        LastName: postData.user.lastName || '',
+        Role: postData.user.role,
+        IsActive: (postData.user as any).isActive ?? true,
+        PasswordHash: (postData.user as any).passwordHash || '',
+        Bio: (postData.user as any).bio || null,
+        Location: postData.user.location || null,
+        PhoneNumber: (postData.user as any).phoneNumber || null,
+        ProfilePicture: postData.user.profilePicture || null,
+        CreatedAt: (postData.user as any).createdAt || new Date().toISOString(),
+        UpdatedAt: (postData.user as any).updatedAt || new Date().toISOString()
+      };
+    }
+
+    // Remove other navigation properties that might cause issues
+    delete updatePayload.PetWeddingParticipants;
+    delete updatePayload.PostImages;
+    delete updatePayload.ValidatedImages;
+
+    // Ensure all required fields are present and valid
+    if (!updatePayload.UserId) {
+      throw new Error('UserId is required for post update');
+    }
+    if (updatePayload.PostType === undefined || updatePayload.PostType === null) {
+      throw new Error('PostType is required for post update');
+    }
+    if (!updatePayload.Title) {
+      throw new Error('Title is required for post update');
+    }
+    if (!updatePayload.Content) {
+      throw new Error('Content is required for post update');
+    }
+    if (updatePayload.Status === undefined || updatePayload.Status === null) {
+      throw new Error('Status is required for post update');
+    }
+    
+    console.log('Final cleaned update payload:', updatePayload);
+    console.log('Payload keys:', Object.keys(updatePayload));
+    await postApi.put(`/posts/${id}`, updatePayload);
   },
 
   // Delete post
