@@ -41,6 +41,7 @@ export interface UpdateUserProfileRequest {
   bio?: string;
   location?: string;
   phoneNumber?: string;
+  profilePicture?: string;
 }
 
 export const userAPI = {
