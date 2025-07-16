@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
-import { MoreVert, Edit, Delete, Person, ChatBubbleOutline } from '@mui/icons-material';
+import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
 import PostImageGallery from '../../../PostImageGallery';
@@ -175,6 +175,36 @@ const PostCard: React.FC<PostCardProps> = ({
           {truncateContent(post.content, compact ? 100 : 200)}
         </Text>
 
+        {/* Location and Address info for Meetup and Wedding posts */}
+        {(post.postType === 0 || post.postType === 1) && (
+          <Box sx={{ mb: 2 }}>
+            {post.location && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
+                <Text variant="caption" color="text.secondary">
+                  {post.location}
+                </Text>
+              </Box>
+            )}
+            {post.address && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <LocationOn sx={{ fontSize: 16, color: 'primary.main' }} />
+                <Text variant="caption" color="text.primary" fontWeight="medium">
+                  {post.address}
+                </Text>
+              </Box>
+            )}
+            {post.eventDate && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Event sx={{ fontSize: 16, color: 'primary.main' }} />
+                <Text variant="caption" color="text.primary" fontWeight="medium">
+                  {formatDate(post.eventDate)}
+                </Text>
+              </Box>
+            )}
+          </Box>
+        )}
+
         {/* Image Gallery */}
         {post.images && post.images.length > 0 && (
           <PostImageGallery 
@@ -217,18 +247,11 @@ const PostCard: React.FC<PostCardProps> = ({
         </Box>
 
         {/* Footer with additional info */}
-        {!compact && (post.eventDate || post.updatedAt !== post.createdAt) && (
+        {!compact && post.updatedAt !== post.createdAt && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-            {post.eventDate && (
-              <Text variant="caption" color="text.secondary">
-                Event: {formatDate(post.eventDate)}
-              </Text>
-            )}
-            {post.updatedAt !== post.createdAt && (
-              <Text variant="caption" color="text.secondary">
-                Updated: {formatDate(post.updatedAt)}
-              </Text>
-            )}
+            <Text variant="caption" color="text.secondary">
+              Updated: {formatDate(post.updatedAt)}
+            </Text>
           </Box>
         )}
       </Box>

@@ -246,6 +246,16 @@ const PostDetail: React.FC = () => {
               </Box>
             )}
 
+            {/* Address - for Meetup and Pet Wedding posts */}
+            {currentPost.address && (currentPost.postType === 0 || currentPost.postType === 1) && (
+              <Box display="flex" alignItems="center" mb={2}>
+                <LocationOn color="primary" sx={{ mr: 1 }} />
+                <Typography variant="body1" fontWeight="medium">
+                  Address: {currentPost.address}
+                </Typography>
+              </Box>
+            )}
+
             {currentPost.category && (
               <Box mt={3}>
                 <Typography variant="body2" color="text.secondary">
