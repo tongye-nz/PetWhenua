@@ -56,8 +56,10 @@ const PostDetail: React.FC = () => {
   };
 
   const handleEdit = () => {
-    // Navigate to edit mode - you can implement this later
-    console.log('Edit post:', currentPost?.postId);
+    if (currentPost?.postId) {
+      // Navigate to edit mode
+      navigate(`/edit-post/${currentPost.postId}`);
+    }
   };
 
   const handleDelete = async () => {
@@ -259,22 +261,31 @@ const PostDetail: React.FC = () => {
                 Images
               </Typography>
               <Box display="flex" gap={2} flexWrap="wrap">
-                {currentPost.images.map((image, index) => (
-                  <Box
-                    key={index}
-                    component="img"
-                    src={image}
-                    alt={`${currentPost.title} - Image ${index + 1}`}
-                    sx={{
-                      width: 200,
-                      height: 150,
-                      objectFit: 'cover',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'divider'
-                    }}
-                  />
-                ))}
+                {currentPost.images.map((image, index) => {
+                  // Construct proper image URL
+                  const imageUrl = image.startsWith('http') 
+                    ? image 
+                    : `http://localhost:5295${image.startsWith('/') ? '' : '/'}${image}`;
+                  
+                  return (
+                    <Box
+                      key={index}
+                      component="img"
+                      src={imageUrl}
+                      alt={`${currentPost.title} - Image ${index + 1}`}
+                      sx={{
+                        width: 200,
+                        height: 150,
+                        objectFit: 'cover',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => window.open(imageUrl, '_blank')}
+                    />
+                  );
+                })}
               </Box>
             </Box>
           )}
