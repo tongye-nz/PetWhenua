@@ -560,11 +560,13 @@ const UserProfile: React.FC = () => {
                   />
                   
                   {/* Followed Users List */}
-                  <FollowedUsersList
-                    userId={targetUserId || 0}
-                    isOwnProfile={isOwnProfile}
-                    maxUsers={6}
-                  />
+                  {targetUserId && (
+                    <FollowedUsersList
+                      userId={targetUserId}
+                      isOwnProfile={isOwnProfile}
+                      maxUsers={6}
+                    />
+                  )}
                 </>
               ) : (
                 <>
@@ -590,11 +592,26 @@ const UserProfile: React.FC = () => {
             }}>
               {!isOwnProfile || !form.isEditing ? (
                 // Posts feed for viewing mode
-                <UserPostsFeed
-                  userId={targetUserId || 0}
-                  isOwnProfile={isOwnProfile}
-                  maxPosts={20}
-                />
+                targetUserId ? (
+                  <UserPostsFeed
+                    userId={targetUserId}
+                    isOwnProfile={isOwnProfile}
+                    maxPosts={20}
+                  />
+                ) : (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    height: '200px',
+                    backgroundColor: 'white',
+                    borderRadius: '12px'
+                  }}>
+                    <Typography color="text.secondary">
+                      Loading user data...
+                    </Typography>
+                  </Box>
+                )
               ) : (
                 // Edit form for own profile
                 <Box sx={{ 

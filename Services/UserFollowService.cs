@@ -58,20 +58,48 @@ namespace PetWhenua.Services
 
         public async Task<IEnumerable<User>> GetFollowersAsync(int userId)
         {
-            return await _context.UserFollows
+            var userFollows = await _context.UserFollows
                 .Where(uf => uf.FollowingId == userId)
                 .Include(uf => uf.Follower)
-                .Select(uf => uf.Follower)
                 .ToListAsync();
+
+            return userFollows.Select(uf => new User
+            {
+                UserId = uf.Follower.UserId,
+                Username = uf.Follower.Username,
+                FirstName = uf.Follower.FirstName,
+                LastName = uf.Follower.LastName,
+                ProfilePicture = uf.Follower.ProfilePicture,
+                Bio = uf.Follower.Bio,
+                Location = uf.Follower.Location,
+                CreatedAt = uf.Follower.CreatedAt,
+                Email = uf.Follower.Email,
+                Role = uf.Follower.Role,
+                IsActive = uf.Follower.IsActive
+            });
         }
 
         public async Task<IEnumerable<User>> GetFollowingAsync(int userId)
         {
-            return await _context.UserFollows
+            var userFollows = await _context.UserFollows
                 .Where(uf => uf.FollowerId == userId)
                 .Include(uf => uf.Following)
-                .Select(uf => uf.Following)
                 .ToListAsync();
+
+            return userFollows.Select(uf => new User
+            {
+                UserId = uf.Following.UserId,
+                Username = uf.Following.Username,
+                FirstName = uf.Following.FirstName,
+                LastName = uf.Following.LastName,
+                ProfilePicture = uf.Following.ProfilePicture,
+                Bio = uf.Following.Bio,
+                Location = uf.Following.Location,
+                CreatedAt = uf.Following.CreatedAt,
+                Email = uf.Following.Email,
+                Role = uf.Following.Role,
+                IsActive = uf.Following.IsActive
+            });
         }
 
         public async Task<int> GetFollowerCountAsync(int userId)

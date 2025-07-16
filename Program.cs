@@ -55,6 +55,7 @@ builder.Services.AddScoped<IPetService, PetService>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<IPetConnectionService, PetConnectionService>();
 builder.Services.AddScoped<IPetWeddingService, PetWeddingService>();
+builder.Services.AddScoped<IUserFollowService, UserFollowService>();
 // builder.Services.AddScoped<IPostAuthorizationService, PostAuthorizationService>();
 // builder.Services.AddScoped<PostExpiryService>();
 // builder.Services.AddHostedService<PostExpiryBackgroundService>();

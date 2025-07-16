@@ -57,7 +57,13 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
   };
 
   useEffect(() => {
-    loadFollowedUsers();
+    // Only load if userId is valid
+    if (userId && userId > 0) {
+      loadFollowedUsers();
+    } else {
+      setError('Invalid user ID');
+      setLoading(false);
+    }
   }, [userId, isOwnProfile]);
 
   // Handle follow/unfollow changes
