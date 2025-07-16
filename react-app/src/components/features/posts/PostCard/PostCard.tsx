@@ -96,12 +96,12 @@ const PostCard: React.FC<PostCardProps> = ({
   return (
     <Card 
       sx={{ 
-        height: compact ? 280 : 350,
         display: 'flex',
         flexDirection: 'column',
         cursor: onView ? 'pointer' : 'default',
         transition: 'all 0.3s ease',
         position: 'relative',
+        minHeight: compact ? 280 : 350,
         '&:hover': {
           transform: onView ? 'translateY(-4px)' : 'none',
           boxShadow: onView ? 3 : 1,
@@ -185,7 +185,7 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Status and type chips */}
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
           <StatusChip 
             statusVariant="status"
             status={post.status}
@@ -197,9 +197,12 @@ const PostCard: React.FC<PostCardProps> = ({
             label={getTypeLabel(post.postType)}
           />
         </Box>
+      </CardContent>
 
+      {/* Bottom Section - Engagement and Footer */}
+      <Box sx={{ px: 2, pb: 2 }}>
         {/* Engagement Section */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, pt: 1, pb: 1 }}>
           <LikeButton 
             postId={post.postId} 
             size="small" 
@@ -212,12 +215,10 @@ const PostCard: React.FC<PostCardProps> = ({
             </Text>
           </Box>
         </Box>
-      </CardContent>
 
-      {/* Footer with additional info */}
-      {!compact && (
-        <Box sx={{ px: 2, pb: 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {/* Footer with additional info */}
+        {!compact && (post.eventDate || post.updatedAt !== post.createdAt) && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
             {post.eventDate && (
               <Text variant="caption" color="text.secondary">
                 Event: {formatDate(post.eventDate)}
@@ -229,8 +230,8 @@ const PostCard: React.FC<PostCardProps> = ({
               </Text>
             )}
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
 
       {/* Action menu */}
       {hasActions && (

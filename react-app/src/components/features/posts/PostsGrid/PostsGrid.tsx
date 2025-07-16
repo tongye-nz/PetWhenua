@@ -67,13 +67,10 @@ const PostsGrid: React.FC<PostsGridProps> = ({
     <Box 
       sx={{ 
         display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          sm: 'repeat(2, 1fr)',
-          md: compact ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)',
-          lg: compact ? 'repeat(4, 1fr)' : 'repeat(3, 1fr)'
-        },
-        gap: 3
+        gridTemplateColumns: '1fr',
+        gap: 3,
+        maxWidth: '800px',
+        margin: '0 auto'
       }}
     >
       {posts.map((post) => (
