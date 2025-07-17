@@ -323,7 +323,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {post.images && post.images.length > 0 && (
           <PostImageGallery 
             images={post.images} 
-            maxDisplay={compact ? 2 : 4}
+            maxDisplay={post.images.length > 3 ? 3 : (compact ? 2 : post.images.length)}
             compact={compact}
           />
         )}
