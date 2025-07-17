@@ -9,8 +9,9 @@ namespace PetWhenua.Repositories.Abstract
         Task<User> AddUserAsync(User user);
         Task<User> UpdateUserAsync(User user);
         Task<bool> DeleteUserAsync(int id);
-        Task<bool> UserExistsAsync(int id);
-        Task<bool> UsernameExistsAsync(string username);
-        Task<bool> EmailExistsAsync(string email);
-    }
+            Task<bool> UserExistsAsync(int id);
+    Task<bool> UsernameExistsAsync(string username);
+    Task<bool> EmailExistsAsync(string email);
+    Task<IEnumerable<User>> SearchUsersAsync(string query, int limit = 10);
+}
 }

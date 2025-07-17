@@ -153,5 +153,10 @@ namespace PetWhenua.Services
         {
             return await _userRepository.EmailExistsAsync(email);
         }
+
+        public async Task<IEnumerable<User>> SearchUsersAsync(string query, int limit = 10)
+        {
+            return await _userRepository.SearchUsersAsync(query, limit);
+        }
     }
 }
