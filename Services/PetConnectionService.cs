@@ -37,7 +37,19 @@ namespace PetWhenua.Services
 
             if (existingConnection != null)
             {
-                throw new InvalidOperationException($"Connection already exists with status: {existingConnection.Status}");
+                // Only prevent new requests if connection is Pending or Accepted
+                // Allow new requests if previous was Rejected or Blocked
+                if (existingConnection.Status == PetConnectionStatus.Pending)
+                {
+                    throw new InvalidOperationException("A connection request is already pending between these pets");
+                }
+                else if (existingConnection.Status == PetConnectionStatus.Accepted)
+                {
+                    throw new InvalidOperationException("These pets are already connected");
+                }
+                
+                // If existing connection was Rejected or Blocked, delete it and allow new request
+                _context.PetConnections.Remove(existingConnection);
             }
 
             var connection = new PetConnection

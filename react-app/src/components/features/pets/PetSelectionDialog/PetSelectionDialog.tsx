@@ -89,7 +89,11 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
           );
           
           if (statusResponse.status && statusResponse.status !== 'No Connection') {
-            connections[pet.petId] = statusResponse.status;
+            // Only store connections that should prevent new requests
+            // Rejected connections should allow new requests
+            if (statusResponse.status !== 'Rejected') {
+              connections[pet.petId] = statusResponse.status;
+            }
           }
         } catch (error) {
           // No connection exists, which is fine
