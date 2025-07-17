@@ -9,8 +9,8 @@ namespace PetWhenua.Models.Dtos
         public int User2Id { get; set; }
         public UserSummaryDto User1 { get; set; } = null!;
         public UserSummaryDto User2 { get; set; } = null!;
-        public DateTime CreatedAt { get; set; }
-        public DateTime LastMessageAt { get; set; }
+        public string CreatedAt { get; set; } = string.Empty;
+        public string LastMessageAt { get; set; } = string.Empty;
         public string? LastMessage { get; set; }
         public int? LastMessageSenderId { get; set; }
     }

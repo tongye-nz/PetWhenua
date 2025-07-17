@@ -39,7 +39,7 @@ export const chatService = {
   // Get or create a chat room with another user
   async getOrCreateChatRoom(otherUserId: number): Promise<ChatRoom> {
     try {
-      const response = await chatApi.post('/chat/rooms', { otherUserId });
+      const response = await chatApi.post('/chat/rooms', { OtherUserId: otherUserId });
       return response.data;
     } catch (error) {
       console.error('Error creating/getting chat room:', error);

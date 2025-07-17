@@ -41,8 +41,8 @@ namespace PetWhenua.Services
                         ProfilePicture = cr.User2.ProfilePicture,
                         Location = cr.User2.Location
                     },
-                    CreatedAt = cr.CreatedAt,
-                    LastMessageAt = cr.LastMessageAt,
+                    CreatedAt = cr.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    LastMessageAt = cr.LastMessageAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     LastMessage = cr.LastMessage,
                     LastMessageSenderId = cr.LastMessageSenderId
                 })
@@ -61,12 +61,14 @@ namespace PetWhenua.Services
 
             var existingRoom = await _context.ChatRooms
                 .Where(cr => cr.User1Id == user1Id && cr.User2Id == user2Id)
-                .Include(cr => cr.User1)
-                .Include(cr => cr.User2)
                 .FirstOrDefaultAsync();
 
             if (existingRoom != null)
             {
+                // Manually fetch user data
+                var user1 = await _context.Users.FindAsync(existingRoom.User1Id);
+                var user2 = await _context.Users.FindAsync(existingRoom.User2Id);
+
                 return new ChatRoomDto
                 {
                     ChatRoomId = existingRoom.ChatRoomId,
@@ -74,22 +76,22 @@ namespace PetWhenua.Services
                     User2Id = existingRoom.User2Id,
                     User1 = new UserSummaryDto
                     {
-                        UserId = existingRoom.User1.UserId,
-                        FirstName = existingRoom.User1.FirstName,
-                        LastName = existingRoom.User1.LastName,
-                        ProfilePicture = existingRoom.User1.ProfilePicture,
-                        Location = existingRoom.User1.Location
+                        UserId = user1?.UserId ?? 0,
+                        FirstName = user1?.FirstName,
+                        LastName = user1?.LastName,
+                        ProfilePicture = user1?.ProfilePicture,
+                        Location = user1?.Location
                     },
                     User2 = new UserSummaryDto
                     {
-                        UserId = existingRoom.User2.UserId,
-                        FirstName = existingRoom.User2.FirstName,
-                        LastName = existingRoom.User2.LastName,
-                        ProfilePicture = existingRoom.User2.ProfilePicture,
-                        Location = existingRoom.User2.Location
+                        UserId = user2?.UserId ?? 0,
+                        FirstName = user2?.FirstName,
+                        LastName = user2?.LastName,
+                        ProfilePicture = user2?.ProfilePicture,
+                        Location = user2?.Location
                     },
-                    CreatedAt = existingRoom.CreatedAt,
-                    LastMessageAt = existingRoom.LastMessageAt,
+                    CreatedAt = existingRoom.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                    LastMessageAt = existingRoom.LastMessageAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
                     LastMessage = existingRoom.LastMessage,
                     LastMessageSenderId = existingRoom.LastMessageSenderId
                 };
@@ -107,38 +109,35 @@ namespace PetWhenua.Services
             _context.ChatRooms.Add(newRoom);
             await _context.SaveChangesAsync();
 
-            // Load the full entity with users
-            var createdRoom = await _context.ChatRooms
-                .Where(cr => cr.ChatRoomId == newRoom.ChatRoomId)
-                .Include(cr => cr.User1)
-                .Include(cr => cr.User2)
-                .FirstOrDefaultAsync();
+            // Manually fetch user data for new room
+            var newUser1 = await _context.Users.FindAsync(user1Id);
+            var newUser2 = await _context.Users.FindAsync(user2Id);
 
             return new ChatRoomDto
             {
-                ChatRoomId = createdRoom!.ChatRoomId,
-                User1Id = createdRoom.User1Id,
-                User2Id = createdRoom.User2Id,
+                ChatRoomId = newRoom.ChatRoomId,
+                User1Id = newRoom.User1Id,
+                User2Id = newRoom.User2Id,
                 User1 = new UserSummaryDto
                 {
-                    UserId = createdRoom.User1.UserId,
-                    FirstName = createdRoom.User1.FirstName,
-                    LastName = createdRoom.User1.LastName,
-                    ProfilePicture = createdRoom.User1.ProfilePicture,
-                    Location = createdRoom.User1.Location
+                    UserId = newUser1?.UserId ?? 0,
+                    FirstName = newUser1?.FirstName,
+                    LastName = newUser1?.LastName,
+                    ProfilePicture = newUser1?.ProfilePicture,
+                    Location = newUser1?.Location
                 },
                 User2 = new UserSummaryDto
                 {
-                    UserId = createdRoom.User2.UserId,
-                    FirstName = createdRoom.User2.FirstName,
-                    LastName = createdRoom.User2.LastName,
-                    ProfilePicture = createdRoom.User2.ProfilePicture,
-                    Location = createdRoom.User2.Location
+                    UserId = newUser2?.UserId ?? 0,
+                    FirstName = newUser2?.FirstName,
+                    LastName = newUser2?.LastName,
+                    ProfilePicture = newUser2?.ProfilePicture,
+                    Location = newUser2?.Location
                 },
-                CreatedAt = createdRoom.CreatedAt,
-                LastMessageAt = createdRoom.LastMessageAt,
-                LastMessage = createdRoom.LastMessage,
-                LastMessageSenderId = createdRoom.LastMessageSenderId
+                CreatedAt = newRoom.CreatedAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                LastMessageAt = newRoom.LastMessageAt.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"),
+                LastMessage = newRoom.LastMessage,
+                LastMessageSenderId = newRoom.LastMessageSenderId
             };
         }
 

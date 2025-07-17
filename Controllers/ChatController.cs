@@ -5,6 +5,7 @@ using PetWhenua.Services;
 using PetWhenua.Models;
 using PetWhenua.Models.Dtos;
 using PetWhenua.Hubs;
+using System.Security.Claims;
 
 namespace PetWhenua.Controllers
 {
@@ -237,8 +238,8 @@ namespace PetWhenua.Controllers
 
         private int GetCurrentUserId()
         {
-            var userIdClaim = User.FindFirst("userId");
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 throw new UnauthorizedAccessException("User ID not found in token");
             }
