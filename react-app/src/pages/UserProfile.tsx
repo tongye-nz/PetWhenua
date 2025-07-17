@@ -580,13 +580,11 @@ const UserProfile: React.FC = () => {
                 lg: '0 0 350px' 
               },
               minWidth: 0,
-              position: { md: 'sticky' },
-              top: { md: 16 },
-              maxHeight: { md: 'calc(100vh - 200px)' },
-              overflowY: { md: 'auto' },
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              gap: 2,
+              // Remove restrictive height constraints to prevent content cutoff
+              alignSelf: 'flex-start'
             }}>
               {!isOwnProfile || !isEditing ? (
                 <>
