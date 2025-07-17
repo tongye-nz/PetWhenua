@@ -88,7 +88,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
         navigate('/pet-connection-requests');
         break;
       case 'messages':
-        console.log('Navigate to Messages');
+        navigate('/messages');
         break;
       case 'signout':
         logout();

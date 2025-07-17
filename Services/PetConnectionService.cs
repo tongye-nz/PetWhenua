@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PetWhenua.Models;
 using PetWhenua.Services.Abstract;
 
 namespace PetWhenua.Services
@@ -49,6 +50,16 @@ namespace PetWhenua.Services
                 }
                 
                 // If existing connection was Rejected or Blocked, delete it and allow new request
+                // First delete related notifications to avoid foreign key constraint violation
+                var relatedNotifications = await _context.Notifications
+                    .Where(n => n.RelatedConnectionId == existingConnection.PetConnectionId)
+                    .ToListAsync();
+                
+                if (relatedNotifications.Any())
+                {
+                    _context.Notifications.RemoveRange(relatedNotifications);
+                }
+                
                 _context.PetConnections.Remove(existingConnection);
             }
 
