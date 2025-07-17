@@ -96,9 +96,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     return (
       <Box display="flex" alignItems="center" gap={0.5}>
         <Tooltip title="Sign in to like posts">
-          <IconButton size={getButtonSize()} disabled>
-            <FavoriteBorder sx={{ fontSize: getIconSize() }} />
-          </IconButton>
+          <span>
+            <IconButton size={getButtonSize()} disabled>
+              <FavoriteBorder sx={{ fontSize: getIconSize() }} />
+            </IconButton>
+          </span>
         </Tooltip>
         {showCount && (
           <Typography variant="body2" color="text.secondary">
