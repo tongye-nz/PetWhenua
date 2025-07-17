@@ -30,7 +30,7 @@ const Button: React.FC<ButtonProps> = ({
   const buttonStyle = buttonStyles[variant] || buttonStyles.primary;
 
   // Determine spinner size based on button size
-  const spinnerSize = size === 'small' ? 16 : size === 'large' ? 24 : 20;
+  const spinnerSize = size === 'small' ? 16 : size === 'large' ? 20 : 18;
 
   const getSpinnerColor = () => {
     if (variant === 'primary' || variant === 'secondary') {
@@ -38,6 +38,31 @@ const Button: React.FC<ButtonProps> = ({
     }
     return 'primary'; // Primary color spinner on light background
   };
+
+  // Render loading content if loading, otherwise render children
+  const content = isLoading ? (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 1,
+      }}
+    >
+      <CircularProgress
+        size={spinnerSize}
+        color={getSpinnerColor()}
+        thickness={4}
+      />
+      {loadingText && (
+        <Box component="span" sx={{ fontSize: 'inherit', fontWeight: 'inherit' }}>
+          {loadingText}
+        </Box>
+      )}
+    </Box>
+  ) : (
+    children
+  );
 
   return (
     <MuiButton
@@ -47,38 +72,13 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled || isLoading}
       sx={{
         ...buttonStyle,
-        position: 'relative',
+        // Ensure consistent minimum height to prevent layout shift
+        minHeight: size === 'large' ? 42 : size === 'small' ? 30 : 36,
         ...(sx as any),
       }}
       {...props}
     >
-      {isLoading && (
-        <Box
-          sx={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <CircularProgress
-            size={spinnerSize}
-            color={getSpinnerColor()}
-            thickness={4}
-          />
-          {loadingText && (
-            <span style={{ fontSize: 'inherit', fontWeight: 'inherit' }}>
-              {loadingText}
-            </span>
-          )}
-        </Box>
-      )}
-      <Box sx={{ visibility: isLoading ? 'hidden' : 'visible' }}>
-        {children}
-      </Box>
+      {content}
     </MuiButton>
   );
 };
