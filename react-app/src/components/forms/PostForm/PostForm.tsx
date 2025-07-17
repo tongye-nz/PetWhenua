@@ -128,6 +128,8 @@ const PostForm: React.FC<PostFormProps> = ({
   });
 
   const [errors, setErrors] = useState<PostFormErrors>({});
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [isNavigating, setIsNavigating] = useState<boolean>(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(initialImages);
   
   // Pet Wedding specific state
@@ -285,6 +287,11 @@ const PostForm: React.FC<PostFormProps> = ({
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     
+    // Clear any previous errors and success messages
+    setErrors({});
+    setSuccessMessage('');
+    setIsNavigating(false);
+    
     if (!validateForm() || !user) {
       return;
     }
@@ -364,11 +371,12 @@ const PostForm: React.FC<PostFormProps> = ({
             selectedPetIds: formData.selectedPetIds || undefined,
           } as CreatePostRequest
         : {
-            userId: user?.userId,
+            postId: postId,
+            userId: user?.userId || 0,
             postType: formData.postType,
-            title: formData.title,
-            content: formData.content,
-            status: formData.status,
+            title: formData.title || '',
+            content: formData.content || '',
+            status: formData.status !== undefined ? formData.status : 0, // Default to Active if not set
             images: uploadedImageUrls,
             location: formData.location || undefined,
             address: formData.address || undefined,
@@ -377,7 +385,7 @@ const PostForm: React.FC<PostFormProps> = ({
             category: formData.category || undefined,
             selectedPetIds: formData.selectedPetIds || undefined,
             createdAt: formData.createdAt,
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           } as UpdatePostRequest;
 
       console.log('Submit data:', submitData);
@@ -406,7 +414,20 @@ const PostForm: React.FC<PostFormProps> = ({
           createdPost = await createPost(submitData as CreatePostRequest);
         }
         
-        onSubmit(submitData, createdPost);
+        // Show success message for creation
+        setSuccessMessage('Post created successfully!');
+        setErrors({}); // Clear any previous errors
+        setIsNavigating(true); // Disable form during navigation
+        
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
+
+        // Delay navigation to allow user to see success message
+        setTimeout(() => {
+          onSubmit(submitData, createdPost);
+        }, 2000); // 2 second delay before navigation
       } else {
         // Edit mode - update existing post
         if (!postId) {
@@ -417,11 +438,38 @@ const PostForm: React.FC<PostFormProps> = ({
           throw new Error('User ID is required for post update');
         }
 
+        // Validate required fields before API call
+        if (!user?.userId) {
+          throw new Error('User ID is required for post update');
+        }
+        
+        const updateData = submitData as UpdatePostRequest;
+        if (!updateData.title || !updateData.content) {
+          throw new Error('Title and content are required');
+        }
+        
+        if (updateData.status === undefined || updateData.status === null) {
+          throw new Error('Post status is required');
+        }
+
         // Import and use the post service to update the post
         const { postService } = await import('../../../api/post.api');
         await postService.updatePost(postId, submitData);
         
-        onSubmit(submitData);
+        // Show success message
+        setSuccessMessage('Post updated successfully!');
+        setErrors({}); // Clear any previous errors
+        setIsNavigating(true); // Disable form during navigation
+        
+        // Auto-hide success message after 5 seconds
+        setTimeout(() => {
+          setSuccessMessage('');
+        }, 5000);
+        
+        // Delay navigation to allow user to see success message
+        setTimeout(() => {
+          onSubmit(submitData);
+        }, 2000); // 2 second delay before navigation
       }
     } catch (error) {
       console.error('Form submission error:', error);
@@ -431,6 +479,25 @@ const PostForm: React.FC<PostFormProps> = ({
         console.error('Response status:', (error as any).response.status);
         console.error('Response data:', (error as any).response.data);
         console.error('Response headers:', (error as any).response.headers);
+        
+        // Extract specific validation errors for user display
+        const responseData = (error as any).response.data;
+        if (responseData && responseData.errors) {
+          console.error('Validation errors:', responseData.errors);
+          // Display specific validation errors to user
+          let validationMessages = [];
+          for (const [field, messages] of Object.entries(responseData.errors)) {
+            if (Array.isArray(messages)) {
+              validationMessages.push(`${field}: ${messages.join(', ')}`);
+            } else {
+              validationMessages.push(`${field}: ${messages}`);
+            }
+          }
+          if (validationMessages.length > 0) {
+            setErrors({ general: `Validation errors: ${validationMessages.join('; ')}` });
+            return;
+          }
+        }
       }
       
       // Set a more specific error message
@@ -480,6 +547,16 @@ const PostForm: React.FC<PostFormProps> = ({
       {errors.general && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {errors.general}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 2 }}
+          onClose={() => setSuccessMessage('')}
+        >
+          {successMessage}
         </Alert>
       )}
 
@@ -693,10 +770,13 @@ const PostForm: React.FC<PostFormProps> = ({
             variant="primary"
             size="large"
             fullWidth
-            loading={loading}
-            disabled={loading}
+            loading={loading || isNavigating}
+            disabled={loading || isNavigating}
           >
-            {mode === 'create' ? 'Create Post' : 'Update Post'}
+            {isNavigating 
+              ? (mode === 'create' ? 'Post Created! Redirecting...' : 'Post Updated! Redirecting...') 
+              : (mode === 'create' ? 'Create Post' : 'Update Post')
+            }
           </Button>
           
           {onCancel && (
@@ -706,7 +786,7 @@ const PostForm: React.FC<PostFormProps> = ({
               size="large"
               fullWidth
               onClick={onCancel}
-              disabled={loading}
+              disabled={loading || isNavigating}
             >
               Cancel
             </Button>

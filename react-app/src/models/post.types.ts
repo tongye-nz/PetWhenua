@@ -95,6 +95,7 @@ export interface CreatePostRequest {
 }
 
 export interface UpdatePostRequest {
+  postId?: number;
   userId?: number;
   postType?: PostType;
   title?: string;

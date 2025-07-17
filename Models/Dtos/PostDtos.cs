@@ -2,6 +2,36 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PetWhenua.Models.Dtos
 {
+    public class CreatePostRequest
+    {
+        public int UserId { get; set; }
+        public string UserRole { get; set; } = string.Empty;
+        public PostType PostType { get; set; }
+        
+        [Required]
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+        
+        [Required]
+        public string Content { get; set; } = string.Empty;
+        
+        public List<string>? Images { get; set; }
+        
+        [MaxLength(200)]
+        public string? Location { get; set; }
+        
+        [MaxLength(500)]
+        public string? Address { get; set; }
+        
+        public decimal? Price { get; set; }
+        public DateTime? EventDate { get; set; }
+        
+        [MaxLength(100)]
+        public string? Category { get; set; }
+        
+        public List<int>? SelectedPetIds { get; set; }
+    }
+
     public class CreatePostWithRoleRequest
     {
         [Required]
@@ -26,12 +56,54 @@ namespace PetWhenua.Models.Dtos
         [MaxLength(200)]
         public string? Location { get; set; }
 
+        [MaxLength(500)]
+        public string? Address { get; set; }
+
         public decimal? Price { get; set; }
 
         public DateTime? EventDate { get; set; }
 
         [MaxLength(100)]
         public string? Category { get; set; }
+    }
+
+    public class UpdatePostDto
+    {
+        [Required]
+        public int PostId { get; set; }
+        
+        [Required]
+        public int UserId { get; set; }
+        
+        [Required]
+        public PostType PostType { get; set; }
+        
+        [Required]
+        [MaxLength(200)]
+        public string Title { get; set; } = string.Empty;
+        
+        [Required]
+        public string Content { get; set; } = string.Empty;
+        
+        [Required]
+        public PostStatus Status { get; set; }
+        
+        public List<string>? Images { get; set; }
+        
+        [MaxLength(200)]
+        public string? Location { get; set; }
+        
+        [MaxLength(500)]
+        public string? Address { get; set; }
+        
+        public decimal? Price { get; set; }
+        public DateTime? EventDate { get; set; }
+        
+        [MaxLength(100)]
+        public string? Category { get; set; }
+        
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 
     public class ChangePostStatusRequest

@@ -6,7 +6,7 @@ import { commentService } from '../../../../api';
 import { userFollowService } from '../../../../api/userFollow.api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
-import { PostType } from '../../../../models/post.types';
+import { PostType, PostStatus } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
 
@@ -34,7 +34,13 @@ const PostCard: React.FC<PostCardProps> = ({
   const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
   
   const isOwner = user?.userId === post.userId;
-  const canEdit = isOwner && post.status === 0; // PostStatus.Active
+  // Users can edit their own posts only if status is Active, Inactive, or Pending
+  // Cannot edit if status is Sold, Expired, or Cancelled
+  const canEdit = isOwner && (
+    post.status === PostStatus.Active || 
+    post.status === PostStatus.Inactive || 
+    post.status === PostStatus.Pending
+  );
   const canDelete = isOwner || user?.role === 'site_admin';
   const hasActions = showActions && (canEdit || canDelete);
 

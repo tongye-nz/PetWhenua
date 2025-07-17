@@ -275,9 +275,6 @@ const PostDetail: React.FC = () => {
           {/* Images */}
           {currentPost.images && currentPost.images.length > 0 && (
             <Box mt={4}>
-              <Typography variant="h6" gutterBottom>
-                Images
-              </Typography>
               <Box display="flex" gap={2} flexWrap="wrap">
                 {currentPost.images.map((image, index) => {
                   // Construct proper image URL

@@ -122,14 +122,23 @@ namespace PetWhenua.Services
         /// <returns>True if the user can edit the post</returns>
         public bool CanEditPost(string userRole, Post post, int userId)
         {
-            // Expired posts can only be edited by admins
-            if (post.Status == PostStatus.Expired && !UserRoles.IsAdmin(userRole))
+            // Site admins can edit any post regardless of status
+            if (UserRoles.IsAdmin(userRole))
+            {
+                return true;
+            }
+
+            // Users can only edit their own posts
+            if (post.UserId != userId)
             {
                 return false;
             }
 
-            // Apply standard edit rules
-            return CanEditPost(userRole, post.UserId, userId);
+            // Users can edit their own posts only if status is Active, Inactive, or Pending
+            // Cannot edit if status is Sold, Expired, or Cancelled
+            return post.Status == PostStatus.Active || 
+                   post.Status == PostStatus.Inactive || 
+                   post.Status == PostStatus.Pending;
         }
 
         /// <summary>
