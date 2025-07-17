@@ -24,7 +24,7 @@ import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PetFormDialog, PetSelectionDialog } from '../components/features/pets';
 import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
-import { petConnectionService } from '../api/petConnection.api';
+
 import type { Pet, PetFormData } from '../models/pet.types';
 import type { PetConnectionStatus } from '../models/petConnection.types';
 import { formatPetAge, calculateAgeInYears } from '../models/pet.types';

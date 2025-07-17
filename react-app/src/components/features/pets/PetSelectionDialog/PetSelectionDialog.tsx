@@ -7,7 +7,6 @@ import {
   Box,
   Card,
   CardMedia,
-  CardContent,
   Typography,
   Button,
   Alert,
@@ -17,7 +16,7 @@ import {
   FormControlLabel,
   FormControl
 } from '@mui/material';
-import { Pets, Close } from '@mui/icons-material';
+import { Pets } from '@mui/icons-material';
 import { LoadingSpinner } from '../../../ui';
 import { petService } from '../../../../api/pet.api';
 import { petConnectionService } from '../../../../api/petConnection.api';
