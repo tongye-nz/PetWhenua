@@ -210,6 +210,100 @@ public class LikesController : ControllerBase
         return Ok(new { message = "Post unliked successfully" });
     }
 
+    // POST: api/likes/toggle
+    [HttpPost("toggle")]
+    public async Task<IActionResult> ToggleLike([FromBody] CreateLikeRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var userId = GetCurrentUserId();
+
+        // Check if post exists
+        var postExists = await _context.Posts.AnyAsync(p => p.PostId == request.PostId);
+        if (!postExists)
+        {
+            return NotFound("Post not found.");
+        }
+
+        // Check if user has already liked this post
+        var existingLike = await _context.Likes
+            .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == userId);
+
+        bool isLiked;
+        int? likeId = null;
+
+        if (existingLike != null)
+        {
+            // Unlike the post
+            _context.Likes.Remove(existingLike);
+            isLiked = false;
+        }
+        else
+        {
+            // Like the post
+            var like = new Like
+            {
+                PostId = request.PostId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Likes.Add(like);
+            await _context.SaveChangesAsync();
+            likeId = like.LikeId;
+            isLiked = true;
+
+            // Send notification to post owner (if different from liker)
+            try
+            {
+                var post = await _context.Posts
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.PostId == request.PostId);
+                    
+                var liker = await _context.Users
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (post?.UserId != userId && post?.User != null && liker != null)
+                {
+                    await _notificationService.CreateAndSendNotificationAsync(new CreateNotificationRequest
+                    {
+                        UserId = post.UserId,
+                        Type = NotificationType.PostLiked,
+                        Title = "Post Liked",
+                        Message = $"{liker.FirstName} {liker.LastName} liked your post: \"{post.Title}\"",
+                        RelatedPostId = post.PostId,
+                        RelatedUserId = userId
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log notification failure but don't fail the like creation
+                Console.WriteLine($"Failed to send like notification: {ex.Message}");
+            }
+        }
+
+        if (existingLike != null)
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        // Get updated like count
+        var likeCount = await _context.Likes.CountAsync(l => l.PostId == request.PostId);
+
+        return Ok(new
+        {
+            likeId = likeId,
+            postId = request.PostId,
+            userId = userId,
+            likeCount = likeCount,
+            isLiked = isLiked
+        });
+    }
+
     private int GetCurrentUserId()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
