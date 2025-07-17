@@ -194,81 +194,89 @@ const PetConnectionRequests: React.FC = () => {
         </Paper>
       ) : (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {connections.map((connection) => (
-            <Card key={connection.petConnectionId} sx={{ overflow: 'visible' }}>
-              <CardContent sx={{ p: 3 }}>
-                <Grid container spacing={3} alignItems="center">
-                  {/* Requesting Pet */}
-                  <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar
-                        src={connection.pet1?.profilePicture || undefined}
-                        sx={{ 
-                          width: 60, 
-                          height: 60,
-                          bgcolor: 'primary.main'
-                        }}
-                      >
-                        {!connection.pet1?.profilePicture && connection.pet1?.name?.charAt(0)?.toUpperCase()}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                          {connection.pet1?.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {connection.pet1?.species} • {connection.pet1?.breed}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Owner: {connection.requestedBy?.firstName} {connection.requestedBy?.lastName}
+          {connections.map((connection) => {
+            // Determine which pet is the requesting pet and which is the target pet
+            // The requesting pet belongs to the requestedBy user
+            // The target pet belongs to the current user
+            const isRequestingPet1 = connection.pet1?.user?.userId === connection.requestedById;
+            const requestingPet = isRequestingPet1 ? connection.pet1 : connection.pet2;
+            const targetPet = isRequestingPet1 ? connection.pet2 : connection.pet1;
+
+            return (
+              <Card key={connection.petConnectionId} sx={{ overflow: 'visible' }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Grid container spacing={3} alignItems="center">
+                    {/* Requesting Pet (Left Side) */}
+                    <Grid item xs={12} sm={4}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar
+                          src={requestingPet?.profilePicture || undefined}
+                          sx={{ 
+                            width: 60, 
+                            height: 60,
+                            bgcolor: 'primary.main'
+                          }}
+                        >
+                          {!requestingPet?.profilePicture && requestingPet?.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {requestingPet?.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {requestingPet?.species} • {requestingPet?.breed}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Owner: {connection.requestedBy?.firstName} {connection.requestedBy?.lastName}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+
+                    {/* Arrow/Connection Indicator */}
+                    <Grid item xs={12} sm={1}>
+                      <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        flexDirection: { xs: 'row', sm: 'column' }
+                      }}>
+                        <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                          wants to connect with
                         </Typography>
                       </Box>
-                    </Box>
-                  </Grid>
+                    </Grid>
 
-                  {/* Arrow/Connection Indicator */}
-                  <Grid item xs={12} sm={1}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      flexDirection: { xs: 'row', sm: 'column' }
-                    }}>
-                      <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                        wants to connect with
-                      </Typography>
-                    </Box>
-                  </Grid>
-
-                  {/* Target Pet */}
-                  <Grid item xs={12} sm={4}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar
-                        src={connection.pet2?.profilePicture || undefined}
-                        sx={{ 
-                          width: 60, 
-                          height: 60,
-                          bgcolor: 'secondary.main'
-                        }}
-                      >
-                        {!connection.pet2?.profilePicture && connection.pet2?.name?.charAt(0)?.toUpperCase()}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                          {connection.pet2?.name}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {connection.pet2?.species} • {connection.pet2?.breed}
-                        </Typography>
-                        <Chip 
-                          label="Your Pet" 
-                          size="small" 
-                          color="primary" 
-                          variant="outlined"
-                          sx={{ mt: 0.5 }}
-                        />
+                    {/* Target Pet (Right Side - Your Pet) */}
+                    <Grid item xs={12} sm={4}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar
+                          src={targetPet?.profilePicture || undefined}
+                          sx={{ 
+                            width: 60, 
+                            height: 60,
+                            bgcolor: 'secondary.main'
+                          }}
+                        >
+                          {!targetPet?.profilePicture && targetPet?.name?.charAt(0)?.toUpperCase()}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {targetPet?.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {targetPet?.species} • {targetPet?.breed}
+                          </Typography>
+                          <Chip 
+                            label="Your Pet" 
+                            size="small" 
+                            color="primary" 
+                            variant="outlined"
+                            sx={{ mt: 0.5 }}
+                          />
+                        </Box>
                       </Box>
-                    </Box>
-                  </Grid>
+                    </Grid>
 
                   {/* Action Buttons */}
                   <Grid item xs={12} sm={3}>
@@ -334,7 +342,8 @@ const PetConnectionRequests: React.FC = () => {
                 </Box>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </Box>
       )}
     </Container>
