@@ -217,7 +217,8 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
             flexDirection: 'column', 
             gap: 1,
             maxHeight: '300px',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            overflowX: 'hidden' // Prevent horizontal scrollbar
           }}>
             {followedUsers.map((user) => (
               <Box 
@@ -233,7 +234,8 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
                   '&:hover': {
                     backgroundColor: 'rgba(102, 126, 234, 0.05)',
                     borderColor: 'rgba(102, 126, 234, 0.2)',
-                    transform: 'translateX(4px)'
+                    transform: 'scale(1.02)', // Use scale instead of translateX to avoid overflow
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.15)'
                   }
                 }}
               >
