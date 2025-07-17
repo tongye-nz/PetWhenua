@@ -5,6 +5,7 @@ import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
+import { PostType } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
 
@@ -295,11 +296,14 @@ const PostCard: React.FC<PostCardProps> = ({
 
         {/* Status and type chips */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
-          <StatusChip 
-            statusVariant="status"
-            status={post.status}
-            label={getStatusLabel(post.status)}
-          />
+          {/* Only show status chip for post types that need status management */}
+          {post.postType !== PostType.Library && post.postType !== PostType.Moment && (
+            <StatusChip 
+              statusVariant="status"
+              status={post.status}
+              label={getStatusLabel(post.status)}
+            />
+          )}
           <StatusChip 
             statusVariant="type"
             postType={post.postType}
