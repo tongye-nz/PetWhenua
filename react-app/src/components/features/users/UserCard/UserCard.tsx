@@ -23,7 +23,7 @@ const UserCard: React.FC<UserCardProps> = ({
   const { user: currentUser } = useAuth();
   const isCurrentUser = currentUser?.userId === user.userId;
 
-  const cardHeight = compact ? 120 : 160;
+  const cardHeight = compact ? 150 : 200; // Reasonable height to accommodate 2-line names
   const avatarSize = compact ? 40 : 56;
 
   return (
@@ -58,7 +58,10 @@ const UserCard: React.FC<UserCardProps> = ({
               sx={{ 
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                display: '-webkit-box',
+                WebkitLineClamp: 2, // Allow up to 2 lines for full name
+                WebkitBoxOrient: 'vertical',
+                lineHeight: 1.2
               }}
             >
               {user.firstName && user.lastName 
