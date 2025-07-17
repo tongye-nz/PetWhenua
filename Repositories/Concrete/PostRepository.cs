@@ -20,6 +20,12 @@ namespace PetWhenua.Repositories.Concrete
                 .ThenInclude(pwp => pwp.Pet)
                 .AsQueryable();
 
+            // Only show active posts for public browsing (unless filtering by specific userId for user's own posts)
+            if (!userId.HasValue)
+            {
+                query = query.Where(p => p.Status == PostStatus.Active);
+            }
+
             if (postType.HasValue)
             {
                 query = query.Where(p => p.PostType == postType.Value);
@@ -94,7 +100,7 @@ namespace PetWhenua.Repositories.Concrete
         {
             return await _context.Posts
                 .Include(p => p.User)
-                .Where(p => p.PostType == postType)
+                .Where(p => p.PostType == postType && p.Status == PostStatus.Active)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
@@ -140,6 +146,15 @@ namespace PetWhenua.Repositories.Concrete
                     p.Status == PostStatus.Active &&
                     p.EventDate.HasValue)
                 .OrderBy(p => p.EventDate)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Post>> GetAllPostsByTypeAsync(PostType postType)
+        {
+            return await _context.Posts
+                .Include(p => p.User)
+                .Where(p => p.PostType == postType)
+                .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
         }
     }

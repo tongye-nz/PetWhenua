@@ -6,14 +6,13 @@ import {
   CardContent,
   Box,
   Typography,
-  Chip,
   Avatar,
   Button,
   Alert,
   Divider
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner, LikeButton } from '../components/ui';
+import { LoadingSpinner, LikeButton, StatusChip } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -44,16 +43,18 @@ const PostDetail: React.FC = () => {
     return typeMap[postType] || 'Unknown';
   };
 
-  const getPostTypeColor = (postType: PostType): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
-    const colorMap: { [key: number]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
-      0: 'info',       // Meetup
-      1: 'secondary',  // Pet Wedding
-      2: 'success',    // Buy & Sell
-      3: 'warning',    // Library
-      4: 'error',      // Announcement
-      5: 'primary'     // Moment
+
+
+  const getStatusLabel = (status: number): string => {
+    const statusMap: { [key: number]: string } = {
+      0: 'Active',
+      1: 'Sold',
+      2: 'Expired',
+      3: 'Inactive',
+      4: 'Cancelled',
+      5: 'Pending'
     };
-    return colorMap[postType] || 'primary';
+    return statusMap[status] || 'Unknown';
   };
 
   const handleEdit = () => {
@@ -180,12 +181,18 @@ const PostDetail: React.FC = () => {
       {/* Post Content */}
       <Card>
         <CardContent sx={{ p: 4 }}>
-          {/* Post Type Badge */}
-          <Box mb={2}>
-            <Chip 
+          {/* Post Type and Status Badges */}
+          <Box mb={2} display="flex" gap={1} flexWrap="wrap">
+            <StatusChip 
+              statusVariant="type"
+              postType={currentPost.postType}
               label={getPostTypeLabel(currentPost.postType)}
-              color={getPostTypeColor(currentPost.postType)}
-              variant="filled"
+              size="small"
+            />
+            <StatusChip 
+              statusVariant="status"
+              status={currentPost.status}
+              label={getStatusLabel(currentPost.status)}
               size="small"
             />
           </Box>
@@ -197,12 +204,17 @@ const PostDetail: React.FC = () => {
 
           {/* Author and Date */}
           <Box display="flex" alignItems="center" mb={3}>
-            <Avatar sx={{ mr: 2 }}>
-              {currentPost.user?.username?.charAt(0).toUpperCase()}
+            <Avatar 
+              src={currentPost.user?.profilePicture || undefined}
+              sx={{ mr: 2 }}
+            >
+              {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
             </Avatar>
             <Box>
               <Typography variant="subtitle1" fontWeight="medium">
-                {currentPost.user?.username}
+                {currentPost.user?.firstName && currentPost.user?.lastName 
+                  ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
+                  : currentPost.user?.username}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Posted {formatDate(currentPost.createdAt)}
@@ -216,6 +228,95 @@ const PostDetail: React.FC = () => {
           <Typography variant="body1" sx={{ mt: 3, lineHeight: 1.7 }}>
             {currentPost.content}
           </Typography>
+
+          {/* Pet Wedding Participants - show the two pets */}
+          {currentPost.postType === 1 && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
+            <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                💍 Pet Wedding Participants
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {currentPost.petWeddingParticipants.map((participant) => (
+                  <Box key={participant.participantId} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    p: 2,
+                    minWidth: 250,
+                    boxShadow: 1
+                  }}>
+                    {/* Pet Profile Picture */}
+                    <Avatar
+                      src={(() => {
+                        const profilePic = participant.pet?.profilePicture;
+                        if (!profilePic) return undefined;
+                        
+                        // If it's already a full URL, use it directly
+                        if (profilePic.startsWith('http')) return profilePic;
+                        
+                        // If it's a data URL (base64), use it directly 
+                        if (profilePic.startsWith('data:')) {
+                          return profilePic;
+                        }
+                        
+                        // If it's a file path, construct the full URL
+                        if (profilePic.length < 500) {
+                          return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                        }
+                        
+                        return undefined;
+                      })()}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        bgcolor: 'primary.light',
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        flexShrink: 0
+                      }}
+                    >
+                      {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                    </Avatar>
+                    
+                    {/* Pet Info */}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography variant="h6" sx={{ 
+                        fontWeight: 'bold',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {participant.pet?.name || 'Unknown Pet'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {participant.pet?.gender && (
+                          <span>
+                            {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️ Male' : 
+                             participant.pet.gender === 'Female' || participant.pet.gender === 'F' ? '♀️ Female' : participant.pet.gender}
+                          </span>
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.primary">
+                        <strong>Species:</strong> {participant.pet?.species || 'Unknown'}
+                      </Typography>
+                      {participant.pet?.breed && (
+                        <Typography variant="body2" color="text.primary">
+                          <strong>Breed:</strong> {participant.pet.breed}
+                        </Typography>
+                      )}
+                      {participant.pet?.age && (
+                        <Typography variant="body2" color="text.primary">
+                          <strong>Age:</strong> {participant.pet.age} years old
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
 
           {/* Additional Information */}
           <Box mt={4}>
@@ -268,9 +369,6 @@ const PostDetail: React.FC = () => {
           {/* Images */}
           {currentPost.images && currentPost.images.length > 0 && (
             <Box mt={4}>
-              <Typography variant="h6" gutterBottom>
-                Images
-              </Typography>
               <Box display="flex" gap={2} flexWrap="wrap">
                 {currentPost.images.map((image, index) => {
                   // Construct proper image URL

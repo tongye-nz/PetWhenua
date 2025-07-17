@@ -3,8 +3,10 @@ import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/ma
 import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
+import { userFollowService } from '../../../../api/userFollow.api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
+import { PostType, PostStatus } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { formatDate } from '../../../../utils/dateUtils';
 
@@ -28,9 +30,17 @@ const PostCard: React.FC<PostCardProps> = ({
   const { user } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [commentCount, setCommentCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
   
   const isOwner = user?.userId === post.userId;
-  const canEdit = isOwner && post.status === 0; // PostStatus.Active
+  // Users can edit their own posts only if status is Active, Inactive, or Pending
+  // Cannot edit if status is Sold, Expired, or Cancelled
+  const canEdit = isOwner && (
+    post.status === PostStatus.Active || 
+    post.status === PostStatus.Inactive || 
+    post.status === PostStatus.Pending
+  );
   const canDelete = isOwner || user?.role === 'site_admin';
   const hasActions = showActions && (canEdit || canDelete);
 
@@ -48,6 +58,32 @@ const PostCard: React.FC<PostCardProps> = ({
 
     loadCommentCount();
   }, [post.postId]);
+
+  // Load follow status for the post author
+  useEffect(() => {
+    const loadFollowStatus = async () => {
+      if (!user?.userId || !post.user?.userId || isOwner) {
+        setFollowStatusLoaded(true);
+        return;
+      }
+
+      try {
+        const status = await userFollowService.isFollowing(post.user.userId);
+        setIsFollowing(status);
+      } catch (error) {
+        console.debug('Failed to load follow status:', error);
+      } finally {
+        setFollowStatusLoaded(true);
+      }
+    };
+
+    loadFollowStatus();
+  }, [post.user?.userId, user?.userId, isOwner]);
+
+  // Handle follow status change
+  const handleFollowChange = (newFollowStatus: boolean) => {
+    setIsFollowing(newFollowStatus);
+  };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -84,7 +120,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const getStatusLabel = (status: number) => {
-    const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled'];
+    const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled', 'Pending'];
     return labels[status] || 'Unknown';
   };
 
@@ -120,12 +156,17 @@ const PostCard: React.FC<PostCardProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar sx={{ width: 32, height: 32 }}>
-            {post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />}
+          <Avatar 
+            src={post.user?.profilePicture || undefined}
+            sx={{ width: 32, height: 32 }}
+          >
+            {!post.user?.profilePicture && (post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
             <Text variant="body2" fontWeight="medium">
-              {post.user?.username || 'Unknown User'}
+              {post.user?.firstName && post.user?.lastName 
+                ? `${post.user.firstName} ${post.user.lastName}` 
+                : post.user?.username || 'Unknown User'}
             </Text>
             <Text variant="caption" color="text.secondary">
               {formatDate(post.createdAt)}
@@ -134,12 +175,17 @@ const PostCard: React.FC<PostCardProps> = ({
           
           {/* Follow button - only show for other users' posts */}
           {!isOwner && post.user && (
-            <FollowButton
-              userId={post.user.userId}
-              isFollowing={false} // TODO: Get actual follow status
-              size="small"
-              variant="outlined"
-            />
+            <>
+              {followStatusLoaded && (
+                <FollowButton
+                  userId={post.user.userId}
+                  isFollowing={isFollowing}
+                  onFollowChange={handleFollowChange}
+                  size="small"
+                  variant="outlined"
+                />
+              )}
+            </>
           )}
         </Box>
 
@@ -194,38 +240,50 @@ const PostCard: React.FC<PostCardProps> = ({
                   minWidth: 0 // Allow content to shrink
                 }}>
                   {/* Pet Profile Picture */}
-                  <Box
+                  <Avatar
+                    src={(() => {
+                      const profilePic = participant.pet?.profilePicture;
+                      if (!profilePic) return undefined;
+                      
+                      console.log('Pet profile picture:', {
+                        petName: participant.pet?.name,
+                        profilePicLength: profilePic.length,
+                        profilePicStart: profilePic.substring(0, 100),
+                        isHttp: profilePic.startsWith('http'),
+                        isData: profilePic.startsWith('data:')
+                      });
+                      
+                      // If it's already a full URL, use it directly
+                      if (profilePic.startsWith('http')) return profilePic;
+                      
+                      // If it's a data URL (base64), use it directly 
+                      // Data URLs don't make HTTP requests, so length is less of an issue
+                      if (profilePic.startsWith('data:')) {
+                        console.log('Using data URL for pet:', participant.pet?.name);
+                        return profilePic;
+                      }
+                      
+                      // If it's a file path, construct the full URL
+                      if (profilePic.length < 500) { // Only if path is reasonable length
+                        const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                        console.log('Constructed URL:', fullUrl);
+                        return fullUrl;
+                      }
+                      
+                      console.log('Profile picture too long, skipping');
+                      return undefined;
+                    })()}
                     sx={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: '50%',
+                      width: 60,
+                      height: 60,
                       bgcolor: 'primary.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
+                      fontSize: '1.75rem',
+                      fontWeight: 'bold',
                       flexShrink: 0
                     }}
                   >
-                    {participant.pet?.profilePicture ? (
-                      <Box
-                        component="img"
-                        src={participant.pet.profilePicture.startsWith('http') 
-                          ? participant.pet.profilePicture 
-                          : `http://localhost:5295${participant.pet.profilePicture.startsWith('/') ? '' : '/'}${participant.pet.profilePicture}`}
-                        alt={participant.pet.name}
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    ) : (
-                      <Text variant="caption" fontWeight="bold" sx={{ color: 'primary.contrastText' }}>
-                        {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
-                      </Text>
-                    )}
-                  </Box>
+                    {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                  </Avatar>
                   
                   {/* Pet Info */}
                   <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -233,11 +291,12 @@ const PostCard: React.FC<PostCardProps> = ({
                       display: 'block',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      fontSize: '1.25rem'
                     }}>
                       {participant.pet?.name || 'Unknown Pet'}
                     </Text>
-                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                       {participant.pet?.gender && (
                         <span>
                           {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️' : 
@@ -288,18 +347,21 @@ const PostCard: React.FC<PostCardProps> = ({
         {post.images && post.images.length > 0 && (
           <PostImageGallery 
             images={post.images} 
-            maxDisplay={compact ? 2 : 4}
+            maxDisplay={post.images.length > 3 ? 3 : (compact ? 2 : post.images.length)}
             compact={compact}
           />
         )}
 
         {/* Status and type chips */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
-          <StatusChip 
-            statusVariant="status"
-            status={post.status}
-            label={getStatusLabel(post.status)}
-          />
+          {/* Only show status chip for post types that need status management */}
+          {post.postType !== PostType.Library && post.postType !== PostType.Moment && (
+            <StatusChip 
+              statusVariant="status"
+              status={post.status}
+              label={getStatusLabel(post.status)}
+            />
+          )}
           <StatusChip 
             statusVariant="type"
             postType={post.postType}

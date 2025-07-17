@@ -21,10 +21,12 @@ import {
   Female
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
-import { PetFormDialog } from '../components/features/pets';
+import { PetFormDialog, PetSelectionDialog } from '../components/features/pets';
 import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
+import { petConnectionService } from '../api/petConnection.api';
 import type { Pet, PetFormData } from '../models/pet.types';
+import type { PetConnectionStatus } from '../models/petConnection.types';
 import { formatPetAge, calculateAgeInYears } from '../models/pet.types';
 
 const PetDetail: React.FC = () => {
@@ -42,6 +44,13 @@ const PetDetail: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Pet connection state
+  const [connectDialogOpen, setConnectDialogOpen] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<PetConnectionStatus | null>(null);
+  const [loadingConnection, setLoadingConnection] = useState(false);
+  const [connectedPets, setConnectedPets] = useState<Pet[]>([]);
+  const [loadingConnectedPets, setLoadingConnectedPets] = useState(false);
+
   useEffect(() => {
     const fetchPet = async () => {
       if (!id) {
@@ -55,6 +64,16 @@ const PetDetail: React.FC = () => {
         setError(null);
         const petData = await petService.getPetById(parseInt(id), true); // Include user data
         setPet(petData);
+        
+        // Fetch connected pets for this pet
+        if (petData.petId) {
+          await fetchConnectedPets(petData.petId);
+        }
+        
+        // Check connection status if this is not the user's own pet
+        if (user && petData.userId !== user.userId) {
+          await checkConnectionStatus(petData);
+        }
       } catch (err) {
         console.error('Failed to fetch pet:', err);
         setError(err instanceof Error ? err.message : 'Failed to load pet details');
@@ -68,6 +87,83 @@ const PetDetail: React.FC = () => {
 
   const handleBack = () => {
     navigate(-1);
+  };
+
+  const checkConnectionStatus = async (targetPet: Pet) => {
+    if (!user?.userId || !targetPet.petId) return;
+    
+    try {
+      setLoadingConnection(true);
+      
+      // Get current user's pets
+      const userPets = await petService.getCurrentUserPets();
+      
+      if (userPets.length === 0) {
+        setConnectionStatus(null);
+        return;
+      }
+      
+      // Check connection status between user's pets and target pet
+      let overallStatus: PetConnectionStatus | null = null;
+      
+      for (const userPet of userPets) {
+        if (userPet.petId) {
+          try {
+            const statusResponse = await petConnectionService.getConnectionStatus(
+              userPet.petId, 
+              targetPet.petId
+            );
+            
+            // Priority: Accepted > Pending > null
+            if (statusResponse.status === 'Accepted') {
+              overallStatus = 'Accepted';
+              break; // Accepted is highest priority, stop checking
+            } else if (statusResponse.status === 'Pending' && overallStatus !== 'Accepted') {
+              overallStatus = 'Pending';
+            }
+          } catch (error) {
+            // If no connection exists between these pets, continue checking others
+            console.log(`No connection between pet ${userPet.petId} and ${targetPet.petId}`);
+          }
+        }
+      }
+      
+      setConnectionStatus(overallStatus);
+      console.log('Connection status check result:', overallStatus);
+    } catch (error) {
+      console.error('Failed to check connection status:', error);
+      setConnectionStatus(null);
+    } finally {
+      setLoadingConnection(false);
+    }
+  };
+
+  const fetchConnectedPets = async (petId: number) => {
+    try {
+      setLoadingConnectedPets(true);
+      const connected = await petConnectionService.getConnectedPets(petId);
+      setConnectedPets(connected);
+    } catch (error) {
+      console.error('Failed to fetch connected pets:', error);
+      setConnectedPets([]);
+    } finally {
+      setLoadingConnectedPets(false);
+    }
+  };
+
+  const handleConnectClick = () => {
+    setConnectDialogOpen(true);
+  };
+
+  const handleConnectionRequested = async () => {
+    setSuccess('Connection request sent! Wait for the pet owner to respond.');
+    setConnectionStatus('Pending');
+    
+    // Refresh both connected pets and connection status
+    if (pet?.petId) {
+      await fetchConnectedPets(pet.petId);
+      await checkConnectionStatus(pet);
+    }
   };
 
   const handleEdit = () => {
@@ -236,16 +332,31 @@ const PetDetail: React.FC = () => {
         <Text variant="h4" component="h1">
           {pet.name}
         </Text>
-        {isOwnPet && (
-          <Button
-            variant="outline"
-            startIcon={<Edit />}
-            onClick={handleEdit}
-            sx={{ ml: 'auto' }}
-          >
-            Edit Pet
-          </Button>
-        )}
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+          {isOwnPet ? (
+            <Button
+              variant="outline"
+              startIcon={<Edit />}
+              onClick={handleEdit}
+            >
+              Edit Pet
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              startIcon={<Pets />}
+              onClick={handleConnectClick}
+              disabled={loadingConnection || connectionStatus === 'Pending'}
+            >
+              {connectionStatus === 'Pending' 
+                ? 'Request Sent' 
+                : connectionStatus === 'Accepted'
+                ? 'Connected'
+                : 'Connect Pets'
+              }
+            </Button>
+          )}
+        </Box>
       </Box>
 
       {/* Main Pet Card */}
@@ -398,45 +509,71 @@ const PetDetail: React.FC = () => {
           Connection
         </Text>
         
-        {/* Mock Connection Users - Replace with real data */}
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          {[
-            { name: 'Joe A.', avatar: 'J', color: '#1976d2' },
-            { name: 'Dylan C.', avatar: 'D', color: '#1976d2' },
-            { name: 'Ethan C.', avatar: 'E', color: '#00c853' },
-            { name: 'Louis W.', avatar: 'L', color: '#00c853' },
-            { name: 'Jacob S.', avatar: 'J', color: '#ff9800' },
-            { name: 'Julia T.', avatar: 'J', color: '#f44336' }
-          ].map((user, index) => (
-            <Box key={index} sx={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              gap: 0.5
-            }}>
-              <Avatar sx={{ 
-                width: 48, 
-                height: 48, 
-                bgcolor: user.color,
-                fontSize: '1.2rem',
-                fontWeight: 600
-              }}>
-                {user.avatar}
-              </Avatar>
-              <Text variant="caption" sx={{ fontWeight: 500, textAlign: 'center' }}>
-                {user.name}
-              </Text>
-            </Box>
-          ))}
-        </Box>
+        {/* Connected Pets */}
+        {loadingConnectedPets ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <LoadingSpinner size="small" />
+          </Box>
+        ) : connectedPets.length > 0 ? (
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            {connectedPets.map((connectedPet) => (
+              <Box key={connectedPet.petId} sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                gap: 0.5,
+                cursor: 'pointer'
+              }}
+              onClick={() => navigate(`/pet/${connectedPet.petId}`)}
+              >
+                <Avatar 
+                  src={connectedPet.profilePicture || undefined}
+                  sx={{ 
+                    width: 48, 
+                    height: 48, 
+                    bgcolor: 'primary.main',
+                    fontSize: '1.2rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {!connectedPet.profilePicture && connectedPet.name?.charAt(0)?.toUpperCase()}
+                </Avatar>
+                <Text variant="caption" sx={{ 
+                  fontWeight: 500, 
+                  textAlign: 'center',
+                  maxWidth: '80px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {connectedPet.name}
+                </Text>
+              </Box>
+            ))}
+          </Box>
+        ) : (
+          <Text variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            No connected pets yet.
+          </Text>
+        )}
 
         {!isOwnPet && user && (
           <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
             <Text variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Connect your pet with {pet.name} to enable interactions and potential playdates.
             </Text>
-            <Button variant="primary" size="small">
-              Connect Pets
+            <Button 
+              variant="primary" 
+              size="small"
+              onClick={handleConnectClick}
+              disabled={loadingConnection || connectionStatus === 'Pending'}
+            >
+              {connectionStatus === 'Pending' 
+                ? 'Request Sent' 
+                : connectionStatus === 'Accepted'
+                ? 'Connected'
+                : 'Connect Pets'
+              }
             </Button>
           </Box>
         )}
@@ -451,6 +588,16 @@ const PetDetail: React.FC = () => {
         isLoading={formLoading}
         error={formError}
       />
+
+      {/* Pet Connection Dialog */}
+      {pet && !isOwnPet && (
+        <PetSelectionDialog
+          open={connectDialogOpen}
+          targetPet={pet}
+          onClose={() => setConnectDialogOpen(false)}
+          onConnectionRequested={handleConnectionRequested}
+        />
+      )}
     </Container>
   );
 };

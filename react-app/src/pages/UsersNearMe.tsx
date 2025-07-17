@@ -137,8 +137,8 @@ const UsersNearMe: React.FC = () => {
             gridTemplateColumns: {
               xs: '1fr',
               sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-              lg: 'repeat(4, 1fr)'
+              md: 'repeat(2, 1fr)', // Reduced from 3 to 2 for wider cards
+              lg: 'repeat(3, 1fr)'  // Reduced from 4 to 3 for wider cards
             },
             gap: 3
           }}>

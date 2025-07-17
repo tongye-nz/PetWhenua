@@ -28,6 +28,7 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [followStatusMap, setFollowStatusMap] = useState<Record<number, boolean>>({});
 
   // Load followed users
   const loadFollowedUsers = async () => {
@@ -48,6 +49,23 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
       // Limit the number of users displayed
       const limitedUsers = users.slice(0, maxUsers);
       setFollowedUsers(limitedUsers);
+
+      // For non-own profiles, load follow status for each user
+      if (!isOwnProfile) {
+        const statusMap: Record<number, boolean> = {};
+        await Promise.all(
+          limitedUsers.map(async (user) => {
+            try {
+              const status = await userFollowService.isFollowing(user.userId);
+              statusMap[user.userId] = status;
+            } catch (error) {
+              console.debug('Failed to load follow status for user:', user.userId);
+              statusMap[user.userId] = false;
+            }
+          })
+        );
+        setFollowStatusMap(statusMap);
+      }
     } catch (err) {
       console.error('Failed to load followed users:', err);
       setError('Failed to load followed users');
@@ -68,6 +86,12 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
 
   // Handle follow/unfollow changes
   const handleFollowChange = (targetUserId: number, isFollowing: boolean) => {
+    // Update the follow status map
+    setFollowStatusMap(prev => ({
+      ...prev,
+      [targetUserId]: isFollowing
+    }));
+
     // If unfollowing, remove from the list (for own profile)
     if (!isFollowing && isOwnProfile) {
       setFollowedUsers(prev => prev.filter(user => user.userId !== targetUserId));
@@ -256,7 +280,7 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
                 {!isOwnProfile && (
                   <FollowButton
                     userId={user.userId}
-                    isFollowing={false} // We'll need to check this from API
+                    isFollowing={followStatusMap[user.userId] || false}
                     onFollowChange={(isFollowing) => handleFollowChange(user.userId, isFollowing)}
                     size="small"
                     variant="outlined"

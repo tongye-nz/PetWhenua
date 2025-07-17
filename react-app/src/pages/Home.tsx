@@ -19,7 +19,10 @@ const Home: React.FC = () => {
       case 1: // Find a pet owner near you
         navigate('/users-near-me');
         break;
-      case 2: // Join Meetups & Events
+      case 2: // Find pets near you
+        navigate('/pets-near-me');
+        break;
+      case 3: // Join Meetups & Events
         navigate('/posts/meetup');
         break;
       default:
@@ -33,7 +36,7 @@ const Home: React.FC = () => {
   const getJoinBtnStyle = () => 
     hoveredJoinBtn ? homeStyles.joinEventBtnHover : homeStyles.joinEventBtn;
 
-  const iconCircleStyles = [homeStyles.iconCircle1, homeStyles.iconCircle2, homeStyles.iconCircle3];
+  const iconCircleStyles = [homeStyles.iconCircle1, homeStyles.iconCircle2, homeStyles.iconCircle3, homeStyles.iconCircle4];
 
   return (
     <div style={homeStyles.homePage}>
@@ -69,6 +72,11 @@ const Home: React.FC = () => {
                 icon: '📍', 
                 title: 'Find a pet owner near you',
                 description: 'Find pet owners near you and build\nrelationships for your pets'
+              },
+              {
+                icon: '🐕',
+                title: 'Find pets near you',
+                description: 'Discover adorable pets in your area\nand connect with their owners'
               },
               {
                 icon: '📅',

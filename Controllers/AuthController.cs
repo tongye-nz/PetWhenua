@@ -74,5 +74,7 @@ namespace PetWhenua.Controllers
             var userDto = _authService.MapToUserDto(user);
             return Ok(userDto);
         }
+
+
     }
 } 

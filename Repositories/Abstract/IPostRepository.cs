@@ -14,5 +14,6 @@ namespace PetWhenua.Repositories.Abstract
         Task<bool> UserExistsAsync(int userId);
         Task<IEnumerable<Post>> GetExpirablePostsAsync(DateTime currentDate);
         Task<IEnumerable<Post>> GetActiveTimeBasedPostsAsync();
+        Task<IEnumerable<Post>> GetAllPostsByTypeAsync(PostType postType); // Admin method - shows all posts regardless of status
     }
 }

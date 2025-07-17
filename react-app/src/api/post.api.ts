@@ -69,26 +69,8 @@ export const postService = {
       UpdatedAt: new Date().toISOString() // Always update timestamp
     };
 
-    // Include User object from original post data if available  
-    if (postData.user) {
-      // Convert frontend user object to backend format
-      updatePayload.User = {
-        UserId: postData.user.userId,
-        Username: postData.user.username,
-        Email: (postData.user as any).email || '',
-        FirstName: postData.user.firstName || '',
-        LastName: postData.user.lastName || '',
-        Role: postData.user.role,
-        IsActive: (postData.user as any).isActive ?? true,
-        PasswordHash: (postData.user as any).passwordHash || '',
-        Bio: (postData.user as any).bio || null,
-        Location: postData.user.location || null,
-        PhoneNumber: (postData.user as any).phoneNumber || null,
-        ProfilePicture: postData.user.profilePicture || null,
-        CreatedAt: (postData.user as any).createdAt || new Date().toISOString(),
-        UpdatedAt: (postData.user as any).updatedAt || new Date().toISOString()
-      };
-    }
+    // Don't include User navigation property - only UserId is needed for updates
+    // The backend should load the user from the database using UserId
 
     // Remove navigation properties that might cause issues
     delete updatePayload.PetWeddingParticipants;

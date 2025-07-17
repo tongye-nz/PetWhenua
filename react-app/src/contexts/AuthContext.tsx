@@ -91,7 +91,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       dispatch({ type: 'AUTH_START' });
       setError(null);
       
-      const response = await authService.login(credentials);
+      // Add timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout. Please check your connection and try again.')), 30000);
+      });
+      
+      const loginPromise = authService.login(credentials);
+      const response = await Promise.race([loginPromise, timeoutPromise]) as any;
       
       dispatch({
         type: 'AUTH_SUCCESS',
@@ -101,9 +107,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
     } catch (err) {
+      console.error('AuthContext: Login error details:', err);
       const apiError = err as ApiError;
-      setError(apiError.message);
-      dispatch({ type: 'AUTH_FAILURE', payload: apiError.message });
+      const errorMessage = apiError.message || 'Login failed. Please try again.';
+      setError(errorMessage);
+      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
       throw err;
     }
   };
@@ -114,7 +122,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       dispatch({ type: 'AUTH_START' });
       setError(null);
       
-      const response = await authService.register(userData);
+      // Add timeout handling
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout. Please check your connection and try again.')), 30000);
+      });
+      
+      const registerPromise = authService.register(userData);
+      const response = await Promise.race([registerPromise, timeoutPromise]) as any;
       
       dispatch({
         type: 'AUTH_SUCCESS',
@@ -124,9 +138,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
     } catch (err) {
+      console.error('AuthContext: Register error details:', err);
       const apiError = err as ApiError;
-      setError(apiError.message);
-      dispatch({ type: 'AUTH_FAILURE', payload: apiError.message });
+      const errorMessage = apiError.message || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
       throw err;
     }
   };

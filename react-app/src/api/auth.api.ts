@@ -24,12 +24,22 @@ authApi.interceptors.request.use((config) => {
 authApi.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    const isAuthEndpoint = error.config?.url?.includes('/auth/login') || 
+                          error.config?.url?.includes('/auth/register');
+    
+    // Only redirect to login if it's a 401 on a protected endpoint (not auth endpoints)
+    if (error.response?.status === 401 && !isAuthEndpoint) {
+      // Token expired or invalid on protected route
+      console.warn('Authentication token expired or invalid. Redirecting to login.');
       localStorage.removeItem('authToken');
       localStorage.removeItem('authUser');
-      window.location.href = '/login';
+      
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
+    
     return Promise.reject(error);
   }
 );
@@ -41,26 +51,58 @@ const handleApiError = (error: AxiosError): ApiError => {
     
     // Handle validation errors
     if (data.errors) {
+      const validationMessages = Object.values(data.errors).flat().join(', ');
       return {
-        message: 'Validation failed',
+        message: validationMessages || 'Validation failed',
         errors: data.errors
       };
+    }
+    
+    // Handle specific error messages from server - prioritize server messages
+    if (data.message) {
+      return { message: data.message };
     }
     
     // Handle string error messages
     if (typeof data === 'string') {
       return { message: data };
     }
-    
-    // Handle object with message property
-    if (data.message) {
-      return { message: data.message };
-    }
   }
   
-  return {
-    message: error.message || 'An unexpected error occurred'
-  };
+  // Handle network and other specific errors
+  if (!error.response) {
+    return {
+      message: 'Network error. Please check your internet connection and try again.'
+    };
+  }
+  
+  // Handle specific HTTP status codes - only use fallback messages if no server message
+  switch (error.response.status) {
+    case 400:
+      return { message: 'Invalid request. Please check your input and try again.' };
+    case 401:
+      // For 401, try to extract server message first, fallback to generic message
+      const unauthorizedMessage = typeof error.response.data === 'string' 
+        ? error.response.data 
+        : (error.response.data as any)?.message || 'Invalid username/email or password. Please try again.';
+      return { message: unauthorizedMessage };
+    case 403:
+      return { message: 'You do not have permission to perform this action.' };
+    case 404:
+      return { message: 'Service not found. Please try again later.' };
+    case 429:
+      return { message: 'Too many attempts. Please wait a moment and try again.' };
+    case 500:
+      return { message: 'Server error. Please try again later.' };
+    case 502:
+    case 503:
+    case 504:
+      return { message: 'Service temporarily unavailable. Please try again later.' };
+    default:
+      return {
+        message: error.message || 'An unexpected error occurred. Please try again.'
+      };
+  }
 };
 
 // Authentication API functions

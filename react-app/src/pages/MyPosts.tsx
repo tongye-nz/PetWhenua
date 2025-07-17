@@ -40,6 +40,7 @@ const MyPosts: React.FC = () => {
       sold: posts.filter(p => p.status === 1).length, // PostStatus.Sold
       expired: posts.filter(p => p.status === 2).length, // PostStatus.Expired
       cancelled: posts.filter(p => p.status === 4).length, // PostStatus.Cancelled
+      pending: posts.filter(p => p.status === 5).length, // PostStatus.Pending
     };
   };
 
@@ -50,6 +51,7 @@ const MyPosts: React.FC = () => {
     { label: 'Sold', status: 1 as PostStatus }, // PostStatus.Sold
     { label: 'Expired', status: 2 as PostStatus }, // PostStatus.Expired
     { label: 'Cancelled', status: 4 as PostStatus }, // PostStatus.Cancelled
+    { label: 'Pending', status: 5 as PostStatus }, // PostStatus.Pending
   ];
 
   const counts = getTabCounts();
@@ -141,6 +143,7 @@ const MyPosts: React.FC = () => {
           <Tab label={`Sold (${counts.sold})`} />
           <Tab label={`Expired (${counts.expired})`} />
           <Tab label={`Cancelled (${counts.cancelled})`} />
+          <Tab label={`Pending (${counts.pending})`} />
         </Tabs>
       </Card>
 

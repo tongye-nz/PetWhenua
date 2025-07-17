@@ -15,6 +15,7 @@ export { default as PetDeleteDialog } from './PetDeleteDialog';
 export { default as MyPetsLoading } from './MyPetsLoading';
 export { default as MyPetsErrorAlert } from './MyPetsErrorAlert';
 export { default as MyPetsFab } from './MyPetsFab';
+export { PetSelectionDialog } from './PetSelectionDialog';
 
 export type { PetCardProps } from './PetCard';
 export type { PetCardImageProps } from './PetCardImage';
@@ -33,3 +34,4 @@ export type { PetDeleteDialogProps } from './PetDeleteDialog';
 export type { MyPetsLoadingProps } from './MyPetsLoading';
 export type { MyPetsErrorAlertProps } from './MyPetsErrorAlert';
 export type { MyPetsFabProps } from './MyPetsFab';
+export type { PetSelectionDialogProps } from './PetSelectionDialog';

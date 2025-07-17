@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using PetWhenua.Services;
 using PetWhenua.Models.Dtos;
 using PetWhenua.Repositories.Abstract;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -9,11 +11,13 @@ public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
     private readonly IImageService _imageService;
+    private readonly IPostAuthorizationService _authorizationService;
 
-    public PostsController(IPostService postService, IImageService imageService)
+    public PostsController(IPostService postService, IImageService imageService, IPostAuthorizationService authorizationService)
     {
         _postService = postService;
         _imageService = imageService;
+        _authorizationService = authorizationService;
     }
 
     [HttpGet]
@@ -55,16 +59,59 @@ public class PostsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePost(int id, Post post)
+    [Authorize]
+    public async Task<IActionResult> UpdatePost(int id, UpdatePostDto updateDto)
     {
-        if (id != post.PostId)
+        if (id != updateDto.PostId)
         {
             return BadRequest("Post ID mismatch.");
         }
 
         try
         {
-            await _postService.UpdatePostAsync(post);
+            // Get current user info
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            if (string.IsNullOrEmpty(userRoleClaim))
+            {
+                return Unauthorized("User role not found.");
+            }
+
+            // Get the existing post to check authorization
+            var existingPost = await _postService.GetPostByIdAsync(id);
+            if (existingPost == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            // Check if user can edit this post
+            if (!_authorizationService.CanEditPost(userRoleClaim, existingPost, userId))
+            {
+                return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active, Inactive, or Pending.");
+            }
+
+            // Update the existing tracked entity instead of creating a new one
+            // This avoids EF tracking conflicts
+            existingPost.PostType = updateDto.PostType;
+            existingPost.Title = updateDto.Title;
+            existingPost.Content = updateDto.Content;
+            existingPost.Status = updateDto.Status;
+            existingPost.Images = updateDto.Images ?? new List<string>();
+            existingPost.Location = updateDto.Location;
+            existingPost.Address = updateDto.Address;
+            existingPost.Price = updateDto.Price;
+            existingPost.EventDate = updateDto.EventDate;
+            existingPost.Category = updateDto.Category;
+            existingPost.UpdatedAt = DateTime.UtcNow;
+            // Note: Don't update CreatedAt or UserId for security
+
+            await _postService.UpdatePostAsync(existingPost);
             return NoContent();
         }
         catch (InvalidOperationException ex)

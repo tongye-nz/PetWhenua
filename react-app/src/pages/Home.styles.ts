@@ -109,6 +109,16 @@ export const homeStyles: { [key: string]: CSSProperties } = {
     justifyContent: 'center',
     margin: '0 auto',
   },
+  iconCircle4: {
+    width: '80px',
+    height: '80px',
+    borderRadius: '50%',
+    background: 'linear-gradient(135deg, #ffa726, #fb8c00)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0 auto',
+  },
   icon: {
     fontSize: '2rem',
     color: 'white',

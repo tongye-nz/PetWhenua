@@ -69,8 +69,8 @@ const PostsGrid: React.FC<PostsGridProps> = ({
         display: 'grid',
         gridTemplateColumns: '1fr',
         gap: 3,
-        maxWidth: '800px',
-        margin: '0 auto'
+        // Removed maxWidth and margin constraints to match filter card width
+        width: '100%'
       }}
     >
       {posts.map((post) => (

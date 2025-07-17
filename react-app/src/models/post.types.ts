@@ -72,6 +72,7 @@ export interface Post {
 
 export interface CreatePostRequest {
   userId?: number;
+  userRole?: string;
   postType: PostType;
   title: string;
   content: string;
@@ -94,6 +95,7 @@ export interface CreatePostRequest {
 }
 
 export interface UpdatePostRequest {
+  postId?: number;
   userId?: number;
   postType?: PostType;
   title?: string;
