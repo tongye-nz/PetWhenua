@@ -11,8 +11,7 @@ import {
   IconButton,
   Chip,
   Divider,
-  Paper,
-  Grid
+  Paper
 } from '@mui/material';
 import {
   ArrowBack,
@@ -23,13 +22,13 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { petConnectionService } from '../api/petConnection.api';
-import { useAuth } from '../contexts/AuthContext';
+
 import type { PetConnection } from '../models/petConnection.types';
 import { PetConnectionStatus } from '../models/petConnection.types';
 
 const PetConnectionRequests: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+
   const [connections, setConnections] = useState<PetConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,9 +204,9 @@ const PetConnectionRequests: React.FC = () => {
             return (
               <Card key={connection.petConnectionId} sx={{ overflow: 'visible' }}>
                 <CardContent sx={{ p: 3 }}>
-                  <Grid container spacing={3} alignItems="center">
+                  <Box sx={{ display: 'flex', gap: 3, alignItems: 'center', flexWrap: 'wrap' }}>
                     {/* Requesting Pet (Left Side) */}
-                    <Grid item xs={12} sm={4}>
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
                           src={requestingPet?.profilePicture || undefined}
@@ -231,10 +230,10 @@ const PetConnectionRequests: React.FC = () => {
                           </Typography>
                         </Box>
                       </Box>
-                    </Grid>
+                    </Box>
 
                     {/* Arrow/Connection Indicator */}
-                    <Grid item xs={12} sm={1}>
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 120 }}>
                       <Box sx={{ 
                         display: 'flex', 
                         justifyContent: 'center',
@@ -245,10 +244,10 @@ const PetConnectionRequests: React.FC = () => {
                           wants to connect with
                         </Typography>
                       </Box>
-                    </Grid>
+                    </Box>
 
                     {/* Target Pet (Right Side - Your Pet) */}
-                    <Grid item xs={12} sm={4}>
+                    <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
                           src={targetPet?.profilePicture || undefined}
@@ -276,10 +275,10 @@ const PetConnectionRequests: React.FC = () => {
                           />
                         </Box>
                       </Box>
-                    </Grid>
+                    </Box>
 
                   {/* Action Buttons */}
-                  <Grid item xs={12} sm={3}>
+                  <Box sx={{ flex: { xs: '1 1 100%', sm: '0 0 auto' }, minWidth: 150 }}>
                     <Box sx={{ 
                       display: 'flex', 
                       gap: 1,
@@ -307,8 +306,8 @@ const PetConnectionRequests: React.FC = () => {
                         Decline
                       </Button>
                     </Box>
-                  </Grid>
-                </Grid>
+                  </Box>
+                </Box>
 
                 {/* Message Section */}
                 {connection.requestMessage && (

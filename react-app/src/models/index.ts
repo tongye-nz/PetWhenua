@@ -13,6 +13,21 @@ export * from './comment.types';
 // Like-related types and interfaces
 export * from './like.types';
 
+// Pet connection types and interfaces
+export * from './petConnection.types';
+
+// Pet wedding types and interfaces
+export * from './petWedding.types';
+
+// User follow types and interfaces
+export * from './userFollow.types';
+
+// Notification types and interfaces
+export * from './notification.types';
+
+// Chat types and interfaces
+export * from './chat.types';
+
 // Re-export commonly used types for convenience
 export type {
   Post,

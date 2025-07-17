@@ -1,15 +1,27 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using PetWhenua.Services;
+using PetWhenua.Hubs;
+using PetWhenua.Models;
+using PetWhenua.Models.Dtos;
 
 [ApiController]
 [Route("api/[controller]")]
 public class CommentsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly INotificationService _notificationService;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public CommentsController(AppDbContext context)
+    public CommentsController(
+        AppDbContext context,
+        INotificationService notificationService,
+        IHubContext<NotificationHub> hubContext)
     {
         _context = context;
+        _notificationService = notificationService;
+        _hubContext = hubContext;
     }
 
     // GET: api/comments/post/{postId}
@@ -76,6 +88,49 @@ public class CommentsController : ControllerBase
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+
+        // Send notification to post owner (if different from commenter)
+        try
+        {
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PostId == request.PostId);
+                
+            var commenter = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == request.UserId);
+
+            if (post?.UserId != request.UserId && post?.User != null && commenter != null)
+            {
+                // Create notification
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = post.UserId,
+                    Type = NotificationType.PostCommented,
+                    Title = "New Comment",
+                    Message = $"{commenter.FirstName} {commenter.LastName} commented on your post: \"{post.Title}\"",
+                    RelatedPostId = post.PostId,
+                    RelatedUserId = request.UserId
+                });
+
+                // Send real-time notification
+                await _hubContext.Clients.User(post.UserId.ToString())
+                    .SendAsync("NotificationReceived", new
+                    {
+                        type = NotificationType.PostCommented,
+                        title = "New Comment",
+                        message = $"{commenter.FirstName} {commenter.LastName} commented on your post",
+                        postId = post.PostId,
+                        postTitle = post.Title,
+                        commenterId = request.UserId,
+                        commenterName = $"{commenter.FirstName} {commenter.LastName}"
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log notification failure but don't fail the comment creation
+            Console.WriteLine($"Failed to send comment notification: {ex.Message}");
+        }
 
         // Return the created comment with user info
         var createdComment = await _context.Comments

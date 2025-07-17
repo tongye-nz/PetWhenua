@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using PetWhenua.Services.Abstract;
+using PetWhenua.Services;
+using PetWhenua.Hubs;
+using PetWhenua.Models;
+using PetWhenua.Models.Dtos;
 using System.Security.Claims;
 
 namespace PetWhenua.Controllers
@@ -11,10 +16,20 @@ namespace PetWhenua.Controllers
     public class UserFollowController : ControllerBase
     {
         private readonly IUserFollowService _userFollowService;
+        private readonly INotificationService _notificationService;
+        private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IUserService _userService;
 
-        public UserFollowController(IUserFollowService userFollowService)
+        public UserFollowController(
+            IUserFollowService userFollowService,
+            INotificationService notificationService,
+            IHubContext<NotificationHub> hubContext,
+            IUserService userService)
         {
             _userFollowService = userFollowService;
+            _notificationService = notificationService;
+            _hubContext = hubContext;
+            _userService = userService;
         }
 
         [HttpPost("follow/{userId}")]
@@ -24,6 +39,44 @@ namespace PetWhenua.Controllers
             {
                 var currentUserId = GetCurrentUserId();
                 var follow = await _userFollowService.FollowUserAsync(currentUserId, userId);
+
+                // Send notification to the followed user
+                try
+                {
+                    var follower = await _userService.GetUserByIdAsync(currentUserId);
+                    var followedUser = await _userService.GetUserByIdAsync(userId);
+
+                    if (follower != null && followedUser != null)
+                    {
+                        // Create notification
+                        await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                        {
+                            UserId = userId,
+                            Type = NotificationType.UserFollowed,
+                            Title = "New Follower",
+                            Message = $"{follower.FirstName} {follower.LastName} started following you",
+                            RelatedUserId = currentUserId
+                        });
+
+                        // Send real-time notification
+                        await _hubContext.Clients.User(userId.ToString())
+                            .SendAsync("NotificationReceived", new
+                            {
+                                type = NotificationType.UserFollowed,
+                                title = "New Follower",
+                                message = $"{follower.FirstName} {follower.LastName} started following you",
+                                followerId = currentUserId,
+                                followerName = $"{follower.FirstName} {follower.LastName}",
+                                followerProfilePicture = follower.ProfilePicture
+                            });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log notification failure but don't fail the follow action
+                    Console.WriteLine($"Failed to send follow notification: {ex.Message}");
+                }
+
                 return Ok(new { message = "User followed successfully", follow });
             }
             catch (InvalidOperationException ex)

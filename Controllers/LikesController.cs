@@ -1,75 +1,188 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.Authorization;
+using PetWhenua.Services;
+using PetWhenua.Hubs;
+using PetWhenua.Models;
+using PetWhenua.Models.Dtos;
+using System.Security.Claims;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LikesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly INotificationService _notificationService;
+    private readonly IHubContext<NotificationHub> _hubContext;
 
-    public LikesController(AppDbContext context)
+    public LikesController(
+        AppDbContext context,
+        INotificationService notificationService,
+        IHubContext<NotificationHub> hubContext)
     {
         _context = context;
+        _notificationService = notificationService;
+        _hubContext = hubContext;
+    }
+
+    // GET: api/likes/post/{postId}
+    [HttpGet("post/{postId}")]
+    public async Task<IActionResult> GetLikesByPost(int postId)
+    {
+        var likes = await _context.Likes
+            .Where(l => l.PostId == postId)
+            .Include(l => l.User)
+            .OrderByDescending(l => l.CreatedAt)
+            .Select(l => new
+            {
+                l.LikeId,
+                l.PostId,
+                l.UserId,
+                l.CreatedAt,
+                User = new
+                {
+                    l.User.UserId,
+                    l.User.Username,
+                    l.User.FirstName,
+                    l.User.LastName,
+                    l.User.ProfilePicture
+                }
+            })
+            .ToListAsync();
+
+        return Ok(likes);
+    }
+
+    // GET: api/likes/count/{postId}
+    [HttpGet("count/{postId}")]
+    public async Task<IActionResult> GetLikeCount(int postId)
+    {
+        var count = await _context.Likes.CountAsync(l => l.PostId == postId);
+        return Ok(new { count });
+    }
+
+    // GET: api/likes/user/{postId}
+    [HttpGet("user/{postId}")]
+    public async Task<IActionResult> HasUserLikedPost(int postId)
+    {
+        var userId = GetCurrentUserId();
+        var hasLiked = await _context.Likes
+            .AnyAsync(l => l.PostId == postId && l.UserId == userId);
+        return Ok(new { hasLiked });
     }
 
     // POST: api/likes
     [HttpPost]
-    public async Task<IActionResult> LikePost([FromBody] LikeRequest request)
+    public async Task<IActionResult> LikePost([FromBody] CreateLikeRequest request)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        // Verify post exists
+        var userId = GetCurrentUserId();
+
+        // Check if post exists
         var postExists = await _context.Posts.AnyAsync(p => p.PostId == request.PostId);
         if (!postExists)
         {
             return NotFound($"Post with ID {request.PostId} not found.");
         }
 
-        // Verify user exists
-        var userExists = await _context.Users.AnyAsync(u => u.UserId == request.UserId);
-        if (!userExists)
-        {
-            return NotFound($"User with ID {request.UserId} not found.");
-        }
-
-        // Check if already liked
+        // Check if user already liked this post
         var existingLike = await _context.Likes
-            .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == request.UserId);
+            .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == userId);
 
         if (existingLike != null)
         {
-            return Conflict("Post is already liked by this user.");
+            return BadRequest("You have already liked this post.");
         }
 
         var like = new Like
         {
             PostId = request.PostId,
-            UserId = request.UserId,
+            UserId = userId,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.Likes.Add(like);
         await _context.SaveChangesAsync();
 
-        // Return updated like count
-        var likeCount = await _context.Likes.CountAsync(l => l.PostId == request.PostId);
-        
-        return Ok(new { 
-            likeId = like.LikeId,
-            postId = like.PostId,
-            userId = like.UserId,
-            likeCount = likeCount,
-            isLiked = true
-        });
+        // Send notification to post owner (if different from liker)
+        try
+        {
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.PostId == request.PostId);
+                
+            var liker = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
+
+            if (post?.UserId != userId && post?.User != null && liker != null)
+            {
+                // Create notification
+                await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                {
+                    UserId = post.UserId,
+                    Type = NotificationType.PostLiked,
+                    Title = "Post Liked",
+                    Message = $"{liker.FirstName} {liker.LastName} liked your post: \"{post.Title}\"",
+                    RelatedPostId = post.PostId,
+                    RelatedUserId = userId
+                });
+
+                // Send real-time notification
+                await _hubContext.Clients.User(post.UserId.ToString())
+                    .SendAsync("NotificationReceived", new
+                    {
+                        type = NotificationType.PostLiked,
+                        title = "Post Liked",
+                        message = $"{liker.FirstName} {liker.LastName} liked your post",
+                        postId = post.PostId,
+                        postTitle = post.Title,
+                        likerId = userId,
+                        likerName = $"{liker.FirstName} {liker.LastName}"
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log notification failure but don't fail the like creation
+            Console.WriteLine($"Failed to send like notification: {ex.Message}");
+        }
+
+        // Return the created like with user info
+        var createdLike = await _context.Likes
+            .Where(l => l.LikeId == like.LikeId)
+            .Include(l => l.User)
+            .Select(l => new
+            {
+                l.LikeId,
+                l.PostId,
+                l.UserId,
+                l.CreatedAt,
+                User = new
+                {
+                    l.User.UserId,
+                    l.User.Username,
+                    l.User.FirstName,
+                    l.User.LastName,
+                    l.User.ProfilePicture
+                }
+            })
+            .FirstOrDefaultAsync();
+
+        return CreatedAtAction(nameof(GetLikesByPost), new { postId = like.PostId }, createdLike);
     }
 
-    // DELETE: api/likes/post/{postId}/user/{userId}
-    [HttpDelete("post/{postId}/user/{userId}")]
-    public async Task<IActionResult> UnlikePost(int postId, int userId)
+    // DELETE: api/likes/{postId}
+    [HttpDelete("{postId}")]
+    public async Task<IActionResult> UnlikePost(int postId)
     {
+        var userId = GetCurrentUserId();
+
         var like = await _context.Likes
             .FirstOrDefaultAsync(l => l.PostId == postId && l.UserId == userId);
 
@@ -81,121 +194,21 @@ public class LikesController : ControllerBase
         _context.Likes.Remove(like);
         await _context.SaveChangesAsync();
 
-        // Return updated like count
-        var likeCount = await _context.Likes.CountAsync(l => l.PostId == postId);
-        
-        return Ok(new { 
-            postId = postId,
-            userId = userId,
-            likeCount = likeCount,
-            isLiked = false
-        });
+        return Ok(new { message = "Post unliked successfully" });
     }
 
-    // GET: api/likes/post/{postId}/count
-    [HttpGet("post/{postId}/count")]
-    public async Task<IActionResult> GetLikeCount(int postId)
+    private int GetCurrentUserId()
     {
-        var count = await _context.Likes.CountAsync(l => l.PostId == postId);
-        return Ok(new { postId, count });
-    }
-
-    // GET: api/likes/post/{postId}/user/{userId}/status
-    [HttpGet("post/{postId}/user/{userId}/status")]
-    public async Task<IActionResult> GetLikeStatus(int postId, int userId)
-    {
-        var isLiked = await _context.Likes
-            .AnyAsync(l => l.PostId == postId && l.UserId == userId);
-        
-        var likeCount = await _context.Likes.CountAsync(l => l.PostId == postId);
-
-        return Ok(new { 
-            postId,
-            userId,
-            isLiked,
-            likeCount
-        });
-    }
-
-    // GET: api/likes/post/{postId}/users
-    [HttpGet("post/{postId}/users")]
-    public async Task<IActionResult> GetUsersWhoLikedPost(int postId)
-    {
-        var users = await _context.Likes
-            .Where(l => l.PostId == postId)
-            .Include(l => l.User)
-            .Select(l => new
-            {
-                l.User.UserId,
-                l.User.Username,
-                l.User.FirstName,
-                l.User.LastName,
-                l.User.ProfilePicture,
-                l.CreatedAt
-            })
-            .OrderByDescending(u => u.CreatedAt)
-            .ToListAsync();
-
-        return Ok(users);
-    }
-
-    // POST: api/likes/toggle
-    [HttpPost("toggle")]
-    public async Task<IActionResult> ToggleLike([FromBody] LikeRequest request)
-    {
-        if (!ModelState.IsValid)
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
-            return BadRequest(ModelState);
+            throw new UnauthorizedAccessException("Invalid user token");
         }
-
-        // Verify post exists
-        var postExists = await _context.Posts.AnyAsync(p => p.PostId == request.PostId);
-        if (!postExists)
-        {
-            return NotFound($"Post with ID {request.PostId} not found.");
-        }
-
-        // Check if already liked
-        var existingLike = await _context.Likes
-            .FirstOrDefaultAsync(l => l.PostId == request.PostId && l.UserId == request.UserId);
-
-        bool isLiked;
-        if (existingLike != null)
-        {
-            // Unlike the post
-            _context.Likes.Remove(existingLike);
-            isLiked = false;
-        }
-        else
-        {
-            // Like the post
-            var like = new Like
-            {
-                PostId = request.PostId,
-                UserId = request.UserId,
-                CreatedAt = DateTime.UtcNow
-            };
-            _context.Likes.Add(like);
-            isLiked = true;
-        }
-
-        await _context.SaveChangesAsync();
-
-        // Return updated like count
-        var likeCount = await _context.Likes.CountAsync(l => l.PostId == request.PostId);
-        
-        return Ok(new { 
-            postId = request.PostId,
-            userId = request.UserId,
-            likeCount = likeCount,
-            isLiked = isLiked
-        });
+        return userId;
     }
 }
 
-// DTO for request
-public class LikeRequest
+public class CreateLikeRequest
 {
     public int PostId { get; set; }
-    public int UserId { get; set; }
 } 

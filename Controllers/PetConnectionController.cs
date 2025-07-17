@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using PetWhenua.Services.Abstract;
+using PetWhenua.Services;
 using System.Security.Claims;
 
 namespace PetWhenua.Controllers
@@ -11,10 +12,17 @@ namespace PetWhenua.Controllers
     public class PetConnectionController : ControllerBase
     {
         private readonly IPetConnectionService _petConnectionService;
+        private readonly INotificationService _notificationService;
+        private readonly IPetService _petService;
 
-        public PetConnectionController(IPetConnectionService petConnectionService)
+        public PetConnectionController(
+            IPetConnectionService petConnectionService,
+            INotificationService notificationService,
+            IPetService petService)
         {
             _petConnectionService = petConnectionService;
+            _notificationService = notificationService;
+            _petService = petService;
         }
 
         [HttpPost("request")]
@@ -25,6 +33,34 @@ namespace PetWhenua.Controllers
                 var currentUserId = GetCurrentUserId();
                 var connection = await _petConnectionService.RequestConnectionAsync(
                     currentUserId, request.Pet1Id, request.Pet2Id, request.Message);
+                
+                // Send notification to the pet owner who received the request
+                try
+                {
+                    // Get pet information to create meaningful notification
+                    var pet1 = await _petService.GetPetByIdAsync(request.Pet1Id, includeUser: true);
+                    var pet2 = await _petService.GetPetByIdAsync(request.Pet2Id, includeUser: true);
+                    
+                    // Determine which pet belongs to the target user
+                    var targetUserId = pet1?.UserId == currentUserId ? pet2?.UserId : pet1?.UserId;
+                    var requesterPetName = pet1?.UserId == currentUserId ? pet1?.Name : pet2?.Name;
+                    var targetPetName = pet1?.UserId == currentUserId ? pet2?.Name : pet1?.Name;
+                    
+                    if (targetUserId.HasValue && !string.IsNullOrEmpty(requesterPetName) && !string.IsNullOrEmpty(targetPetName))
+                    {
+                        await _notificationService.CreatePetConnectionRequestNotificationAsync(
+                            targetUserId.Value, 
+                            currentUserId, 
+                            connection.PetConnectionId, 
+                            requesterPetName, 
+                            targetPetName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log notification failure but don't fail the main request
+                    Console.WriteLine($"Failed to send connection request notification: {ex.Message}");
+                }
                 
                 return Ok(new { message = "Connection request sent successfully", connection });
             }
@@ -42,6 +78,33 @@ namespace PetWhenua.Controllers
                 var currentUserId = GetCurrentUserId();
                 var connection = await _petConnectionService.RespondToConnectionAsync(
                     connectionId, currentUserId, request.Response, request.Message);
+                
+                // Send notification to the original requester about the response
+                try
+                {
+                    var pet1 = await _petService.GetPetByIdAsync(connection.Pet1Id, includeUser: true);
+                    var pet2 = await _petService.GetPetByIdAsync(connection.Pet2Id, includeUser: true);
+                    
+                    var requesterPetName = pet1?.UserId == connection.RequestedById ? pet1?.Name : pet2?.Name;
+                    var responderPetName = pet1?.UserId == connection.RequestedById ? pet2?.Name : pet1?.Name;
+                    
+                    if (!string.IsNullOrEmpty(requesterPetName) && !string.IsNullOrEmpty(responderPetName))
+                    {
+                        var isApproved = request.Response == PetConnectionStatus.Accepted;
+                        await _notificationService.CreatePetConnectionResponseNotificationAsync(
+                            connection.RequestedById, 
+                            currentUserId, 
+                            connection.PetConnectionId, 
+                            isApproved, 
+                            requesterPetName, 
+                            responderPetName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log notification failure but don't fail the main request
+                    Console.WriteLine($"Failed to send connection response notification: {ex.Message}");
+                }
                 
                 return Ok(new { message = "Response sent successfully", connection });
             }

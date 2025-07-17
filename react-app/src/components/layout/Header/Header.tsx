@@ -25,6 +25,7 @@ import {
 import { Avatar } from '@mui/material';
 import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
+import { NotificationCenter } from '../../features/notifications';
 
 interface HeaderProps {
   onSignInClick?: () => void;
@@ -188,9 +189,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
           {/* Right Section */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {/* Desktop Profile/Sign In */}
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
               {isAuthenticated ? (
                 <>
+                  <NotificationCenter />
                   <IconButton
                     onClick={handleProfileClick}
                     sx={{
