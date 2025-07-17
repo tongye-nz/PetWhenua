@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Container, Box, Paper, Typography, Alert } from '@mui/material';
 import { Pets as PetsIcon, LocationOn } from '@mui/icons-material';
 import { Text, LoadingSpinner } from '../components/ui';
@@ -14,6 +15,7 @@ interface PetWithOwner extends Pet {
 }
 
 const PetsNearMe: React.FC = () => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [pets, setPets] = useState<PetWithOwner[]>([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +73,12 @@ const PetsNearMe: React.FC = () => {
       setError('Failed to load pets near you');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewPet = (pet: PetWithOwner) => {
+    if (pet.petId) {
+      navigate(`/pet/${pet.petId}`);
     }
   };
 
@@ -179,6 +187,7 @@ const PetsNearMe: React.FC = () => {
                <PetCard
                  key={pet.petId}
                  pet={pet}
+                 onView={handleViewPet}
                  compact={false}
                />
              ))}
