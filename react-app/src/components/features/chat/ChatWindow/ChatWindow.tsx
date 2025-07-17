@@ -26,6 +26,7 @@ import {
   Chat as ChatIcon
 } from '@mui/icons-material';
 import { useSignalR } from '../../../../contexts/SignalRContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { chatService } from '../../../../api/chat.api';
 import type { ChatMessage, ChatRoom, MessageStatus } from '../../../../models/chat.types';
 import type { User } from '../../../../models/auth.types';
@@ -64,6 +65,7 @@ function TabPanel(props: TabPanelProps) {
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUserId }) => {
   const { onlineUsers, typingUsers } = useSignalR();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<ChatRoom | null>(null);
@@ -185,8 +187,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
     }, 2000);
   };
 
-  // Mock function - replace with actual auth context
-  const getCurrentUserId = () => 1;
+  // Get current user ID from auth context
+  const getCurrentUserId = () => {
+    return user?.userId || 0;
+  };
 
   const isUserOnline = (userId: number) => {
     return onlineUsers.has(userId);
