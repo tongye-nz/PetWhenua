@@ -274,10 +274,10 @@ const PostCard: React.FC<PostCardProps> = ({
                       return undefined;
                     })()}
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: 60,
+                      height: 60,
                       bgcolor: 'primary.light',
-                      fontSize: '0.75rem',
+                      fontSize: '1.75rem',
                       fontWeight: 'bold',
                       flexShrink: 0
                     }}
@@ -291,11 +291,12 @@ const PostCard: React.FC<PostCardProps> = ({
                       display: 'block',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      fontSize: '1.25rem'
                     }}>
                       {participant.pet?.name || 'Unknown Pet'}
                     </Text>
-                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                    <Text variant="caption" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
                       {participant.pet?.gender && (
                         <span>
                           {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️' : 
