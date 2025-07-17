@@ -62,62 +62,96 @@ const PostImageGallery: React.FC<PostImageGalleryProps> = ({
   return (
     <>
       <Box sx={{ mb: 2 }}>
-        <ImageList 
-          variant="quilted" 
-          cols={getGridCols()} 
-          rowHeight={compact ? 120 : 200}
-          gap={8}
-        >
-          {displayImages.map((image, index) => (
-            <ImageListItem 
-              key={index}
-              onClick={() => openLightbox(index)}
-              sx={{ 
-                cursor: 'pointer',
-                position: 'relative',
-                '&:hover': {
-                  opacity: 0.8,
-                  transition: 'opacity 0.2s'
-                }
+        {/* Single image layout - display with preserved aspect ratio */}
+        {displayImages.length === 1 ? (
+          <Box
+            onClick={() => openLightbox(0)}
+            sx={{ 
+              cursor: 'pointer',
+              position: 'relative',
+              borderRadius: 2,
+              overflow: 'hidden',
+              maxHeight: compact ? 250 : 400,
+              display: 'flex',
+              justifyContent: 'center',
+              '&:hover': {
+                opacity: 0.8,
+                transition: 'opacity 0.2s'
+              }
+            }}
+          >
+            <img
+              src={getImageUrl(displayImages[0])}
+              alt="Post image"
+              loading="lazy"
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: compact ? 250 : 400,
+                objectFit: 'contain',
+                borderRadius: 8
               }}
-            >
-              <img
-                src={getImageUrl(image)}
-                alt={`Post image ${index + 1}`}
-                loading="lazy"
-                style={{
-                  borderRadius: 8,
-                  objectFit: 'cover',
-                  width: '100%',
-                  height: '100%'
+            />
+          </Box>
+        ) : (
+          /* Multiple images grid layout */
+          <ImageList 
+            variant="quilted" 
+            cols={getGridCols()} 
+            rowHeight={compact ? 120 : 200}
+            gap={8}
+          >
+            {displayImages.map((image, index) => (
+              <ImageListItem 
+                key={index}
+                onClick={() => openLightbox(index)}
+                sx={{ 
+                  cursor: 'pointer',
+                  position: 'relative',
+                  '&:hover': {
+                    opacity: 0.8,
+                    transition: 'opacity 0.2s'
+                  }
                 }}
-              />
-              
-              {/* Show "+" overlay for remaining images */}
-              {index === maxDisplay - 1 && remainingCount > 0 && (
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderRadius: 2,
-                    color: 'white'
+              >
+                <img
+                  src={getImageUrl(image)}
+                  alt={`Post image ${index + 1}`}
+                  loading="lazy"
+                  style={{
+                    borderRadius: 8,
+                    objectFit: 'cover',
+                    width: '100%',
+                    height: '100%'
                   }}
-                >
-                  <Typography variant="h6">
-                    +{remainingCount}
-                  </Typography>
-                </Box>
-              )}
-            </ImageListItem>
-          ))}
-        </ImageList>
+                />
+                
+                {/* Show "+" overlay for remaining images */}
+                {index === maxDisplay - 1 && remainingCount > 0 && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 2,
+                      color: 'white'
+                    }}
+                  >
+                    <Typography variant="h6">
+                      +{remainingCount}
+                    </Typography>
+                  </Box>
+                )}
+              </ImageListItem>
+            ))}
+          </ImageList>
+        )}
       </Box>
 
       {/* Lightbox Modal */}
