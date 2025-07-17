@@ -204,12 +204,17 @@ const PostDetail: React.FC = () => {
 
           {/* Author and Date */}
           <Box display="flex" alignItems="center" mb={3}>
-            <Avatar sx={{ mr: 2 }}>
-              {currentPost.user?.username?.charAt(0).toUpperCase()}
+            <Avatar 
+              src={currentPost.user?.profilePicture || undefined}
+              sx={{ mr: 2 }}
+            >
+              {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
             </Avatar>
             <Box>
               <Typography variant="subtitle1" fontWeight="medium">
-                {currentPost.user?.username}
+                {currentPost.user?.firstName && currentPost.user?.lastName 
+                  ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
+                  : currentPost.user?.username}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Posted {formatDate(currentPost.createdAt)}

@@ -156,12 +156,17 @@ const PostCard: React.FC<PostCardProps> = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Avatar sx={{ width: 32, height: 32 }}>
-            {post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />}
+          <Avatar 
+            src={post.user?.profilePicture || undefined}
+            sx={{ width: 32, height: 32 }}
+          >
+            {!post.user?.profilePicture && (post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
             <Text variant="body2" fontWeight="medium">
-              {post.user?.username || 'Unknown User'}
+              {post.user?.firstName && post.user?.lastName 
+                ? `${post.user.firstName} ${post.user.lastName}` 
+                : post.user?.username || 'Unknown User'}
             </Text>
             <Text variant="caption" color="text.secondary">
               {formatDate(post.createdAt)}
@@ -235,38 +240,50 @@ const PostCard: React.FC<PostCardProps> = ({
                   minWidth: 0 // Allow content to shrink
                 }}>
                   {/* Pet Profile Picture */}
-                  <Box
+                  <Avatar
+                    src={(() => {
+                      const profilePic = participant.pet?.profilePicture;
+                      if (!profilePic) return undefined;
+                      
+                      console.log('Pet profile picture:', {
+                        petName: participant.pet?.name,
+                        profilePicLength: profilePic.length,
+                        profilePicStart: profilePic.substring(0, 100),
+                        isHttp: profilePic.startsWith('http'),
+                        isData: profilePic.startsWith('data:')
+                      });
+                      
+                      // If it's already a full URL, use it directly
+                      if (profilePic.startsWith('http')) return profilePic;
+                      
+                      // If it's a data URL (base64), use it directly 
+                      // Data URLs don't make HTTP requests, so length is less of an issue
+                      if (profilePic.startsWith('data:')) {
+                        console.log('Using data URL for pet:', participant.pet?.name);
+                        return profilePic;
+                      }
+                      
+                      // If it's a file path, construct the full URL
+                      if (profilePic.length < 500) { // Only if path is reasonable length
+                        const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                        console.log('Constructed URL:', fullUrl);
+                        return fullUrl;
+                      }
+                      
+                      console.log('Profile picture too long, skipping');
+                      return undefined;
+                    })()}
                     sx={{
                       width: 32,
                       height: 32,
-                      borderRadius: '50%',
                       bgcolor: 'primary.light',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
                       flexShrink: 0
                     }}
                   >
-                    {participant.pet?.profilePicture ? (
-                      <Box
-                        component="img"
-                        src={participant.pet.profilePicture.startsWith('http') 
-                          ? participant.pet.profilePicture 
-                          : `http://localhost:5295${participant.pet.profilePicture.startsWith('/') ? '' : '/'}${participant.pet.profilePicture}`}
-                        alt={participant.pet.name}
-                        sx={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    ) : (
-                      <Text variant="caption" fontWeight="bold" sx={{ color: 'primary.contrastText' }}>
-                        {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
-                      </Text>
-                    )}
-                  </Box>
+                    {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                  </Avatar>
                   
                   {/* Pet Info */}
                   <Box sx={{ minWidth: 0, flex: 1 }}>
