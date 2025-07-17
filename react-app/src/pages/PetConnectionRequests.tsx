@@ -60,10 +60,27 @@ const PetConnectionRequests: React.FC = () => {
       setError(null);
       setSuccess(null);
 
-      await petConnectionService.respondToConnection(connectionId, {
-        response,
+      // Convert string enum values to integers for ASP.NET Core
+      const enumToInt = {
+        'Pending': 0,
+        'Accepted': 1,
+        'Rejected': 2,
+        'Blocked': 3
+      };
+
+      const requestData = {
+        response: enumToInt[response as keyof typeof enumToInt],
         message
+      };
+
+      console.log('Sending response to connection:', {
+        connectionId,
+        requestData,
+        originalResponse: response,
+        convertedResponse: requestData.response
       });
+
+      await petConnectionService.respondToConnection(connectionId, requestData as any);
 
       // Remove the processed connection from the list
       setConnections(prev => prev.filter(conn => conn.petConnectionId !== connectionId));
@@ -77,6 +94,35 @@ const PetConnectionRequests: React.FC = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Failed to respond to connection:', err);
+      
+      // Enhanced error logging
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as any;
+        console.error('Response data:', axiosError.response?.data);
+        console.error('Response status:', axiosError.response?.status);
+        console.error('Response headers:', axiosError.response?.headers);
+        
+        // Log validation errors specifically
+        if (axiosError.response?.data?.errors) {
+          console.error('Validation errors:', axiosError.response.data.errors);
+          
+          // Extract specific validation error messages
+          const errors = axiosError.response.data.errors;
+          const errorMessages = Object.keys(errors).map(key => 
+            `${key}: ${Array.isArray(errors[key]) ? errors[key].join(', ') : errors[key]}`
+          );
+          setError(`Validation failed: ${errorMessages.join('; ')}`);
+          return;
+        }
+        
+        // Show the backend error message if available
+        const backendMessage = axiosError.response?.data?.message || axiosError.response?.data;
+        if (typeof backendMessage === 'string') {
+          setError(backendMessage);
+          return;
+        }
+      }
+      
       setError(err instanceof Error ? err.message : 'Failed to process request');
     } finally {
       setProcessingId(null);
