@@ -17,5 +17,6 @@ namespace PetWhenua.Services
         Task<bool> UserExistsAsync(int id);
         Task<bool> UsernameExistsAsync(string username);
         Task<bool> EmailExistsAsync(string email);
+        Task<IEnumerable<User>> SearchUsersAsync(string query, int limit = 10);
     }
 }

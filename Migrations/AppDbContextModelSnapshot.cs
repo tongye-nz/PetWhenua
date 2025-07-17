@@ -224,6 +224,163 @@ namespace PetWhenua.Migrations
                     b.ToTable("PetWeddingParticipants");
                 });
 
+            modelBuilder.Entity("PetWhenua.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MessageId"));
+
+                    b.Property<int?>("ChatRoomId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedPetId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedPostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("ChatRoomId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("RelatedPetId");
+
+                    b.HasIndex("RelatedPostId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("ChatMessages");
+                });
+
+            modelBuilder.Entity("PetWhenua.Models.ChatRoom", b =>
+                {
+                    b.Property<int>("ChatRoomId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ChatRoomId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastMessage")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("LastMessageAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("LastMessageSenderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("User1Id")
+                        .HasColumnType("int");
+
+                    b.Property<int>("User2Id")
+                        .HasColumnType("int");
+
+                    b.HasKey("ChatRoomId");
+
+                    b.HasIndex("User2Id");
+
+                    b.HasIndex("User1Id", "User2Id")
+                        .IsUnique();
+
+                    b.ToTable("ChatRooms");
+                });
+
+            modelBuilder.Entity("PetWhenua.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<string>("AdditionalData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("RelatedConnectionId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedPetId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedPostId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("RelatedUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("RelatedConnectionId");
+
+                    b.HasIndex("RelatedPetId");
+
+                    b.HasIndex("RelatedPostId");
+
+                    b.HasIndex("RelatedUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("PetWhenua.Models.PostImage", b =>
                 {
                     b.Property<int>("Id")
@@ -526,6 +683,103 @@ namespace PetWhenua.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("PetWhenua.Models.ChatMessage", b =>
+                {
+                    b.HasOne("PetWhenua.Models.ChatRoom", "ChatRoom")
+                        .WithMany("Messages")
+                        .HasForeignKey("ChatRoomId");
+
+                    b.HasOne("User", "Receiver")
+                        .WithMany("ReceivedMessages")
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Pet", "RelatedPet")
+                        .WithMany()
+                        .HasForeignKey("RelatedPetId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Post", "RelatedPost")
+                        .WithMany()
+                        .HasForeignKey("RelatedPostId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("User", "Sender")
+                        .WithMany("SentMessages")
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ChatRoom");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("RelatedPet");
+
+                    b.Navigation("RelatedPost");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("PetWhenua.Models.ChatRoom", b =>
+                {
+                    b.HasOne("User", "User1")
+                        .WithMany("ChatRoomsAsUser1")
+                        .HasForeignKey("User1Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("User", "User2")
+                        .WithMany("ChatRoomsAsUser2")
+                        .HasForeignKey("User2Id")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User1");
+
+                    b.Navigation("User2");
+                });
+
+            modelBuilder.Entity("PetWhenua.Models.Notification", b =>
+                {
+                    b.HasOne("PetConnection", "RelatedConnection")
+                        .WithMany()
+                        .HasForeignKey("RelatedConnectionId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Pet", "RelatedPet")
+                        .WithMany()
+                        .HasForeignKey("RelatedPetId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("Post", "RelatedPost")
+                        .WithMany()
+                        .HasForeignKey("RelatedPostId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("User", "RelatedUser")
+                        .WithMany()
+                        .HasForeignKey("RelatedUserId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RelatedConnection");
+
+                    b.Navigation("RelatedPet");
+
+                    b.Navigation("RelatedPost");
+
+                    b.Navigation("RelatedUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PetWhenua.Models.PostImage", b =>
                 {
                     b.HasOne("Post", "Post")
@@ -584,6 +838,11 @@ namespace PetWhenua.Migrations
                     b.Navigation("PetWeddingParticipations");
                 });
 
+            modelBuilder.Entity("PetWhenua.Models.ChatRoom", b =>
+                {
+                    b.Navigation("Messages");
+                });
+
             modelBuilder.Entity("Post", b =>
                 {
                     b.Navigation("Comments");
@@ -597,6 +856,10 @@ namespace PetWhenua.Migrations
 
             modelBuilder.Entity("User", b =>
                 {
+                    b.Navigation("ChatRoomsAsUser1");
+
+                    b.Navigation("ChatRoomsAsUser2");
+
                     b.Navigation("Comments");
 
                     b.Navigation("Followers");
@@ -605,11 +868,17 @@ namespace PetWhenua.Migrations
 
                     b.Navigation("Likes");
 
+                    b.Navigation("Notifications");
+
                     b.Navigation("PetWeddingParticipations");
 
                     b.Navigation("Pets");
 
                     b.Navigation("Posts");
+
+                    b.Navigation("ReceivedMessages");
+
+                    b.Navigation("SentMessages");
                 });
 #pragma warning restore 612, 618
         }

@@ -161,6 +161,25 @@ public class UsersController : ControllerBase
         }
     }
 
+    [HttpGet("search")]
+    public async Task<IActionResult> SearchUsers([FromQuery] string q, [FromQuery] int limit = 10)
+    {
+        if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+        {
+            return BadRequest("Search query must be at least 2 characters long.");
+        }
+
+        try
+        {
+            var users = await _userService.SearchUsersAsync(q, limit);
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to search users", error = ex.Message });
+        }
+    }
+
     [HttpGet("me")]
     [Authorize]
     public async Task<IActionResult> GetCurrentUser()

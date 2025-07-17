@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
 using PetWhenua.Services.Abstract;
+using PetWhenua.Services;
+using PetWhenua.Hubs;
+using PetWhenua.Models;
+using PetWhenua.Models.Dtos;
 using System.Security.Claims;
 
 namespace PetWhenua.Controllers
@@ -11,10 +16,17 @@ namespace PetWhenua.Controllers
     public class PetWeddingController : ControllerBase
     {
         private readonly IPetWeddingService _petWeddingService;
+        private readonly INotificationService _notificationService;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public PetWeddingController(IPetWeddingService petWeddingService)
+        public PetWeddingController(
+            IPetWeddingService petWeddingService,
+            INotificationService notificationService,
+            IHubContext<NotificationHub> hubContext)
         {
             _petWeddingService = petWeddingService;
+            _notificationService = notificationService;
+            _hubContext = hubContext;
         }
 
         [HttpPost("create")]
@@ -52,6 +64,23 @@ namespace PetWhenua.Controllers
                 
                 if (!success)
                     return NotFound("No pending approval found for this user");
+
+                // Send notification about approval
+                try
+                {
+                    await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                    {
+                        UserId = currentUserId, // For now, notify the approver
+                        Type = NotificationType.PetWeddingApproved,
+                        Title = "Pet Wedding Approved",
+                        Message = "Pet wedding participation has been approved",
+                        RelatedPostId = postId
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send pet wedding approval notification: {ex.Message}");
+                }
 
                 return Ok(new { message = "Participation approved successfully" });
             }

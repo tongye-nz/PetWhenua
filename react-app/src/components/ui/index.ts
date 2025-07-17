@@ -9,6 +9,7 @@ export { default as DateTimeInput } from './DateTimeInput';
 export { default as FollowButton } from './FollowButton';
 export { LikeButton } from './LikeButton';
 export { default as PetConnectionButton } from './PetConnectionButton';
+export { ChatButton } from './ChatButton';
 
 export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';

@@ -2,7 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { PostProvider } from './contexts/PostContext';
+import { SignalRProvider } from './contexts/SignalRContext';
 import { Layout } from './components/common';
+import { NotificationToast } from './components/features/notifications';
+import { ChatButton } from './components/ui';
 import Home from './pages/Home.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
@@ -16,6 +19,7 @@ import MyPosts from './pages/MyPosts.tsx';
 import UsersNearMe from './pages/UsersNearMe.tsx';
 import PetsNearMe from './pages/PetsNearMe.tsx';
 import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
+import Messages from './pages/Messages.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
@@ -26,9 +30,12 @@ const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
 function App() {
   return (
     <AuthProvider>
-      <PostProvider>
-        <Router>
-          <Layout>
+      <SignalRProvider>
+        <PostProvider>
+          <Router>
+            <NotificationToast />
+            <ChatButton variant="fab" showUnreadBadge={true} />
+            <Layout>
             <Suspense fallback={<div style={{ 
               display: 'flex', 
               justifyContent: 'center', 
@@ -79,6 +86,11 @@ function App() {
                     <PetConnectionRequests />
                   </ProtectedRoute>
                 } />
+                <Route path="/messages" element={
+                  <ProtectedRoute>
+                    <Messages />
+                  </ProtectedRoute>
+                } />
                 <Route path="/users-near-me" element={<UsersNearMe />} />
                 <Route path="/pets-near-me" element={<PetsNearMe />} />
                 <Route path="/login" element={<Login />} />
@@ -89,6 +101,7 @@ function App() {
           </Layout>
         </Router>
       </PostProvider>
+      </SignalRProvider>
     </AuthProvider>
   );
 }

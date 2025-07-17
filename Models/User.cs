@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using PetWhenua.Models;
 
 public class User
 {
@@ -58,4 +59,15 @@ public class User
     
     // Pet wedding participation
     public List<PetWeddingParticipant> PetWeddingParticipations { get; set; } = new();
+    
+    // Notifications
+    public List<Notification> Notifications { get; set; } = new();
+    
+    // Chat messages
+    public List<ChatMessage> SentMessages { get; set; } = new();
+    public List<ChatMessage> ReceivedMessages { get; set; } = new();
+    
+    // Chat rooms
+    public List<ChatRoom> ChatRoomsAsUser1 { get; set; } = new();
+    public List<ChatRoom> ChatRoomsAsUser2 { get; set; } = new();
 }

@@ -33,7 +33,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials();
+              .AllowCredentials()
+              .SetIsOriginAllowed(_ => true); // Required for SignalR
     });
 });
 
@@ -60,6 +61,8 @@ builder.Services.AddScoped<IPetConnectionService, PetConnectionService>();
 builder.Services.AddScoped<IPetWeddingService, PetWeddingService>();
 builder.Services.AddScoped<IUserFollowService, UserFollowService>();
 builder.Services.AddScoped<IImageService, ImageService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 
 // Configure Image Upload Settings
 builder.Services.Configure<ImageUploadSettings>(
@@ -93,9 +96,35 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey)),
         ClockSkew = TimeSpan.Zero
     };
+    
+    // Configure JWT for SignalR
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
 });
 
 builder.Services.AddAuthorization();
+
+// Add SignalR
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+    options.KeepAliveInterval = TimeSpan.FromSeconds(30);        // Send keepalive every 30 seconds
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);   // Timeout client after 60 seconds
+    options.HandshakeTimeout = TimeSpan.FromSeconds(30);        // Allow 30 seconds for handshake
+    options.MaximumReceiveMessageSize = 1024 * 1024;            // 1MB max message size
+    options.StreamBufferCapacity = 10;                          // Buffer for streaming
+});
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
@@ -120,5 +149,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR Hub
+app.MapHub<PetWhenua.Hubs.NotificationHub>("/hubs/notifications");
 
 app.Run();

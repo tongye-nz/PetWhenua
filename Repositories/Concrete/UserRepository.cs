@@ -101,5 +101,29 @@ namespace PetWhenua.Repositories.Concrete
             return await _context.Users
                 .AnyAsync(u => u.Email.ToLower() == email.ToLower());
         }
+
+        public async Task<IEnumerable<User>> SearchUsersAsync(string query, int limit = 10)
+        {
+            var searchTerm = query.ToLower();
+            
+            return await _context.Users
+                .Where(u => 
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
+                    u.Username.ToLower().Contains(searchTerm) ||
+                    (u.FirstName != null && u.LastName != null && (u.FirstName + " " + u.LastName).ToLower().Contains(searchTerm))
+                )
+                .Take(limit)
+                .Select(u => new User
+                {
+                    UserId = u.UserId,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Username = u.Username,
+                    ProfilePicture = u.ProfilePicture,
+                    Location = u.Location
+                })
+                .ToListAsync();
+        }
     }
 }

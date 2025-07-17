@@ -11,4 +11,10 @@ export * from './pets';
 export * from './posts';
 
 // Comment Features
-export * from './comments'; 
+export * from './comments';
+
+// Notification Features
+export * from './notifications';
+
+// Chat Features
+export * from './chat'; 

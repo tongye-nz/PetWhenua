@@ -15,6 +15,9 @@ public class AppDbContext : DbContext
     public DbSet<UserFollow> UserFollows => Set<UserFollow>();
     public DbSet<PetConnection> PetConnections => Set<PetConnection>();
     public DbSet<PetWeddingParticipant> PetWeddingParticipants => Set<PetWeddingParticipant>();
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<ChatRoom> ChatRooms => Set<ChatRoom>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -162,5 +165,92 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(pi => pi.UploadedBy)
             .OnDelete(DeleteBehavior.NoAction);
+
+        // Configure Notification relationships
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany(u => u.Notifications)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.RelatedPost)
+            .WithMany()
+            .HasForeignKey(n => n.RelatedPostId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.RelatedPet)
+            .WithMany()
+            .HasForeignKey(n => n.RelatedPetId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.RelatedUser)
+            .WithMany()
+            .HasForeignKey(n => n.RelatedUserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.RelatedConnection)
+            .WithMany()
+            .HasForeignKey(n => n.RelatedConnectionId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Configure ChatMessage relationships
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(cm => cm.Sender)
+            .WithMany(u => u.SentMessages)
+            .HasForeignKey(cm => cm.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(cm => cm.Receiver)
+            .WithMany(u => u.ReceivedMessages)
+            .HasForeignKey(cm => cm.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(cm => cm.RelatedPost)
+            .WithMany()
+            .HasForeignKey(cm => cm.RelatedPostId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<ChatMessage>()
+            .HasOne(cm => cm.RelatedPet)
+            .WithMany()
+            .HasForeignKey(cm => cm.RelatedPetId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Configure ChatRoom relationships
+        modelBuilder.Entity<ChatRoom>()
+            .HasOne(cr => cr.User1)
+            .WithMany(u => u.ChatRoomsAsUser1)
+            .HasForeignKey(cr => cr.User1Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<ChatRoom>()
+            .HasOne(cr => cr.User2)
+            .WithMany(u => u.ChatRoomsAsUser2)
+            .HasForeignKey(cr => cr.User2Id)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Ensure unique chat room between two users
+        modelBuilder.Entity<ChatRoom>()
+            .HasIndex(cr => new { cr.User1Id, cr.User2Id })
+            .IsUnique();
+
+        // Configure enum storage for new entities
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Type)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<Notification>()
+            .Property(n => n.Status)
+            .HasConversion<string>();
+
+        modelBuilder.Entity<ChatMessage>()
+            .Property(cm => cm.Status)
+            .HasConversion<string>();
     }
 }
