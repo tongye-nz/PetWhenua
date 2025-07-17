@@ -353,9 +353,9 @@ namespace PetWhenua.Services
             await _context.SaveChangesAsync();
         }
 
-        private async Task<NotificationDto> MapToNotificationDto(Notification notification)
+        private Task<NotificationDto> MapToNotificationDto(Notification notification)
         {
-            return new NotificationDto
+            return Task.FromResult(new NotificationDto
             {
                 NotificationId = notification.NotificationId,
                 UserId = notification.UserId,
@@ -376,7 +376,7 @@ namespace PetWhenua.Services
                     : null,
                 RelatedPetName = notification.RelatedPet?.Name,
                 RelatedPostTitle = notification.RelatedPost?.Title
-            };
+            });
         }
     }
 

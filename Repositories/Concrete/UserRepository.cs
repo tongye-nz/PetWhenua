@@ -108,10 +108,10 @@ namespace PetWhenua.Repositories.Concrete
             
             return await _context.Users
                 .Where(u => 
-                    u.FirstName.ToLower().Contains(searchTerm) ||
-                    u.LastName.ToLower().Contains(searchTerm) ||
+                    (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) ||
+                    (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
                     u.Username.ToLower().Contains(searchTerm) ||
-                    (u.FirstName + " " + u.LastName).ToLower().Contains(searchTerm)
+                    (u.FirstName != null && u.LastName != null && (u.FirstName + " " + u.LastName).ToLower().Contains(searchTerm))
                 )
                 .Take(limit)
                 .Select(u => new User
