@@ -229,6 +229,95 @@ const PostDetail: React.FC = () => {
             {currentPost.content}
           </Typography>
 
+          {/* Pet Wedding Participants - show the two pets */}
+          {currentPost.postType === 1 && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
+            <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
+              <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                💍 Pet Wedding Participants
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 3, justifyContent: 'center', flexWrap: 'wrap' }}>
+                {currentPost.petWeddingParticipants.map((participant) => (
+                  <Box key={participant.participantId} sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 2,
+                    p: 2,
+                    minWidth: 250,
+                    boxShadow: 1
+                  }}>
+                    {/* Pet Profile Picture */}
+                    <Avatar
+                      src={(() => {
+                        const profilePic = participant.pet?.profilePicture;
+                        if (!profilePic) return undefined;
+                        
+                        // If it's already a full URL, use it directly
+                        if (profilePic.startsWith('http')) return profilePic;
+                        
+                        // If it's a data URL (base64), use it directly 
+                        if (profilePic.startsWith('data:')) {
+                          return profilePic;
+                        }
+                        
+                        // If it's a file path, construct the full URL
+                        if (profilePic.length < 500) {
+                          return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                        }
+                        
+                        return undefined;
+                      })()}
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        bgcolor: 'primary.light',
+                        fontSize: '2rem',
+                        fontWeight: 'bold',
+                        flexShrink: 0
+                      }}
+                    >
+                      {participant.pet?.name?.charAt(0).toUpperCase() || '🐾'}
+                    </Avatar>
+                    
+                    {/* Pet Info */}
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                      <Typography variant="h6" sx={{ 
+                        fontWeight: 'bold',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {participant.pet?.name || 'Unknown Pet'}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                        {participant.pet?.gender && (
+                          <span>
+                            {participant.pet.gender === 'Male' || participant.pet.gender === 'M' ? '♂️ Male' : 
+                             participant.pet.gender === 'Female' || participant.pet.gender === 'F' ? '♀️ Female' : participant.pet.gender}
+                          </span>
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.primary">
+                        <strong>Species:</strong> {participant.pet?.species || 'Unknown'}
+                      </Typography>
+                      {participant.pet?.breed && (
+                        <Typography variant="body2" color="text.primary">
+                          <strong>Breed:</strong> {participant.pet.breed}
+                        </Typography>
+                      )}
+                      {participant.pet?.age && (
+                        <Typography variant="body2" color="text.primary">
+                          <strong>Age:</strong> {participant.pet.age} years old
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+
           {/* Additional Information */}
           <Box mt={4}>
             {currentPost.price && (
