@@ -83,6 +83,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'posts':
         navigate('/my-posts');
         break;
+      case 'connections':
+        navigate('/pet-connection-requests');
+        break;
       case 'messages':
         console.log('Navigate to Messages');
         break;
@@ -109,6 +112,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { key: 'details', label: 'My Details', icon: '👤' },
     { key: 'pets', label: 'My Pets', icon: '🐾' },
     { key: 'posts', label: 'My Posts', icon: '📝' },
+    { key: 'connections', label: 'Connection Requests', icon: '🤝' },
     { key: 'messages', label: 'Messages', icon: '💬' },
     { key: 'signout', label: 'Sign Out', icon: '🚪' }
   ];

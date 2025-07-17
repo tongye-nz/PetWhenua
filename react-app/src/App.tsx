@@ -15,6 +15,7 @@ import CreatePost from './pages/CreatePost.tsx';
 import MyPosts from './pages/MyPosts.tsx';
 import UsersNearMe from './pages/UsersNearMe.tsx';
 import PetsNearMe from './pages/PetsNearMe.tsx';
+import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
 import { ProtectedRoute } from './components/common';
 import './App.css';
@@ -71,6 +72,11 @@ function App() {
                 <Route path="/my-posts" element={
                   <ProtectedRoute>
                     <MyPosts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/pet-connection-requests" element={
+                  <ProtectedRoute>
+                    <PetConnectionRequests />
                   </ProtectedRoute>
                 } />
                 <Route path="/users-near-me" element={<UsersNearMe />} />
