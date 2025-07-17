@@ -351,6 +351,7 @@ const PostForm: React.FC<PostFormProps> = ({
       const submitData: CreatePostRequest | UpdatePostRequest = mode === 'create' 
         ? {
             userId: user?.userId,
+            userRole: user?.role,
             postType: formData.postType,
             title: formData.title,
             content: formData.content,

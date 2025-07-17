@@ -18,6 +18,8 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.MaxDepth = 32;
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -63,9 +65,9 @@ builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.Configure<ImageUploadSettings>(
     builder.Configuration.GetSection("ImageUpload"));
 
-// builder.Services.AddScoped<IPostAuthorizationService, PostAuthorizationService>();
-// builder.Services.AddScoped<PostExpiryService>();
-// builder.Services.AddHostedService<PostExpiryBackgroundService>();
+builder.Services.AddScoped<IPostAuthorizationService, PostAuthorizationService>();
+builder.Services.AddScoped<PostExpiryService>();
+builder.Services.AddHostedService<PostExpiryBackgroundService>();
 
 // Configure JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
