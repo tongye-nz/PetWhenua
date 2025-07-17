@@ -14,7 +14,8 @@ import {
   Radio,
   RadioGroup,
   FormControlLabel,
-  FormControl
+  FormControl,
+  Chip
 } from '@mui/material';
 import { Pets } from '@mui/icons-material';
 import { LoadingSpinner } from '../../../ui';
@@ -43,6 +44,7 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingConnections, setExistingConnections] = useState<{[key: number]: string}>({});
 
   // Load user's pets when dialog opens
   useEffect(() => {
@@ -62,11 +64,45 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
       if (pets.length === 1) {
         setSelectedPetId(pets[0].petId!);
       }
+
+      // Check for existing connections
+      await checkExistingConnections(pets);
     } catch (err) {
       console.error('Failed to load pets:', err);
       setError('Failed to load your pets');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkExistingConnections = async (pets: Pet[]) => {
+    if (!targetPet.petId) return;
+    
+    const connections: {[key: number]: string} = {};
+    
+    for (const pet of pets) {
+      if (pet.petId) {
+        try {
+          const statusResponse = await petConnectionService.getConnectionStatus(
+            pet.petId, 
+            targetPet.petId
+          );
+          
+          if (statusResponse.status && statusResponse.status !== 'No Connection') {
+            connections[pet.petId] = statusResponse.status;
+          }
+        } catch (error) {
+          // No connection exists, which is fine
+          console.log(`No connection between pet ${pet.petId} and ${targetPet.petId}`);
+        }
+      }
+    }
+    
+    setExistingConnections(connections);
+    
+    // Clear selected pet if it already has a connection
+    if (selectedPetId && connections[selectedPetId]) {
+      setSelectedPetId(null);
     }
   };
 
@@ -76,20 +112,69 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
       return;
     }
 
+    if (!targetPet.petId) {
+      setError('Target pet ID is missing');
+      return;
+    }
+
+    // Check if there's already a connection for the selected pet
+    const existingStatus = existingConnections[selectedPetId];
+    if (existingStatus) {
+      if (existingStatus === 'Pending') {
+        setError('A connection request is already pending for this pet. Please wait for a response.');
+        return;
+      } else if (existingStatus === 'Accepted') {
+        setError('This pet is already connected to the target pet!');
+        return;
+      }
+    }
+
     try {
       setSubmitting(true);
       setError(null);
 
-      await petConnectionService.requestConnection({
+      const requestData = {
         pet1Id: selectedPetId,
-        pet2Id: targetPet.petId!,
+        pet2Id: targetPet.petId,
         message: message || `${myPets.find(p => p.petId === selectedPetId)?.name} would like to connect with ${targetPet.name}!`
-      });
+      };
+
+      console.log('Sending connection request:', requestData);
+      console.log('Current user from auth:', user);
+      console.log('Selected pet:', myPets.find(p => p.petId === selectedPetId));
+      console.log('Target pet:', targetPet);
+
+      await petConnectionService.requestConnection(requestData);
 
       onConnectionRequested();
       handleClose();
     } catch (err) {
       console.error('Failed to request connection:', err);
+      
+      // Enhanced error logging
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as any;
+        console.error('Response data:', axiosError.response?.data);
+        console.error('Response status:', axiosError.response?.status);
+        console.error('Response headers:', axiosError.response?.headers);
+        
+        // Show the backend error message if available
+        const backendMessage = axiosError.response?.data?.message || axiosError.response?.data;
+        if (typeof backendMessage === 'string') {
+          // Make the error message more user-friendly
+          if (backendMessage.includes('Connection already exists with status: Pending')) {
+            setError('A connection request is already pending between these pets. Please wait for a response.');
+          } else if (backendMessage.includes('Connection already exists with status: Accepted')) {
+            setError('These pets are already connected!');
+          } else if (backendMessage.includes('You can only request connections for your own pets')) {
+            setError('You can only create connections for your own pets.');
+          } else {
+            setError(backendMessage);
+          }
+          return;
+        }
+      }
+      
       setError(err instanceof Error ? err.message : 'Failed to send connection request');
     } finally {
       setSubmitting(false);
@@ -158,19 +243,20 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
                     <Card 
                       key={pet.petId}
                       sx={{ 
-                        cursor: 'pointer',
+                        cursor: existingConnections[pet.petId!] ? 'not-allowed' : 'pointer',
                         border: selectedPetId === pet.petId ? 2 : 1,
                         borderColor: selectedPetId === pet.petId ? 'primary.main' : 'divider',
+                        opacity: existingConnections[pet.petId!] ? 0.6 : 1,
                         '&:hover': {
-                          borderColor: 'primary.light'
+                          borderColor: existingConnections[pet.petId!] ? 'divider' : 'primary.light'
                         }
                       }}
-                      onClick={() => setSelectedPetId(pet.petId!)}
+                      onClick={() => !existingConnections[pet.petId!] && setSelectedPetId(pet.petId!)}
                     >
                       <Box sx={{ display: 'flex', alignItems: 'center', p: 1 }}>
                         <FormControlLabel
                           value={pet.petId}
-                          control={<Radio />}
+                          control={<Radio disabled={!!existingConnections[pet.petId!]} />}
                           label=""
                           sx={{ m: 0, mr: 1 }}
                         />
@@ -204,10 +290,23 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
                             </Box>
                           )}
                           
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight="medium">
-                              {pet.name}
-                            </Typography>
+                          <Box sx={{ flex: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <Typography variant="subtitle1" fontWeight="medium">
+                                {pet.name}
+                              </Typography>
+                              {existingConnections[pet.petId!] && (
+                                <Chip
+                                  label={existingConnections[pet.petId!] === 'Pending' ? 'Request Sent' : 
+                                         existingConnections[pet.petId!] === 'Accepted' ? 'Connected' : 
+                                         existingConnections[pet.petId!]}
+                                  size="small"
+                                  color={existingConnections[pet.petId!] === 'Accepted' ? 'success' : 
+                                         existingConnections[pet.petId!] === 'Pending' ? 'warning' : 'default'}
+                                  sx={{ ml: 1, fontSize: '0.75rem' }}
+                                />
+                              )}
+                            </Box>
                             <Typography variant="caption" color="text.secondary">
                               {pet.species} • {pet.breed}
                             </Typography>

@@ -94,11 +94,45 @@ const PetDetail: React.FC = () => {
     
     try {
       setLoadingConnection(true);
-      // For now, we'll set status to null - in a real implementation,
-      // you'd need to check against all your pets
-      setConnectionStatus(null);
+      
+      // Get current user's pets
+      const userPets = await petService.getCurrentUserPets();
+      
+      if (userPets.length === 0) {
+        setConnectionStatus(null);
+        return;
+      }
+      
+      // Check connection status between user's pets and target pet
+      let overallStatus: PetConnectionStatus | null = null;
+      
+      for (const userPet of userPets) {
+        if (userPet.petId) {
+          try {
+            const statusResponse = await petConnectionService.getConnectionStatus(
+              userPet.petId, 
+              targetPet.petId
+            );
+            
+            // Priority: Accepted > Pending > null
+            if (statusResponse.status === 'Accepted') {
+              overallStatus = 'Accepted';
+              break; // Accepted is highest priority, stop checking
+            } else if (statusResponse.status === 'Pending' && overallStatus !== 'Accepted') {
+              overallStatus = 'Pending';
+            }
+          } catch (error) {
+            // If no connection exists between these pets, continue checking others
+            console.log(`No connection between pet ${userPet.petId} and ${targetPet.petId}`);
+          }
+        }
+      }
+      
+      setConnectionStatus(overallStatus);
+      console.log('Connection status check result:', overallStatus);
     } catch (error) {
       console.error('Failed to check connection status:', error);
+      setConnectionStatus(null);
     } finally {
       setLoadingConnection(false);
     }
@@ -125,9 +159,10 @@ const PetDetail: React.FC = () => {
     setSuccess('Connection request sent! Wait for the pet owner to respond.');
     setConnectionStatus('Pending');
     
-    // Refresh connected pets in case the connection was immediately accepted
+    // Refresh both connected pets and connection status
     if (pet?.petId) {
       await fetchConnectedPets(pet.petId);
+      await checkConnectionStatus(pet);
     }
   };
 
@@ -531,8 +566,14 @@ const PetDetail: React.FC = () => {
               variant="primary" 
               size="small"
               onClick={handleConnectClick}
+              disabled={loadingConnection || connectionStatus === 'Pending'}
             >
-              Connect Pets
+              {connectionStatus === 'Pending' 
+                ? 'Request Sent' 
+                : connectionStatus === 'Accepted'
+                ? 'Connected'
+                : 'Connect Pets'
+              }
             </Button>
           </Box>
         )}
