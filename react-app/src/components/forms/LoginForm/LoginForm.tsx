@@ -15,6 +15,11 @@ export interface LoginFormProps {
   disabled?: boolean;
 }
 
+interface LoginFormErrors {
+  usernameOrEmail?: string;
+  password?: string;
+}
+
 const LoginForm: React.FC<LoginFormProps> = ({
   onSubmit,
   onRegisterClick,
@@ -22,12 +27,87 @@ const LoginForm: React.FC<LoginFormProps> = ({
   error = null,
   disabled = false,
 }) => {
-  const [usernameOrEmail, setUsernameOrEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState<LoginFormData>({
+    usernameOrEmail: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState<LoginFormErrors>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+
+  const validateField = (field: keyof LoginFormData, value: string): string | undefined => {
+    switch (field) {
+      case 'usernameOrEmail':
+        if (!value.trim()) {
+          return 'Email or username is required';
+        }
+        if (value.length < 3) {
+          return 'Must be at least 3 characters';
+        }
+        return undefined;
+      case 'password':
+        if (!value) {
+          return 'Password is required';
+        }
+        if (value.length < 6) {
+          return 'Password must be at least 6 characters';
+        }
+        return undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: LoginFormErrors = {};
+    
+    newErrors.usernameOrEmail = validateField('usernameOrEmail', formData.usernameOrEmail);
+    newErrors.password = validateField('password', formData.password);
+    
+    setErrors(newErrors);
+    setTouched({ usernameOrEmail: true, password: true });
+    
+    return !newErrors.usernameOrEmail && !newErrors.password;
+  };
+
+  const handleInputChange = (field: keyof LoginFormData) => (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = event.target.value;
+    
+    setFormData(prev => ({
+      ...prev,
+      [field]: value,
+    }));
+    
+    // Validate field if it's been touched
+    if (touched[field]) {
+      const fieldError = validateField(field, value);
+      setErrors(prev => ({
+        ...prev,
+        [field]: fieldError,
+      }));
+    }
+  };
+
+  const handleBlur = (field: keyof LoginFormData) => () => {
+    setTouched(prev => ({
+      ...prev,
+      [field]: true,
+    }));
+    
+    const fieldError = validateField(field, formData[field]);
+    setErrors(prev => ({
+      ...prev,
+      [field]: fieldError,
+    }));
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    onSubmit({ usernameOrEmail, password });
+    
+    if (validateForm()) {
+      onSubmit(formData);
+    }
   };
 
   return (
@@ -44,8 +124,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
           fullWidth
           label="Email or Username"
           placeholder="Enter your email or username"
-          value={usernameOrEmail}
-          onChange={(e) => setUsernameOrEmail(e.target.value)}
+          value={formData.usernameOrEmail}
+          onChange={handleInputChange('usernameOrEmail')}
+          onBlur={handleBlur('usernameOrEmail')}
+          error={touched.usernameOrEmail && !!errors.usernameOrEmail}
+          helperText={touched.usernameOrEmail ? errors.usernameOrEmail : ''}
           required
           disabled={isLoading || disabled}
         />
@@ -55,8 +138,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
           type="password"
           label="Password"
           placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleInputChange('password')}
+          onBlur={handleBlur('password')}
+          error={touched.password && !!errors.password}
+          helperText={touched.password ? errors.password : ''}
           required
           disabled={isLoading || disabled}
         />
@@ -67,30 +153,26 @@ const LoginForm: React.FC<LoginFormProps> = ({
           variant="primary"
           size="large"
           isLoading={isLoading}
-          disabled={disabled}
+          loadingText="Signing In..."
+          disabled={disabled || isLoading}
         >
           Sign In
         </Button>
 
+        {/* Register Link */}
         {onRegisterClick && (
           <Box sx={{ textAlign: 'center' }}>
-            <Text variant="body2" color="text.secondary">
-              Not a member?{' '}
-              <Text 
-                component="span" 
-                sx={{ 
-                  color: 'primary.main', 
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  '&:hover': {
-                    color: 'primary.dark'
-                  }
-                }}
-                onClick={onRegisterClick}
-              >
-                Register now!
-              </Text>
+            <Text variant="body2" sx={{ mb: 1 }}>
+              Don't have an account?
             </Text>
+            <Button
+              variant="text"
+              onClick={onRegisterClick}
+              disabled={isLoading || disabled}
+              sx={{ textTransform: 'none' }}
+            >
+              Create Account
+            </Button>
           </Box>
         )}
       </Stack>
