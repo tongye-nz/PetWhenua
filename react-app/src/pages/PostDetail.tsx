@@ -13,7 +13,7 @@ import {
   Divider
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner, LikeButton } from '../components/ui';
+import { LoadingSpinner, LikeButton, StatusChip } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -54,6 +54,18 @@ const PostDetail: React.FC = () => {
       5: 'primary'     // Moment
     };
     return colorMap[postType] || 'primary';
+  };
+
+  const getStatusLabel = (status: number): string => {
+    const statusMap: { [key: number]: string } = {
+      0: 'Active',
+      1: 'Sold',
+      2: 'Expired',
+      3: 'Inactive',
+      4: 'Cancelled',
+      5: 'Pending'
+    };
+    return statusMap[status] || 'Unknown';
   };
 
   const handleEdit = () => {
@@ -180,12 +192,19 @@ const PostDetail: React.FC = () => {
       {/* Post Content */}
       <Card>
         <CardContent sx={{ p: 4 }}>
-          {/* Post Type Badge */}
-          <Box mb={2}>
+          {/* Post Type and Status Badges */}
+          <Box mb={2} display="flex" gap={1} flexWrap="wrap">
             <Chip 
               label={getPostTypeLabel(currentPost.postType)}
               color={getPostTypeColor(currentPost.postType)}
               variant="filled"
+              size="small"
+            />
+            <StatusChip 
+              statusVariant="status"
+              status={currentPost.status}
+              label={getStatusLabel(currentPost.status)}
+              variant="outlined"
               size="small"
             />
           </Box>
