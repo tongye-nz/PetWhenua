@@ -1,6 +1,7 @@
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import type { Notification } from '../models/notification.types';
 import type { ChatMessage, TypingIndicator } from '../models/chat.types';
+import { API_CONFIG } from '../config/api.config';
 
 export class SignalRService {
   private connection: HubConnection | null = null;
@@ -30,24 +31,37 @@ export class SignalRService {
     this.isConnecting = true;
 
     try {
+      // Extract base URL from API config and create SignalR hub URL
+      const baseUrl = API_CONFIG.BASE_URL.replace('/api', '');
+      const hubUrl = `${baseUrl}/hubs/notifications`;
+
       this.connection = new HubConnectionBuilder()
-        .withUrl('http://localhost:5295/hubs/notifications', {
+        .withUrl(hubUrl, {
           accessTokenFactory: () => token,
-          withCredentials: true
+          withCredentials: true,
+          skipNegotiation: false,
+          transport: undefined // Let SignalR choose the best transport
         })
         .withAutomaticReconnect({
-          nextRetryDelayInMilliseconds: () => {
-            return Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+          nextRetryDelayInMilliseconds: (retryContext) => {
+            // Match server's configuration with exponential backoff
+            if (retryContext.previousRetryCount < 3) {
+              return 1000 * Math.pow(2, retryContext.previousRetryCount);
+            }
+            return 30000; // Max 30 seconds
           }
         })
         .configureLogging(LogLevel.Information)
+        // Configure timeout settings to match backend
+        .withServerTimeout(70000) // 70 seconds (longer than server's 60 seconds)
+        .withKeepAliveInterval(25000) // 25 seconds (shorter than server's 30 seconds)
         .build();
 
       // Set up event handlers
       this.setupEventHandlers();
 
       await this.connection.start();
-      console.log('SignalR connection established');
+      console.log('SignalR connection established to:', hubUrl);
       
       this.reconnectAttempts = 0;
       this.onConnectionStateChanged?.(true);
@@ -124,12 +138,20 @@ export class SignalRService {
     this.connection.onclose((error) => {
       console.log('SignalR connection closed:', error);
       this.onConnectionStateChanged?.(false);
+      
+      // Handle timeout errors specifically
+      if (error && error.message?.includes('timeout')) {
+        console.log('Connection lost due to timeout, attempting to reconnect...');
+        // Don't attempt immediate reconnection on timeout
+        // Let the automatic reconnection handle it
+      }
     });
   }
 
   private async handleReconnect(token: string): Promise<void> {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max reconnection attempts reached');
+      this.onConnectionStateChanged?.(false);
       return;
     }
 

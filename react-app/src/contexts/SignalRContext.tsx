@@ -69,8 +69,13 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const connectToHub = useCallback(async (token: string) => {
     try {
-      // Set up event handlers
-      signalRService.onConnectionStatus(setIsConnected);
+      console.log('Starting SignalR connection...');
+      
+      // Set up event handlers first
+      signalRService.onConnectionStatus((connected) => {
+        console.log('SignalR connection status changed:', connected);
+        setIsConnected(connected);
+      });
       
       signalRService.onNotification((notification) => {
         console.log('Received notification in context:', notification);
@@ -135,24 +140,35 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
         );
       });
 
+      // Connect to SignalR hub
+      console.log('Attempting to connect to SignalR hub with token...');
       await signalRService.connect(token);
       setConnectionState(signalRService.connectionState);
+      console.log('SignalR connection successful, state:', signalRService.connectionState);
       
-      // Load initial notifications and unread count
-      try {
-        const [unreadNotifications, notificationCount] = await Promise.all([
-          notificationService.getUnreadNotifications(),
-          notificationService.getNotificationCount()
-        ]);
-        
-        setNotifications(unreadNotifications);
-        setUnreadCount(notificationCount.unreadCount);
-        console.log('Loaded initial notifications:', unreadNotifications.length, 'unread count:', notificationCount.unreadCount);
-      } catch (error) {
-        console.error('Failed to load initial notifications:', error);
-      }
+      // Load initial notifications and unread count (in background, don't block connection)
+      setTimeout(async () => {
+        try {
+          console.log('Loading initial notifications...');
+          const [unreadNotifications, notificationCount] = await Promise.all([
+            notificationService.getUnreadNotifications(),
+            notificationService.getNotificationCount()
+          ]);
+          
+          setNotifications(unreadNotifications);
+          setUnreadCount(notificationCount.unreadCount);
+          console.log('Loaded initial notifications:', unreadNotifications.length, 'unread count:', notificationCount.unreadCount);
+        } catch (error) {
+          console.error('Failed to load initial notifications:', error);
+          // Don't fail the entire connection if notifications can't be loaded
+        }
+      }, 1000); // Delay to ensure connection is stable
+      
     } catch (error) {
       console.error('Failed to connect to SignalR:', error);
+      setIsConnected(false);
+      setConnectionState('Failed');
+      // Don't throw error, let the automatic reconnection handle it
     }
   }, [notificationHandler, chatMessageHandler]);
 

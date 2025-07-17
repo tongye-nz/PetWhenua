@@ -119,8 +119,11 @@ builder.Services.AddAuthorization();
 builder.Services.AddSignalR(options =>
 {
     options.EnableDetailedErrors = true;
-    options.KeepAliveInterval = TimeSpan.FromSeconds(30);
-    options.ClientTimeoutInterval = TimeSpan.FromMinutes(1);
+    options.KeepAliveInterval = TimeSpan.FromSeconds(30);        // Send keepalive every 30 seconds
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);   // Timeout client after 60 seconds
+    options.HandshakeTimeout = TimeSpan.FromSeconds(30);        // Allow 30 seconds for handshake
+    options.MaximumReceiveMessageSize = 1024 * 1024;            // 1MB max message size
+    options.StreamBufferCapacity = 10;                          // Buffer for streaming
 });
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
