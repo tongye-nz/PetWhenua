@@ -44,17 +44,7 @@ const PostDetail: React.FC = () => {
     return typeMap[postType] || 'Unknown';
   };
 
-  const getPostTypeColor = (postType: PostType): 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' => {
-    const colorMap: { [key: number]: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info' } = {
-      0: 'info',       // Meetup
-      1: 'secondary',  // Pet Wedding
-      2: 'success',    // Buy & Sell
-      3: 'warning',    // Library
-      4: 'error',      // Announcement
-      5: 'primary'     // Moment
-    };
-    return colorMap[postType] || 'primary';
-  };
+
 
   const getStatusLabel = (status: number): string => {
     const statusMap: { [key: number]: string } = {
@@ -194,17 +184,16 @@ const PostDetail: React.FC = () => {
         <CardContent sx={{ p: 4 }}>
           {/* Post Type and Status Badges */}
           <Box mb={2} display="flex" gap={1} flexWrap="wrap">
-            <Chip 
+            <StatusChip 
+              statusVariant="type"
+              postType={currentPost.postType}
               label={getPostTypeLabel(currentPost.postType)}
-              color={getPostTypeColor(currentPost.postType)}
-              variant="filled"
               size="small"
             />
             <StatusChip 
               statusVariant="status"
               status={currentPost.status}
               label={getStatusLabel(currentPost.status)}
-              variant="outlined"
               size="small"
             />
           </Box>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Chip } from '@mui/material';
 import type { ChipProps } from '@mui/material';
+import { cyan, pink, lightGreen, indigo, orange, blueGrey } from '@mui/material/colors';
 import { PostStatus, PostType } from '../../../models/post.types';
 
 export interface StatusChipProps extends Omit<ChipProps, 'color'> {
@@ -26,29 +27,57 @@ const StatusChip: React.FC<StatusChipProps> = ({
     }
   };
 
-  const getPostTypeColor = (type: PostType) => {
+
+
+  const getCustomPostTypeStyles = (type: PostType) => {
     switch (type) {
-      case PostType.Meetup: return 'primary';
-      case PostType.BuySell: return 'secondary';
-      case PostType.Library: return 'info';
-      case PostType.Announcement: return 'warning';
-      default: return 'default';
+      case PostType.Meetup:
+        return { backgroundColor: cyan[500], color: '#ffffff' };
+      case PostType.PetWedding:
+        return { backgroundColor: pink[500], color: '#ffffff' };
+      case PostType.BuySell:
+        return { backgroundColor: lightGreen[500], color: '#ffffff' };
+      case PostType.Library:
+        return { backgroundColor: indigo[500], color: '#ffffff' };
+      case PostType.Announcement:
+        return { backgroundColor: orange[500], color: '#ffffff' };
+      case PostType.Moment:
+        return { backgroundColor: blueGrey[500], color: '#ffffff' };
+      default:
+        return {};
     }
   };
 
-  const color = statusVariant === 'status' && status !== undefined 
-    ? getStatusColor(status) 
-    : statusVariant === 'type' && postType !== undefined 
-    ? getPostTypeColor(postType) 
-    : 'default';
-
-  return (
-    <Chip
-      color={color as any}
-      size="small"
-      {...props}
-    />
-  );
+  if (statusVariant === 'type' && postType !== undefined) {
+    // Use custom colors for post types
+    const customStyles = getCustomPostTypeStyles(postType);
+    return (
+      <Chip
+        size="small"
+        sx={customStyles}
+        {...props}
+      />
+    );
+  } else if (statusVariant === 'status' && status !== undefined) {
+    // Use standard MUI colors for status
+    const color = getStatusColor(status);
+    return (
+      <Chip
+        color={color as any}
+        size="small"
+        {...props}
+      />
+    );
+  } else {
+    // Default case
+    return (
+      <Chip
+        color="default"
+        size="small"
+        {...props}
+      />
+    );
+  }
 };
 
 export default StatusChip;
