@@ -73,6 +73,19 @@ public class LikesController : ControllerBase
         return Ok(new { hasLiked });
     }
 
+    // GET: api/likes/post/{postId}/user/{userId}/status
+    [HttpGet("post/{postId}/user/{userId}/status")]
+    public async Task<IActionResult> GetLikeStatus(int postId, int userId)
+    {
+        var likeCount = await _context.Likes.CountAsync(l => l.PostId == postId);
+        var isLiked = await _context.Likes.AnyAsync(l => l.PostId == postId && l.UserId == userId);
+        
+        return Ok(new { 
+            likeCount = likeCount,
+            isLiked = isLiked 
+        });
+    }
+
     // POST: api/likes
     [HttpPost]
     public async Task<IActionResult> LikePost([FromBody] CreateLikeRequest request)
