@@ -17,11 +17,6 @@ const SignIn: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Clear error when component mounts
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
-
   const handleLogin = async (formData: LoginFormData) => {
     clearError();
     
@@ -44,11 +39,14 @@ const SignIn: React.FC = () => {
 
   // Enhanced error message with helpful guidance
   const getEnhancedErrorMessage = () => {
-    if (!error) return null;
+    
+    if (!error) {
+      return null;
+    }
 
-    const isCredentialError = error.includes('Invalid username') || error.includes('password');
-    const isNetworkError = error.includes('Network') || error.includes('timeout');
-    const isServerError = error.includes('Server error') || error.includes('temporarily unavailable');
+    const isCredentialError = error.includes('Invalid username') || error.includes('Invalid email') || error.includes('password');
+    const isNetworkError = error.includes('Network') || error.includes('timeout') || error.includes('connection');
+    const isServerError = error.includes('Server error') || error.includes('temporarily unavailable') || error.includes('Service temporarily');
 
     if (attemptCount >= 3 && isCredentialError) {
       return (
@@ -78,6 +76,7 @@ const SignIn: React.FC = () => {
       );
     }
 
+    // Default case - show the error as-is for any unmatched errors (including credential errors)
     return (
       <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
         {error}
@@ -93,6 +92,7 @@ const SignIn: React.FC = () => {
       />
       
       <Box sx={{ width: '100%' }}>
+        
         {getEnhancedErrorMessage()}
         
         <LoginForm 

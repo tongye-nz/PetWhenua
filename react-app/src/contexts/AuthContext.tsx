@@ -107,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
     } catch (err) {
-      console.error('Login error:', err);
+      console.error('AuthContext: Login error details:', err);
       const apiError = err as ApiError;
       const errorMessage = apiError.message || 'Login failed. Please try again.';
       setError(errorMessage);

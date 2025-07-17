@@ -58,7 +58,7 @@ const handleApiError = (error: AxiosError): ApiError => {
       };
     }
     
-    // Handle specific error messages from server
+    // Handle specific error messages from server - prioritize server messages
     if (data.message) {
       return { message: data.message };
     }
@@ -76,12 +76,16 @@ const handleApiError = (error: AxiosError): ApiError => {
     };
   }
   
-  // Handle specific HTTP status codes
+  // Handle specific HTTP status codes - only use fallback messages if no server message
   switch (error.response.status) {
     case 400:
       return { message: 'Invalid request. Please check your input and try again.' };
     case 401:
-      return { message: 'Invalid username/email or password. Please try again.' };
+      // For 401, try to extract server message first, fallback to generic message
+      const unauthorizedMessage = typeof error.response.data === 'string' 
+        ? error.response.data 
+        : (error.response.data as any)?.message || 'Invalid username/email or password. Please try again.';
+      return { message: unauthorizedMessage };
     case 403:
       return { message: 'You do not have permission to perform this action.' };
     case 404:
