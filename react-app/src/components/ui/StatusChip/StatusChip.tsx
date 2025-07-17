@@ -23,6 +23,7 @@ const StatusChip: React.FC<StatusChipProps> = ({
       case PostStatus.Expired: return 'error';
       case PostStatus.Inactive: return 'warning';
       case PostStatus.Cancelled: return 'error';
+      case PostStatus.Pending: return 'warning';
       default: return 'default';
     }
   };

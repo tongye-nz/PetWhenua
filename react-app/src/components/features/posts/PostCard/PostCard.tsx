@@ -120,7 +120,7 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const getStatusLabel = (status: number) => {
-    const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled'];
+    const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled', 'Pending'];
     return labels[status] || 'Unknown';
   };
 
