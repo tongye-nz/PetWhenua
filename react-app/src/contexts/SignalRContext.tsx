@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { signalRService } from '../services/signalRService';
 import { useAuth } from './AuthContext';
+import { notificationService } from '../api/notification.api';
 import type { Notification } from '../models/notification.types';
 import type { ChatMessage, TypingIndicator } from '../models/chat.types';
 
@@ -136,6 +137,20 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       await signalRService.connect(token);
       setConnectionState(signalRService.connectionState);
+      
+      // Load initial notifications and unread count
+      try {
+        const [unreadNotifications, notificationCount] = await Promise.all([
+          notificationService.getUnreadNotifications(),
+          notificationService.getNotificationCount()
+        ]);
+        
+        setNotifications(unreadNotifications);
+        setUnreadCount(notificationCount.unreadCount);
+        console.log('Loaded initial notifications:', unreadNotifications.length, 'unread count:', notificationCount.unreadCount);
+      } catch (error) {
+        console.error('Failed to load initial notifications:', error);
+      }
     } catch (error) {
       console.error('Failed to connect to SignalR:', error);
     }

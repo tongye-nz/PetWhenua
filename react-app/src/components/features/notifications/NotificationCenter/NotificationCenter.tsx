@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Alert
 } from '@mui/material';
+import { grey } from '@mui/material/colors';
 import {
   Notifications as NotificationsIcon,
   NotificationsNone,
@@ -185,7 +186,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       <IconButton
         color="inherit"
         onClick={handleMenuOpen}
-        sx={{ color: 'white' }}
+        sx={{ color: grey[900] }}
       >
         <Badge badgeContent={unreadCount} color="error">
           {unreadCount > 0 ? <NotificationsIcon /> : <NotificationsNone />}
