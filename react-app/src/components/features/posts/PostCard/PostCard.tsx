@@ -3,6 +3,7 @@ import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/ma
 import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
+import { userFollowService } from '../../../../api/userFollow.api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
 import { PostType } from '../../../../models/post.types';
@@ -29,6 +30,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const { user } = useAuth();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [commentCount, setCommentCount] = useState(0);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
   
   const isOwner = user?.userId === post.userId;
   const canEdit = isOwner && post.status === 0; // PostStatus.Active
@@ -49,6 +52,32 @@ const PostCard: React.FC<PostCardProps> = ({
 
     loadCommentCount();
   }, [post.postId]);
+
+  // Load follow status for the post author
+  useEffect(() => {
+    const loadFollowStatus = async () => {
+      if (!user?.userId || !post.user?.userId || isOwner) {
+        setFollowStatusLoaded(true);
+        return;
+      }
+
+      try {
+        const status = await userFollowService.isFollowing(post.user.userId);
+        setIsFollowing(status);
+      } catch (error) {
+        console.debug('Failed to load follow status:', error);
+      } finally {
+        setFollowStatusLoaded(true);
+      }
+    };
+
+    loadFollowStatus();
+  }, [post.user?.userId, user?.userId, isOwner]);
+
+  // Handle follow status change
+  const handleFollowChange = (newFollowStatus: boolean) => {
+    setIsFollowing(newFollowStatus);
+  };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation();
@@ -135,12 +164,17 @@ const PostCard: React.FC<PostCardProps> = ({
           
           {/* Follow button - only show for other users' posts */}
           {!isOwner && post.user && (
-            <FollowButton
-              userId={post.user.userId}
-              isFollowing={false} // TODO: Get actual follow status
-              size="small"
-              variant="outlined"
-            />
+            <>
+              {followStatusLoaded && (
+                <FollowButton
+                  userId={post.user.userId}
+                  isFollowing={isFollowing}
+                  onFollowChange={handleFollowChange}
+                  size="small"
+                  variant="outlined"
+                />
+              )}
+            </>
           )}
         </Box>
 

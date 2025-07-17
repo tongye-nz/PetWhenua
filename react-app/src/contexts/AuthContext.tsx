@@ -138,7 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
     } catch (err) {
-      console.error('Register error:', err);
+      console.error('AuthContext: Register error details:', err);
       const apiError = err as ApiError;
       const errorMessage = apiError.message || 'Registration failed. Please try again.';
       setError(errorMessage);
