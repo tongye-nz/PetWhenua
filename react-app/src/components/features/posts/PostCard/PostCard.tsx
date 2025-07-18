@@ -8,6 +8,7 @@ import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
 import { PostType, PostStatus } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../../utils/dateUtils';
 
 export interface PostCardProps {
@@ -28,6 +29,7 @@ const PostCard: React.FC<PostCardProps> = ({
   compact = false
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [commentCount, setCommentCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -114,6 +116,23 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  const handleProfilePictureClick = (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components (PostCard click)
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!post.user?.userId) return;
+    
+    // Navigate to appropriate profile page
+    if (user?.userId === post.user.userId) {
+      // Current user's profile
+      navigate('/profile');
+    } else {
+      // Other user's profile
+      navigate(`/user/${post.user.userId}`);
+    }
+  };
+
   const truncateContent = (content: string, maxLength: number = 150) => {
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + '...';
@@ -158,7 +177,16 @@ const PostCard: React.FC<PostCardProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar 
             src={post.user?.profilePicture || undefined}
-            sx={{ width: 32, height: 32 }}
+            sx={{ 
+              width: 32, 
+              height: 32,
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+              }
+            }}
+            onClick={handleProfilePictureClick}
           >
             {!post.user?.profilePicture && (post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>

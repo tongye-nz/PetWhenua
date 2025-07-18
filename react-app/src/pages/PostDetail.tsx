@@ -80,6 +80,23 @@ const PostDetail: React.FC = () => {
     }
   };
 
+  const handleProfilePictureClick = (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!currentPost?.user?.userId) return;
+    
+    // Navigate to appropriate profile page
+    if (user?.userId === currentPost.user.userId) {
+      // Current user's profile
+      navigate('/profile');
+    } else {
+      // Other user's profile
+      navigate(`/user/${currentPost.user.userId}`);
+    }
+  };
+
   const canEditOrDelete = user && currentPost && (
     user.userId === currentPost.userId || 
     user.role === 'site_admin' || 
@@ -206,7 +223,15 @@ const PostDetail: React.FC = () => {
           <Box display="flex" alignItems="center" mb={3}>
             <Avatar 
               src={currentPost.user?.profilePicture || undefined}
-              sx={{ mr: 2 }}
+              sx={{ 
+                mr: 2,
+                cursor: 'pointer',
+                transition: 'transform 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                }
+              }}
+              onClick={handleProfilePictureClick}
             >
               {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
             </Avatar>

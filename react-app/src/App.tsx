@@ -26,6 +26,7 @@ import './App.css';
 
 // Lazy load heavier components
 const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
+const OtherUserProfile = lazy(() => import('./pages/OtherUserProfile.tsx'));
 
 function App() {
   return (
@@ -68,6 +69,11 @@ function App() {
                 <Route path="/profile/:userId" element={
                   <ProtectedRoute>
                     <UserProfile />
+                  </ProtectedRoute>
+                } />
+                <Route path="/user/:userId" element={
+                  <ProtectedRoute>
+                    <OtherUserProfile />
                   </ProtectedRoute>
                 } />
                 <Route path="/pets" element={<AllPets />} />
