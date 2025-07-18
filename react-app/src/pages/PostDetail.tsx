@@ -12,10 +12,12 @@ import {
   Divider
 } from '@mui/material';
 import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner, LikeButton, StatusChip } from '../components/ui';
+import { LoadingSpinner, LikeButton, StatusChip, FollowButton } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
+import { userFollowService } from '../api/userFollow.api';
+import { formatDate } from '../utils/dateUtils';
 import type { PostType } from '../models/post.types';
 import { PostStatus } from '../models/post.types';
 
@@ -25,12 +27,42 @@ const PostDetail: React.FC = () => {
   const { user } = useAuth();
   const { currentPost, loading, error, fetchPost, deletePost } = usePost();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchPost(parseInt(id));
     }
   }, [id, fetchPost]);
+
+  // Load follow status for the post author
+  useEffect(() => {
+    const loadFollowStatus = async () => {
+      if (!user?.userId || !currentPost?.user?.userId || user.userId === currentPost.userId) {
+        setFollowStatusLoaded(true);
+        return;
+      }
+
+      try {
+        const status = await userFollowService.isFollowing(currentPost.user.userId);
+        setIsFollowing(status);
+      } catch (error) {
+        console.debug('Failed to load follow status:', error);
+      } finally {
+        setFollowStatusLoaded(true);
+      }
+    };
+
+    if (currentPost) {
+      loadFollowStatus();
+    }
+  }, [currentPost?.user?.userId, user?.userId]);
+
+  // Handle follow status change
+  const handleFollowChange = (newFollowStatus: boolean) => {
+    setIsFollowing(newFollowStatus);
+  };
 
   const getPostTypeLabel = (postType: PostType): string => {
     const typeMap: { [key: number]: string } = {
@@ -233,31 +265,48 @@ const PostDetail: React.FC = () => {
           </Typography>
 
           {/* Author and Date */}
-          <Box display="flex" alignItems="center" mb={3}>
-            <Avatar 
-              src={currentPost.user?.profilePicture || undefined}
-              sx={{ 
-                mr: 2,
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease',
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                }
-              }}
-              onClick={handleProfilePictureClick}
-            >
-              {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1" fontWeight="medium">
-                {currentPost.user?.firstName && currentPost.user?.lastName 
-                  ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
-                  : currentPost.user?.username}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Posted {formatDate(currentPost.createdAt)}
-              </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+            <Box display="flex" alignItems="center">
+              <Avatar 
+                src={currentPost.user?.profilePicture || undefined}
+                sx={{ 
+                  mr: 2,
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                  }
+                }}
+                onClick={handleProfilePictureClick}
+              >
+                {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="medium">
+                  {currentPost.user?.firstName && currentPost.user?.lastName 
+                    ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
+                    : currentPost.user?.username}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Posted {formatDate(currentPost.createdAt)}
+                </Typography>
+              </Box>
             </Box>
+            
+            {/* Follow button - only show for authenticated users viewing other users' posts */}
+            {user && !isOwner && currentPost.user && (
+              <>
+                {followStatusLoaded && (
+                  <FollowButton
+                    userId={currentPost.user.userId}
+                    isFollowing={isFollowing}
+                    onFollowChange={handleFollowChange}
+                    size="medium"
+                    variant="outlined"
+                  />
+                )}
+              </>
+            )}
           </Box>
 
           <Divider sx={{ my: 3 }} />

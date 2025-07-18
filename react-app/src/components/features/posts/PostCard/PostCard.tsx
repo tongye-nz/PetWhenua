@@ -202,8 +202,8 @@ const PostCard: React.FC<PostCardProps> = ({
             </Text>
           </Box>
           
-          {/* Follow button - only show for other users' posts */}
-          {!isOwner && post.user && (
+          {/* Follow button - only show for authenticated users viewing other users' posts */}
+          {user && !isOwner && post.user && (
             <>
               {followStatusLoaded && (
                 <FollowButton
