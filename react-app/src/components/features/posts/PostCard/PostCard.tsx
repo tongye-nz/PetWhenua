@@ -275,32 +275,21 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
                       const profilePic = participant.pet?.profilePicture;
                       if (!profilePic) return undefined;
                       
-                      console.log('Pet profile picture:', {
-                        petName: participant.pet?.name,
-                        profilePicLength: profilePic.length,
-                        profilePicStart: profilePic.substring(0, 100),
-                        isHttp: profilePic.startsWith('http'),
-                        isData: profilePic.startsWith('data:')
-                      });
-                      
                       // If it's already a full URL, use it directly
                       if (profilePic.startsWith('http')) return profilePic;
                       
                       // If it's a data URL (base64), use it directly 
                       // Data URLs don't make HTTP requests, so length is less of an issue
                       if (profilePic.startsWith('data:')) {
-                        console.log('Using data URL for pet:', participant.pet?.name);
                         return profilePic;
                       }
                       
                       // If it's a file path, construct the full URL
                       if (profilePic.length < 500) { // Only if path is reasonable length
                         const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                        console.log('Constructed URL:', fullUrl);
                         return fullUrl;
                       }
                       
-                      console.log('Profile picture too long, skipping');
                       return undefined;
                     })()}
                     sx={{

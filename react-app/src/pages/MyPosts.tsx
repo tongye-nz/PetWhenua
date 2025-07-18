@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -32,7 +32,8 @@ const MyPosts: React.FC = () => {
     return posts.filter(post => post.status === status);
   };
 
-  const getTabCounts = () => {
+  // **PERFORMANCE OPTIMIZATION: Memoize tab counts to prevent recalculation on every render**
+  const counts = useMemo(() => {
     return {
       all: posts.length,
       active: posts.filter(p => p.status === 0).length, // PostStatus.Active
@@ -42,7 +43,7 @@ const MyPosts: React.FC = () => {
       cancelled: posts.filter(p => p.status === 4).length, // PostStatus.Cancelled
       pending: posts.filter(p => p.status === 5).length, // PostStatus.Pending
     };
-  };
+  }, [posts]); // Only recalculate when posts array changes
 
   const tabs = [
     { label: 'All', status: undefined },
@@ -54,8 +55,10 @@ const MyPosts: React.FC = () => {
     { label: 'Pending', status: 5 as PostStatus }, // PostStatus.Pending
   ];
 
-  const counts = getTabCounts();
-  const currentPosts = filterPostsByStatus(tabs[selectedTab].status);
+  // **PERFORMANCE OPTIMIZATION: Memoize current posts filtering**
+  const currentPosts = useMemo(() => {
+    return filterPostsByStatus(tabs[selectedTab].status);
+  }, [posts, selectedTab]); // Only recalculate when posts or selected tab changes
 
   const handleCreatePost = () => {
     navigate('/create-post');
