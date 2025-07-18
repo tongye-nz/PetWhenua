@@ -82,6 +82,69 @@ const Posts: React.FC = () => {
     }
   }, [filters.region, filters.district, handleFilterChange]);
 
+  // Re-filter following posts when filters change
+  useEffect(() => {
+    if (showingFollowingPosts) {
+      // Re-apply current filters to the original following posts
+      const refetchFollowingPosts = async () => {
+        try {
+          setFollowingLoading(true);
+          
+          // Get list of users the current user is following
+          const followedUsers = await userFollowService.getMyFollowing();
+          
+          if (followedUsers.length === 0) {
+            setFollowingPosts([]);
+            setFollowingLoading(false);
+            return;
+          }
+          
+          // Get posts from all followed users
+          const allFollowingPosts: Post[] = [];
+          
+          await Promise.all(
+            followedUsers.map(async (user) => {
+              try {
+                const userPosts = await postService.getUserPosts(user.userId);
+                allFollowingPosts.push(...userPosts);
+              } catch (error) {
+                console.error(`Failed to fetch posts for user ${user.userId}:`, error);
+              }
+            })
+          );
+          
+          // Apply current filters
+          let filteredFollowingPosts = allFollowingPosts;
+          
+          if (filters.postType !== undefined) {
+            filteredFollowingPosts = filteredFollowingPosts.filter(post => post.postType === filters.postType);
+          }
+          
+          if (filters.region) {
+            filteredFollowingPosts = filteredFollowingPosts.filter(post => 
+              post.location && post.location.includes(filters.region!)
+            );
+          }
+          
+          if (filters.district) {
+            filteredFollowingPosts = filteredFollowingPosts.filter(post => 
+              post.location && post.location.includes(filters.district!)
+            );
+          }
+          
+          filteredFollowingPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setFollowingPosts(filteredFollowingPosts);
+        } catch (error) {
+          console.error('Failed to re-filter following posts:', error);
+        } finally {
+          setFollowingLoading(false);
+        }
+      };
+      
+      refetchFollowingPosts();
+    }
+  }, [filters.postType, filters.region, filters.district, showingFollowingPosts]);
+
   const handleCreatePost = () => {
     // Navigate to create post page
     navigate('/create-post');
@@ -146,10 +209,32 @@ const Posts: React.FC = () => {
           })
         );
         
-        // Sort posts by creation date (newest first)
-        allFollowingPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        // Apply current filters to the following posts
+        let filteredFollowingPosts = allFollowingPosts;
         
-        setFollowingPosts(allFollowingPosts);
+        // Filter by post type if specified
+        if (filters.postType !== undefined) {
+          filteredFollowingPosts = filteredFollowingPosts.filter(post => post.postType === filters.postType);
+        }
+        
+        // Filter by region if specified
+        if (filters.region) {
+          filteredFollowingPosts = filteredFollowingPosts.filter(post => 
+            post.location && post.location.includes(filters.region!)
+          );
+        }
+        
+        // Filter by district if specified
+        if (filters.district) {
+          filteredFollowingPosts = filteredFollowingPosts.filter(post => 
+            post.location && post.location.includes(filters.district!)
+          );
+        }
+        
+        // Sort posts by creation date (newest first)
+        filteredFollowingPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
+        setFollowingPosts(filteredFollowingPosts);
       } catch (error) {
         console.error('Failed to fetch following posts:', error);
         setShowingFollowingPosts(false);
@@ -342,7 +427,9 @@ const Posts: React.FC = () => {
         showActions={!!user}
         emptyMessage={
           showingFollowingPosts
-            ? 'No posts from users you follow. Try following some users to see their posts here!'
+            ? filters.postType !== undefined || filters.region || filters.district
+              ? `No ${filters.postType !== undefined ? getPostTypeDisplayName(filters.postType).toLowerCase().replace(' posts', '') + ' posts' : 'posts'} from users you follow matching your filters.`
+              : 'No posts from users you follow. Try following some users to see their posts here!'
             : filters.postType !== undefined || filters.userId !== undefined
             ? 'No posts found matching your filters'
             : 'No posts found'
