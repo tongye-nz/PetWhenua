@@ -25,16 +25,6 @@ const PostDetail: React.FC = () => {
   const { currentPost, loading, error, fetchPost, deletePost } = usePost();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleProfileClick = (event: React.MouseEvent) => {
-    // Prevent event bubbling
-    event.preventDefault();
-    event.stopPropagation();
-    
-    if (currentPost?.user?.userId) {
-      navigate(`/user/${currentPost.user.userId}`);
-    }
-  };
-
   useEffect(() => {
     if (id) {
       fetchPost(parseInt(id));
@@ -216,15 +206,7 @@ const PostDetail: React.FC = () => {
           <Box display="flex" alignItems="center" mb={3}>
             <Avatar 
               src={currentPost.user?.profilePicture || undefined}
-              sx={{ 
-                mr: 2,
-                cursor: 'pointer',
-                transition: 'transform 0.2s ease',
-                '&:hover': {
-                  transform: 'scale(1.1)',
-                }
-              }}
-              onClick={handleProfileClick}
+              sx={{ mr: 2 }}
             >
               {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
             </Avatar>

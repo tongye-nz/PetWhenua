@@ -70,11 +70,6 @@ function App() {
                     <UserProfile />
                   </ProtectedRoute>
                 } />
-                <Route path="/user/:userId" element={
-                  <ProtectedRoute>
-                    <UserProfile />
-                  </ProtectedRoute>
-                } />
                 <Route path="/pets" element={<AllPets />} />
                 <Route path="/my-pets" element={
                   <ProtectedRoute>
