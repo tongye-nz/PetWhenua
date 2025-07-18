@@ -14,8 +14,6 @@ import {
   TableSortLabel,
   TextField,
   InputAdornment,
-  Button,
-  Chip,
   MenuItem,
   Select,
   FormControl,
@@ -29,7 +27,7 @@ import {
 } from '@mui/icons-material';
 import { LoadingSpinner } from '../components/ui';
 import { userAPI, type UserListResponse } from '../api/user.api';
-import { ROLE_LABELS, isAdmin } from '../utils/userRoles';
+import { ROLE_LABELS } from '../utils/userRoles';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SortConfig {

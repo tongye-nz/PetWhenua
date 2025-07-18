@@ -17,7 +17,6 @@ import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import { userFollowService } from '../api/userFollow.api';
-import { formatDate } from '../utils/dateUtils';
 import type { PostType } from '../models/post.types';
 import { PostStatus } from '../models/post.types';
 
