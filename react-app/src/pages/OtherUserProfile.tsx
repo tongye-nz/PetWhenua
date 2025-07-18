@@ -23,6 +23,7 @@ import { petService } from '../api/pet.api';
 import type { User } from '../models/auth.types';
 import type { Post } from '../models/post.types';
 import type { Pet } from '../models/pet.types';
+import { PostStatus } from '../models/post.types';
 
 const OtherUserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -117,6 +118,17 @@ const OtherUserProfile: React.FC = () => {
   const handleViewPet = (pet: Pet) => {
     navigate(`/pet/${pet.petId}`);
   };
+
+  // Filter posts to only show Active, Sold, or Expired posts when viewing other users' profiles
+  const getVisiblePosts = (): Post[] => {
+    return userPosts.filter(post => 
+      post.status === PostStatus.Active || 
+      post.status === PostStatus.Sold || 
+      post.status === PostStatus.Expired
+    );
+  };
+
+  const visiblePosts = getVisiblePosts();
 
   if (isLoading) {
     return (
@@ -241,7 +253,7 @@ const OtherUserProfile: React.FC = () => {
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Typography variant="h6" fontWeight="bold" color="success.main">
-                  {userPosts.length}
+                  {visiblePosts.length}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Posts
@@ -355,9 +367,9 @@ const OtherUserProfile: React.FC = () => {
         {/* Posts Section */}
         <Paper elevation={3} sx={{ p: 4 }}>
           <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
-            Posts ({userPosts.length})
+            Posts ({visiblePosts.length})
           </Typography>
-          {userPosts.length === 0 ? (
+          {visiblePosts.length === 0 ? (
             <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
               <Typography variant="body1">
                 No posts yet
@@ -365,7 +377,7 @@ const OtherUserProfile: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-              {userPosts.map((post) => (
+              {visiblePosts.map((post) => (
                 <PostCard
                   key={post.postId}
                   post={post}
