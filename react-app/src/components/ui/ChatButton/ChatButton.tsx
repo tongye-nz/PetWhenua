@@ -3,6 +3,7 @@ import { IconButton, Tooltip, Badge } from '@mui/material';
 import { Chat, ChatBubble } from '@mui/icons-material';
 import { ChatWindow } from '../../features/chat/ChatWindow';
 import { chatService } from '../../../api/chat.api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface ChatButtonProps {
   userId?: number;
@@ -21,8 +22,14 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
   showUnreadBadge = false,
   tooltip = 'Open chat'
 }) => {
+  const { user } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = React.useState(0);
+
+  // Don't render chat button for unauthenticated users
+  if (!user) {
+    return null;
+  }
 
   // Load unread count if showing badge
   React.useEffect(() => {
