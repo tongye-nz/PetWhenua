@@ -20,7 +20,8 @@ export interface PostCardProps {
   compact?: boolean;
 }
 
-const PostCard: React.FC<PostCardProps> = ({
+// **PERFORMANCE OPTIMIZATION: Memoize PostCard to prevent unnecessary re-renders**
+const PostCard: React.FC<PostCardProps> = React.memo(({
   post,
   onView,
   onEdit,
@@ -468,6 +469,9 @@ const PostCard: React.FC<PostCardProps> = ({
       )}
     </Card>
   );
-};
+});
+
+// Add display name for debugging
+PostCard.displayName = 'PostCard';
 
 export default PostCard;

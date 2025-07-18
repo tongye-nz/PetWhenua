@@ -106,7 +106,7 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Load profile data from API with retry logic
+  // Load profile data from API with retry logic and parallel API calls
   const loadUserProfile = async (attemptNumber: number = 0): Promise<void> => {
     if (!targetUserId) {
       setError('User ID not available');
@@ -148,16 +148,40 @@ const UserProfile: React.FC = () => {
 
       const { region, district } = parseLocation(apiUser.location || '');
       
-      // Load pet count with error handling
-      let petCount = 0;
-      try {
-        const userPets = await petService.getUserPets(apiUser.userId);
-        petCount = userPets.length;
-      } catch (petError) {
-        console.error('Failed to load pets count:', petError);
-        // Continue with petCount = 0 if pets can't be loaded
-      }
+      // **PERFORMANCE OPTIMIZATION: Use Promise.allSettled for parallel API calls**
+      // This loads all data simultaneously instead of waiting for each call to complete
+      const [
+        petsResult,
+        followStatsResult,
+        postsResult,
+        followStatusResult
+      ] = await Promise.allSettled([
+        // Load pet count
+        petService.getUserPets(apiUser.userId).then(pets => pets.length).catch(() => 0),
+        
+        // Load follow stats
+        userFollowService.getUserFollowStats(apiUser.userId).catch(() => ({ followerCount: 0, followingCount: 0 })),
+        
+        // Load posts count (filter for moments)
+        postService.getUserPosts(apiUser.userId)
+          .then(posts => posts.filter(post => post.postType === PostType.Moment).length)
+          .catch(() => 0),
+        
+        // Check follow status (only if not own profile and user is authenticated)
+        (!isOwnProfile && user?.userId) 
+          ? userFollowService.isFollowing(apiUser.userId).catch(() => false)
+          : Promise.resolve(false)
+      ]);
+
+      // Extract results with fallbacks
+      const petCount = petsResult.status === 'fulfilled' ? petsResult.value : 0;
+      const followStats = followStatsResult.status === 'fulfilled' 
+        ? followStatsResult.value 
+        : { followerCount: 0, followingCount: 0 };
+      const postsCount = postsResult.status === 'fulfilled' ? postsResult.value : 0;
+      const followStatus = followStatusResult.status === 'fulfilled' ? followStatusResult.value : false;
       
+      // Update all state in a single batch
       setProfileData({
         id: apiUser.userId.toString(),
         username: apiUser.username,
@@ -172,31 +196,13 @@ const UserProfile: React.FC = () => {
         joinDate: new Date(apiUser.createdAt).toLocaleDateString()
       });
 
-      // Load follow stats with error handling
-      try {
-        await loadFollowStats(apiUser.userId);
-      } catch (followError) {
-        console.error('Failed to load follow stats:', followError);
-        // Continue without follow stats
-      }
+      setFollowStats({
+        followerCount: followStats.followerCount,
+        followingCount: followStats.followingCount
+      });
 
-      // Load posts count with error handling
-      try {
-        await loadPostsCount(apiUser.userId);
-      } catch (postsError) {
-        console.error('Failed to load posts count:', postsError);
-        // Continue without posts count
-      }
-
-      // Check if current user is following this profile (only if not own profile)
-      if (!isOwnProfile && user?.userId) {
-        try {
-          await checkFollowStatus(apiUser.userId);
-        } catch (followStatusError) {
-          console.error('Failed to check follow status:', followStatusError);
-          // Continue without follow status
-        }
-      }
+      setPostsCount(postsCount);
+      setIsFollowing(followStatus);
 
       // Reset retry count on success
       setRetryCount(0);
@@ -235,31 +241,6 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Load follow statistics
-  const loadFollowStats = async (userId: number) => {
-    try {
-      const stats = await userFollowService.getUserFollowStats(userId);
-      setFollowStats({
-        followerCount: stats.followerCount,
-        followingCount: stats.followingCount
-      });
-    } catch (error) {
-      console.error('Error loading follow stats:', error);
-    }
-  };
-
-  // Check if current user is following the profile user
-  const checkFollowStatus = async (profileUserId: number) => {
-    if (!user?.userId) return;
-    
-    try {
-      const status = await userFollowService.isFollowing(profileUserId);
-      setIsFollowing(status);
-    } catch (error) {
-      console.error('Error checking follow status:', error);
-    }
-  };
-
   // Toggle follow status
   const handleToggleFollow = async (targetUserId: number) => {
     if (!user?.userId) return;
@@ -276,17 +257,6 @@ const UserProfile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error toggling follow status:', error);
-    }
-  };
-
-  // Load posts count for the user
-  const loadPostsCount = async (userId: number) => {
-    try {
-      const userPosts = await postService.getUserPosts(userId);
-      const momentPosts = userPosts.filter(post => post.postType === PostType.Moment);
-      setPostsCount(momentPosts.length);
-    } catch (error) {
-      console.error('Error loading posts count:', error);
     }
   };
 
