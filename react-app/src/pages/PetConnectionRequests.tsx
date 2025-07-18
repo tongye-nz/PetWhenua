@@ -22,9 +22,8 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { petConnectionService } from '../api/petConnection.api';
-import { useAuth } from '../contexts/AuthContext';
-import type { PetConnection, PetConnectionStatus } from '../models/petConnection.types';
-import { formatDate } from '../utils/dateUtils';
+import type { PetConnection } from '../models/petConnection.types';
+import { PetConnectionStatus } from '../models/petConnection.types';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 const PetConnectionRequests: React.FC = () => {

@@ -288,19 +288,9 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
                       // If it's already a full URL, use it directly
                       if (profilePic.startsWith('http')) return profilePic;
                       
-                      // If it's a data URL (base64), use it directly 
-                      // Data URLs don't make HTTP requests, so length is less of an issue
-                      if (profilePic.startsWith('data:')) {
-                        return profilePic;
-                      }
-                      
                       // If it's a file path, construct the full URL
-                      if (profilePic.length < 500) { // Only if path is reasonable length
-                        const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                        return fullUrl;
-                      }
-                      
-                      return undefined;
+                      const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                      return fullUrl;
                     })()}
                     sx={{
                       width: 60,

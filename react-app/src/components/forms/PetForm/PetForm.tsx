@@ -15,6 +15,7 @@ export interface PetFormProps {
   isLoading?: boolean;
   error?: string | null;
   submitLabel?: string;
+  petId?: number; // For existing pets to enable immediate avatar uploads
 }
 
 const PetForm: React.FC<PetFormProps> = ({
@@ -23,7 +24,8 @@ const PetForm: React.FC<PetFormProps> = ({
   onCancel,
   isLoading = false,
   error = null,
-  submitLabel = 'Save Pet'
+  submitLabel = 'Save Pet',
+  petId
 }) => {
   const {
     formData,
@@ -32,6 +34,7 @@ const PetForm: React.FC<PetFormProps> = ({
     processedImageFile,
     handleInputChange,
     handlePictureUpload,
+    handlePictureUploadSuccess,
     handlePictureError,
     handleRemovePicture,
     handleSubmit
@@ -56,9 +59,11 @@ const PetForm: React.FC<PetFormProps> = ({
       <PetPictureUpload
         profilePicture={picturePreview}
         onPictureUpload={handlePictureUpload}
+        onPictureUploadSuccess={handlePictureUploadSuccess}
         onPictureError={handlePictureError}
         onRemovePicture={handleRemovePicture}
         error={errors.profilePicture}
+        petId={petId}
       />
 
       <PetBasicInfoForm

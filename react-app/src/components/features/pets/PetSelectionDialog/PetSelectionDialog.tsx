@@ -18,6 +18,7 @@ import {
   Chip
 } from '@mui/material';
 import { Pets } from '@mui/icons-material';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 import { LoadingSpinner } from '../../../ui';
 import { petService } from '../../../../api/pet.api';
 import { petConnectionService } from '../../../../api/petConnection.api';
@@ -269,7 +270,7 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
                           {pet.profilePicture ? (
                             <CardMedia
                               component="img"
-                              image={pet.profilePicture}
+                              image={getProfilePictureUrl(pet.profilePicture)}
                               alt={pet.name}
                               sx={{ 
                                 width: 60, 

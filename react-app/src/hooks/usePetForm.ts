@@ -91,12 +91,14 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
       profilePicture: undefined
     }));
 
-    // Use the processed image data URL for immediate preview
+    // Use the processed image data URL for immediate preview only
     setPicturePreview(processedImage.dataUrl);
-    handleInputChange('profilePicture', processedImage.dataUrl);
-
-    // Store the processed file for later upload when pet is saved
-    // We can't upload the pet profile picture until the pet is created and has an ID
+    
+    // DO NOT store the Base64 data URL in the form data's profilePicture field
+    // This prevents Base64 data from being saved to the database
+    // The profilePicture field should only contain actual file URLs
+    
+    // Store the processed file for upload handling
     setProcessedImageFile(processedImage.file);
 
     console.log(`Pet picture processed: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB`);
@@ -110,10 +112,18 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
     }));
   };
 
+  // Handle successful profile picture upload by updating form data with file URL
+  const handlePictureUploadSuccess = (fileUrl: string) => {
+    handleInputChange('profilePicture', fileUrl);
+    // Keep the current preview - it will show the same image
+    console.log(`Pet profile picture URL updated: ${fileUrl}`);
+  };
+
   // Remove profile picture
   const handleRemovePicture = () => {
     setPicturePreview('');
     handleInputChange('profilePicture', '');
+    setProcessedImageFile(null);
   };
 
   // Handle form submission
@@ -138,6 +148,7 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
     processedImageFile,
     handleInputChange,
     handlePictureUpload,
+    handlePictureUploadSuccess,
     handlePictureError,
     handleRemovePicture,
     handleSubmit,

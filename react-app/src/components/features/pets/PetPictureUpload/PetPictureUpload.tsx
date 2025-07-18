@@ -9,24 +9,29 @@ import {
 } from '@mui/material';
 import { PhotoCamera, Delete } from '@mui/icons-material';
 import { processPetProfileImage } from '../../../../utils/profileImageUtils';
+import { profilePictureService } from '../../../../api/profile.api';
 import type { ProcessedImageResult } from '../../../../utils/profileImageUtils';
 
 export interface PetPictureUploadProps {
   profilePicture: string;
   onPictureUpload: (processedImage: ProcessedImageResult) => void;
+  onPictureUploadSuccess?: (fileUrl: string) => void;
   onRemovePicture: () => void;
   onPictureError?: (error: string) => void;
   error?: string;
   compact?: boolean;
+  petId?: number; // If provided, upload immediately for existing pet
 }
 
 const PetPictureUpload: React.FC<PetPictureUploadProps> = ({
   profilePicture,
   onPictureUpload,
+  onPictureUploadSuccess,
   onRemovePicture,
   onPictureError,
   error,
-  compact = false
+  compact = false,
+  petId
 }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
@@ -46,10 +51,33 @@ const PetPictureUpload: React.FC<PetPictureUploadProps> = ({
       // Process the image with auto-crop, resize, and compress for pets
       const processedImage = await processPetProfileImage(file);
       
-      // Call the parent callback with processed image
+      // Call the parent callback with processed image (for preview)
       onPictureUpload(processedImage);
 
-      console.log(`Pet profile image processed: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB (${Math.round(processedImage.compressionRatio * 100)}% of original)`);
+      // If petId is provided (existing pet), upload immediately like user profiles
+      if (petId && onPictureUploadSuccess) {
+        try {
+          const uploadResult = await profilePictureService.uploadPetProfilePicture(petId, processedImage.file);
+          
+          console.log('Pet profile picture upload result:', uploadResult);
+          
+          // Update the form data with the server URL
+          onPictureUploadSuccess(uploadResult.profilePicture);
+          
+          console.log(`Pet profile picture uploaded successfully for pet ${petId}: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB`);
+        } catch (error) {
+          console.error('Failed to upload pet profile picture:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Failed to upload pet profile picture';
+          setProcessingError(errorMessage);
+          
+          if (onPictureError) {
+            onPictureError(errorMessage);
+          }
+        }
+      } else {
+        // For new pets, just process and store for later upload
+        console.log(`Pet profile image processed for new pet: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB (${Math.round(processedImage.compressionRatio * 100)}% of original)`);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to process image';
       setProcessingError(errorMessage);

@@ -6,6 +6,7 @@ import {
   IconButton
 } from '@mui/material';
 import { MoreVert } from '@mui/icons-material';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface PetCardImageProps {
   profilePicture?: string;
@@ -32,7 +33,7 @@ const PetCardImage: React.FC<PetCardImageProps> = ({
         <CardMedia
           component="img"
           height={imageHeight}
-          image={profilePicture}
+          image={getProfilePictureUrl(profilePicture)}
           alt={`${petName}'s photo`}
           sx={{ objectFit: 'cover' }}
         />

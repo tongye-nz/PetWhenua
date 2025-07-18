@@ -16,7 +16,6 @@ import { MoreVert, Edit, Delete, Save, Cancel, Person } from '@mui/icons-materia
 import { useAuth } from '../../../../contexts/AuthContext';
 import { commentService } from '../../../../api/comment.api';
 import type { Comment } from '../../../../models/comment.types';
-import { formatDate } from '../../../../utils/dateUtils';
 import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface CommentCardProps {

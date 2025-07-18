@@ -8,28 +8,21 @@ import {
   Typography,
   Avatar,
   Button,
-  Chip,
   Divider,
-  Alert,
-  CircularProgress
+  Alert
 } from '@mui/material';
 import {
   ArrowBack,
   LocationOn,
   Event,
   Edit,
-  Person,
   Delete,
   AttachMoney
 } from '@mui/icons-material';
-import { postService } from '../api/post.api';
 import { PostType, PostStatus } from '../models/post.types';
-import type { Post } from '../models/post.types';
 import { useAuth } from '../contexts/AuthContext';
-import { formatDate } from '../utils/dateUtils';
 import { StatusChip } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
-import PostImageGallery from '../components/PostImageGallery';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 import { LoadingSpinner, LikeButton, FollowButton } from '../components/ui';
 import { usePost } from '../contexts/PostContext';
@@ -357,17 +350,8 @@ const PostDetail: React.FC = () => {
                         // If it's already a full URL, use it directly
                         if (profilePic.startsWith('http')) return profilePic;
                         
-                        // If it's a data URL (base64), use it directly 
-                        if (profilePic.startsWith('data:')) {
-                          return profilePic;
-                        }
-                        
                         // If it's a file path, construct the full URL
-                        if (profilePic.length < 500) {
-                          return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                        }
-                        
-                        return undefined;
+                        return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
                       })()}
                       sx={{
                         width: 80,

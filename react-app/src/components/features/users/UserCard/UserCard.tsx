@@ -1,6 +1,5 @@
 import React from 'react';
 import { Card, CardContent, Avatar, Box } from '@mui/material';
-import { Person } from '@mui/icons-material';
 import { Text, FollowButton } from '../../../ui';
 import { useAuth } from '../../../../contexts/AuthContext';
 import type { User } from '../../../../models/auth.types';
@@ -25,7 +24,6 @@ const UserCard: React.FC<UserCardProps> = ({
   const isCurrentUser = currentUser?.userId === user.userId;
 
   const cardHeight = compact ? 150 : 200; // Reasonable height to accommodate 2-line names
-  const avatarSize = compact ? 40 : 56;
 
   return (
     <Card 

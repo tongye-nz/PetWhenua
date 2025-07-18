@@ -372,7 +372,7 @@ const PetDetail: React.FC = () => {
             {pet.profilePicture ? (
               <CardMedia
                 component="img"
-                image={pet.profilePicture}
+                image={getProfilePictureUrl(pet.profilePicture)}
                 alt={pet.name}
                 sx={{ 
                   width: '100%', 

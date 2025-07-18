@@ -60,6 +60,7 @@ const PetFormDialog: React.FC<PetFormDialogProps> = ({
           isLoading={isLoading}
           error={error}
           submitLabel={editingPet ? 'Update Pet' : 'Add Pet'}
+          petId={editingPet?.petId}
         />
       </DialogContent>
     </Dialog>

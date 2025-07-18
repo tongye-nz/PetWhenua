@@ -74,14 +74,6 @@ const CommentForm: React.FC<CommentFormProps> = ({
     }
   };
 
-  const getDisplayName = () => {
-    if (!user) return '';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    return user.username;
-  };
-
   if (!user) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
