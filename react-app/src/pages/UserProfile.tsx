@@ -7,15 +7,15 @@ import {
   Alert,
   Divider,
   Typography,
-  Button
+  Button,
+  Avatar
 } from '@mui/material';
 import { 
   ProfileAvatarSection,
   ProfileInfoForm,
   ProfileHeaderSection,
-  ProfileSummary,
-  FollowedUsersList,
-  UserPostsFeed
+  UserPostsFeed,
+  UserPetsSection
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
 import { useAuth } from '../contexts/AuthContext';
@@ -564,103 +564,165 @@ const UserProfile: React.FC = () => {
             </Alert>
           )}
 
-          {/* Enhanced Two-Column Responsive Layout */}
+          {/* Single Column Layout */}
           <Box sx={{ 
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' },
-            gap: { xs: 2, md: 3 },
-            alignItems: 'flex-start',
-            minHeight: { md: '70vh' }
+            flexDirection: 'column',
+            gap: 3,
+            maxWidth: '800px',
+            margin: '0 auto'
           }}>
-            {/* Left Column - Profile Summary & Followed Users */}
-            <Box sx={{ 
-              flex: { 
-                xs: '1 1 100%', 
-                md: '0 0 35%',
-                lg: '0 0 350px' 
-              },
-              minWidth: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 2,
-              // Remove restrictive height constraints to prevent content cutoff
-              alignSelf: 'flex-start'
-            }}>
-              {!isOwnProfile || !isEditing ? (
-                <>
-                  <ProfileSummary
-                    profileData={profileData}
-                    isOwnProfile={isOwnProfile}
-                    onEditClick={handleStartEditing}
-                    followerCount={followStats.followerCount}
-                    postsCount={postsCount}
-                    isFollowing={isFollowing}
-                    onFollowChange={async () => {
-                      if (targetUserId) {
-                        await handleToggleFollow(targetUserId);
-                      }
+            {!isOwnProfile || !isEditing ? (
+              <>
+                {/* Header Section - Centered Profile Info */}
+                <Box sx={{ 
+                  backgroundColor: 'white',
+                  borderRadius: '16px',
+                  padding: 4,
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid rgba(0, 0, 0, 0.05)',
+                  textAlign: 'center'
+                }}>
+                  {/* Centered Avatar */}
+                  <Avatar
+                    src={profileData.profilePicture}
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      mb: 2,
+                      mx: 'auto',
+                      bgcolor: 'primary.main',
+                      fontSize: '3rem',
+                      border: '4px solid',
+                      borderColor: 'background.paper',
+                      boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
                     }}
-                  />
+                  >
+                    {profileData.firstName?.charAt(0)}{profileData.lastName?.charAt(0)}
+                  </Avatar>
                   
-                  {/* Followed Users List */}
-                  {targetUserId && (
-                    <FollowedUsersList
-                      userId={targetUserId}
-                      isOwnProfile={isOwnProfile}
-                      maxUsers={6}
-                    />
+                  {/* User Info */}
+                  <Typography variant="h4" fontWeight="bold" gutterBottom>
+                    {profileData.firstName && profileData.lastName 
+                      ? `${profileData.firstName} ${profileData.lastName}`
+                      : profileData.username
+                    }
+                  </Typography>
+                  
+                  {profileData.firstName && profileData.lastName && (
+                    <Typography variant="h6" color="text.secondary" gutterBottom>
+                      @{profileData.username}
+                    </Typography>
                   )}
-                </>
-              ) : (
-                <>
-                  {/* Profile Picture Section for editing */}
-                  <ProfileAvatarSection
-                    profileData={profileData}
-                    formData={form.formData}
-                    isEditing={isOwnProfile && isEditing}
-                    onProfilePictureChange={handleProfilePictureChange}
-                    styles={userProfileStyles}
-                  />
-                </>
-              )}
-            </Box>
+                  
+                  {profileData.bio && (
+                    <Typography variant="body1" sx={{ mb: 2, maxWidth: '600px', mx: 'auto' }}>
+                      {profileData.bio}
+                    </Typography>
+                  )}
+                  
+                  {profileData.region && profileData.district && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      📍 {profileData.region}, {profileData.district}
+                    </Typography>
+                  )}
+                  
+                  {/* Stats */}
+                  <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center',
+                    gap: 4,
+                    mb: 3
+                  }}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h5" fontWeight="bold" color="primary">
+                        {profileData.petCount || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Pets
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h5" fontWeight="bold" color="success.main">
+                        {postsCount}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Posts
+                      </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h5" fontWeight="bold" color="info.main">
+                        {followStats.followerCount}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Followers
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  {/* Action Buttons */}
+                  {isOwnProfile ? (
+                    <Button
+                      variant="outlined"
+                      onClick={handleStartEditing}
+                      size="large"
+                    >
+                      Edit Profile
+                    </Button>
+                  ) : (
+                    <Button
+                      variant={isFollowing ? "outlined" : "contained"}
+                      onClick={async () => {
+                        if (targetUserId) {
+                          await handleToggleFollow(targetUserId);
+                        }
+                      }}
+                      size="large"
+                    >
+                      {isFollowing ? 'Unfollow' : 'Follow'}
+                    </Button>
+                  )}
+                  
+                  {profileData.joinDate && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 2, display: 'block' }}>
+                      Member since {profileData.joinDate}
+                    </Typography>
+                  )}
+                </Box>
 
-            {/* Right Column - Posts Feed or Edit Form */}
-            <Box sx={{ 
-              flex: '1 1 auto',
-              minWidth: 0,
-              width: { xs: '100%', md: '65%' },
-              maxHeight: { md: 'calc(100vh - 200px)' },
-              overflowY: { md: 'auto' }
-            }}>
-              {!isOwnProfile || !isEditing ? (
-                // Posts feed for viewing mode
-                targetUserId ? (
+                {/* Pets Section */}
+                {targetUserId && (
+                  <UserPetsSection
+                    userId={targetUserId}
+                    isOwnProfile={isOwnProfile}
+                  />
+                )}
+
+                {/* Posts Section */}
+                {targetUserId && (
                   <UserPostsFeed
                     userId={targetUserId}
                     isOwnProfile={isOwnProfile}
                     maxPosts={20}
                   />
-                ) : (
-                  <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
-                    height: '200px',
-                    backgroundColor: 'white',
-                    borderRadius: '12px'
-                  }}>
-                    <Typography color="text.secondary">
-                      Loading user data...
-                    </Typography>
-                  </Box>
-                )
-              ) : (
-                // Edit form for own profile
+                )}
+              </>
+            ) : (
+              // Edit form for own profile
+              <>
+                {/* Profile Picture Section for editing */}
+                <ProfileAvatarSection
+                  profileData={profileData}
+                  formData={form.formData}
+                  isEditing={isOwnProfile && isEditing}
+                  onProfilePictureChange={handleProfilePictureChange}
+                  styles={userProfileStyles}
+                />
+                
                 <Box sx={{ 
                   backgroundColor: 'white',
                   borderRadius: '12px',
-                  padding: 2,
+                  padding: 3,
                   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}>
                   <ProfileInfoForm
@@ -671,8 +733,8 @@ const UserProfile: React.FC = () => {
                     styles={userProfileStyles}
                   />
                 </Box>
-              )}
-            </Box>
+              </>
+            )}
           </Box>
         </Paper>
       </Container>

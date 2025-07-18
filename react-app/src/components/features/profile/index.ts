@@ -7,6 +7,7 @@ export { default as UserPostsFeed } from './UserPostsFeed';
 export { default as ProfileAvatarSection } from './ProfileAvatarSection';
 export { default as ProfileInfoForm } from './ProfileInfoForm';
 export { default as ProfileHeaderSection } from './ProfileHeaderSection';
+export { UserPetsSection } from './UserPetsSection';
 
 export type { ProfileHeaderProps } from './ProfileHeader';
 export type { ProfilePictureProps } from './ProfilePicture';
@@ -16,4 +17,5 @@ export type { FollowedUsersListProps } from './FollowedUsersList';
 export type { UserPostsFeedProps } from './UserPostsFeed';
 export type { ProfileAvatarSectionProps } from './ProfileAvatarSection';
 export type { ProfileInfoFormProps } from './ProfileInfoForm';
-export type { ProfileHeaderSectionProps } from './ProfileHeaderSection'; 
+export type { ProfileHeaderSectionProps } from './ProfileHeaderSection';
+export type { UserPetsSectionProps } from './UserPetsSection'; 

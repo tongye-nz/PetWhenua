@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
 import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
@@ -28,6 +29,7 @@ const PostCard: React.FC<PostCardProps> = ({
   compact = false
 }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [commentCount, setCommentCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -100,6 +102,16 @@ const PostCard: React.FC<PostCardProps> = ({
     }
   };
 
+  const handleProfileClick = (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components (like Card click)
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (post.user?.userId) {
+      navigate(`/user/${post.user.userId}`);
+    }
+  };
+
   const handleEdit = () => {
     handleMenuClose();
     if (onEdit) {
@@ -158,7 +170,16 @@ const PostCard: React.FC<PostCardProps> = ({
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar 
             src={post.user?.profilePicture || undefined}
-            sx={{ width: 32, height: 32 }}
+            sx={{ 
+              width: 32, 
+              height: 32,
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+              }
+            }}
+            onClick={handleProfileClick}
           >
             {!post.user?.profilePicture && (post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>
