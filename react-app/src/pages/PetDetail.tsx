@@ -29,6 +29,7 @@ import type { Pet, PetFormData } from '../models/pet.types';
 import type { PetConnectionStatus } from '../models/petConnection.types';
 import { formatPetAge, calculateAgeInYears } from '../models/pet.types';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { formatDate as formatDateUtil } from '../utils/dateUtils';
 
 const PetDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -232,11 +233,7 @@ const PetDetail: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return formatDateUtil(dateString);
   };
 
   const getAgeDisplay = () => {

@@ -29,6 +29,7 @@ import { LoadingSpinner } from '../components/ui';
 import { userAPI, type UserListResponse } from '../api/user.api';
 import { ROLE_LABELS } from '../utils/userRoles';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDateTime } from '../utils/dateUtils';
 
 interface SortConfig {
   field: keyof UserListResponse;
@@ -140,13 +141,7 @@ const AdminPanel: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NZ', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatDateTime(dateString);
   };
 
   const getRoleSelect = (user: UserListResponse) => (

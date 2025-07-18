@@ -8,6 +8,7 @@ import { Text, PetConnectionButton } from '../../../ui';
 import type { Pet } from '../../../../models/pet.types';
 import { formatPetAge } from '../../../../models/pet.types';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { getNzNow } from '../../../../utils/dateUtils';
 
 export interface PetCardContentProps {
   pet: Pet;
@@ -33,8 +34,9 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
       if (pet.age === 0) {
         // For pets marked as 0 years old, try to estimate months from creation date
         if (pet.createdAt) {
-          const createdDate = new Date(pet.createdAt);
-          const now = new Date();
+          // Parse the UTC date and get current NZ time for comparison
+          const createdDate = new Date(pet.createdAt + (pet.createdAt.endsWith('Z') ? '' : 'Z'));
+          const now = getNzNow();
           const monthsDiff = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44));
           
           if (monthsDiff >= 1) {

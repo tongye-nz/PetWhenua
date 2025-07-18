@@ -27,6 +27,7 @@ import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 import { LoadingSpinner, LikeButton, FollowButton } from '../components/ui';
 import { usePost } from '../contexts/PostContext';
 import { userFollowService } from '../api/userFollow.api';
+import { formatDateTime } from '../utils/dateUtils';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -198,13 +199,7 @@ const PostDetail: React.FC = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatDateTime(dateString);
   };
 
   return (

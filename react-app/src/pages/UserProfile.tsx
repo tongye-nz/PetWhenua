@@ -30,6 +30,7 @@ import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
+import { formatDate } from '../utils/dateUtils';
 
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -57,7 +58,7 @@ const UserProfile: React.FC = () => {
       district,
       profilePicture: user?.profilePicture || '',
       petCount: 0, // Will be loaded from API
-      joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
+              joinDate: user?.createdAt ? formatDate(user.createdAt) : formatDate(new Date().toISOString())
     };
   };
 
@@ -195,7 +196,7 @@ const UserProfile: React.FC = () => {
         district,
         profilePicture: apiUser.profilePicture || '',
         petCount: petCount,
-        joinDate: new Date(apiUser.createdAt).toLocaleDateString()
+        joinDate: formatDate(apiUser.createdAt)
       });
 
       setFollowStats({

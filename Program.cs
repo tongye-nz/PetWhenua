@@ -8,6 +8,7 @@ using PetWhenua.Repositories.Abstract;
 using PetWhenua.Repositories.Concrete;
 using PetWhenua.Services.Factories;
 using PetWhenua.Models.Configuration;
+using PetWhenua.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,14 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.MaxDepth = 32;
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        
+        // Configure DateTime serialization to always include timezone information
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.Converters.Add(new PetWhenua.Utils.UtcDateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new PetWhenua.Utils.UtcNullableDateTimeConverter());
+        
+        // Configure DateTime to serialize as UTC with 'Z' suffix
+        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.Never;
     });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

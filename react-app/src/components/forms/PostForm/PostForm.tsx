@@ -18,6 +18,7 @@ import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus }
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
+import { formatDateTimeForInput, getCurrentNzTimeForInput, isInputDateTimeInFuture } from '../../../utils/dateUtils';
 import { petWeddingService } from '../../../api/petWedding.api';
 
 export interface PostFormData {
@@ -56,21 +57,6 @@ export interface PostFormProps {
   onSubmit: (data: CreatePostRequest | UpdatePostRequest, createdPost?: Post) => void;
   onCancel?: () => void;
 }
-
-// Helper function to format datetime for datetime-local input
-const formatDateTimeForInput = (dateString?: string): string => {
-  if (!dateString) return '';
-  
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '';
-    
-    // Format to YYYY-MM-DDTHH:MM (required for datetime-local input)
-    return date.toISOString().slice(0, 16);
-  } catch {
-    return '';
-  }
-};
 
 const PostForm: React.FC<PostFormProps> = ({
   mode,
@@ -228,23 +214,21 @@ const PostForm: React.FC<PostFormProps> = ({
       if (!formData.eventDate) {
         newErrors.eventDate = 'Event date and time are required for this post type';
       } else {
-        const eventDateTime = new Date(formData.eventDate);
-        const now = new Date();
-        
-        // Check if the selected datetime is in the past
-        if (eventDateTime <= now) {
-          newErrors.eventDate = 'Event date and time must be in the future';
+        // Check if the selected datetime is in the future (New Zealand time)
+        if (!isInputDateTimeInFuture(formData.eventDate)) {
+          newErrors.eventDate = 'Event date and time must be in the future (New Zealand time)';
         }
         
         // Check if the selected datetime is too far in the future (optional - 2 years max)
+        const inputDate = new Date(formData.eventDate);
         const twoYearsFromNow = new Date();
-        twoYearsFromNow.setFullYear(now.getFullYear() + 2);
-        if (eventDateTime > twoYearsFromNow) {
+        twoYearsFromNow.setFullYear(twoYearsFromNow.getFullYear() + 2);
+        if (inputDate > twoYearsFromNow) {
           newErrors.eventDate = 'Event date cannot be more than 2 years in the future';
         }
         
         // Validate datetime format
-        if (isNaN(eventDateTime.getTime())) {
+        if (isNaN(inputDate.getTime())) {
           newErrors.eventDate = 'Please enter a valid date and time';
         }
       }
@@ -674,13 +658,10 @@ const PostForm: React.FC<PostFormProps> = ({
               
               // Real-time validation for event date
               if (value) {
-                const eventDateTime = new Date(value);
-                const now = new Date();
-                
-                if (eventDateTime <= now) {
+                if (!isInputDateTimeInFuture(value)) {
                   setErrors(prev => ({
                     ...prev,
-                    eventDate: 'Event date and time must be in the future'
+                    eventDate: 'Event date and time must be in the future (New Zealand time)'
                   }));
                 } else {
                   // Clear error if date is valid
@@ -698,10 +679,10 @@ const PostForm: React.FC<PostFormProps> = ({
               }
             }}
             error={!!errors.eventDate}
-            helperText={errors.eventDate || 'Select a future date and time for your event'}
+            helperText={errors.eventDate || 'Select a future date and time for your event (New Zealand time)'}
             required
             disabled={loading}
-            min={new Date(Date.now() + 60000).toISOString().slice(0, 16)} // Current time + 1 minute
+            min={getCurrentNzTimeForInput()} // Current New Zealand time
           />
         )}
 

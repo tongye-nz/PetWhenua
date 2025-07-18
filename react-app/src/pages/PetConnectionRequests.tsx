@@ -25,6 +25,7 @@ import { petConnectionService } from '../api/petConnection.api';
 import type { PetConnection } from '../models/petConnection.types';
 import { PetConnectionStatus } from '../models/petConnection.types';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { formatDateTime } from '../utils/dateUtils';
 
 const PetConnectionRequests: React.FC = () => {
   const navigate = useNavigate();
@@ -330,13 +331,7 @@ const PetConnectionRequests: React.FC = () => {
                 {/* Request Date */}
                 <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="caption" color="text.secondary">
-                    Request sent: {new Date(connection.requestedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    Request sent: {formatDateTime(connection.requestedAt)}
                   </Typography>
                 </Box>
               </CardContent>
