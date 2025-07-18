@@ -17,6 +17,7 @@ import { CommentSection } from '../components/features/comments';
 import { usePost } from '../contexts/PostContext';
 import { useAuth } from '../contexts/AuthContext';
 import type { PostType } from '../models/post.types';
+import { PostStatus } from '../models/post.types';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -98,9 +99,18 @@ const PostDetail: React.FC = () => {
   };
 
   // Only post authors can edit or delete their own posts
-  const canEditOrDelete = user && currentPost && (
-    user.userId === currentPost.userId
+  const isOwner = user && currentPost && user.userId === currentPost.userId;
+  
+  // Users can edit their own posts only if status is Active, Inactive, or Pending
+  // Cannot edit if status is Sold, Expired, or Cancelled
+  const canEdit = isOwner && (
+    currentPost.status === PostStatus.Active || 
+    currentPost.status === PostStatus.Inactive || 
+    currentPost.status === PostStatus.Pending
   );
+  
+  // Users can always delete their own posts regardless of status
+  const canDelete = isOwner;
 
   if (loading && !currentPost) {
     return (
@@ -170,26 +180,30 @@ const PostDetail: React.FC = () => {
           Back to Posts
         </Button>
         
-        {canEditOrDelete && (
+        {(canEdit || canDelete) && (
           <Box ml="auto" display="flex" gap={1}>
-            <Button
-              startIcon={<Edit />}
-              onClick={handleEdit}
-              variant="outlined"
-              size="small"
-            >
-              Edit
-            </Button>
-            <Button
-              startIcon={<Delete />}
-              onClick={handleDelete}
-              variant="outlined"
-              color="error"
-              size="small"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
+            {canEdit && (
+              <Button
+                startIcon={<Edit />}
+                onClick={handleEdit}
+                variant="outlined"
+                size="small"
+              >
+                Edit
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                startIcon={<Delete />}
+                onClick={handleDelete}
+                variant="outlined"
+                color="error"
+                size="small"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            )}
           </Box>
         )}
       </Box>
