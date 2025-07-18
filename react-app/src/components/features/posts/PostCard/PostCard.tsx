@@ -111,8 +111,17 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = (event?: React.MouseEvent) => {
+    // Prevent event propagation to avoid triggering card click (navigation)
+    if (event) {
+      event.stopPropagation();
+    }
     handleMenuClose();
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
+    if (!confirmed) return;
+    
     if (onDelete) {
       onDelete(post);
     }
@@ -430,7 +439,10 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
           {canEdit && (
             <IconButton
               size="small"
-              onClick={handleEdit}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleEdit();
+              }}
               sx={{ 
                 bgcolor: 'background.paper',
                 boxShadow: 1,
@@ -443,7 +455,10 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
           {canDelete && (
             <IconButton
               size="small"
-              onClick={handleDelete}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleDelete(event);
+              }}
               sx={{ 
                 bgcolor: 'background.paper',
                 boxShadow: 1,

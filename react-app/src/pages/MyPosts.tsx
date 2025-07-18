@@ -18,8 +18,10 @@ import type { Post, PostStatus } from '../models/post.types';
 const MyPosts: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { posts, loading, error, fetchPosts, clearError } = usePost();
+  const { posts, loading, error, fetchPosts, clearError, deletePost } = usePost();
   const [selectedTab, setSelectedTab] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [deleteError, setDeleteError] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -70,13 +72,26 @@ const MyPosts: React.FC = () => {
   };
 
   const handleDeletePost = async (post: Post) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        // The actual delete logic will be handled by PostContext
-        console.log('Delete post:', post.postId);
-      } catch (error) {
-        console.error('Failed to delete post:', error);
-      }
+    // Clear any existing messages
+    setSuccessMessage('');
+    setDeleteError('');
+    
+    try {
+      // Use PostContext's deletePost method to actually delete the post
+      await deletePost(post.postId);
+      
+      // Show success message
+      setSuccessMessage(`Post "${post.title}" has been deleted successfully.`);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+      
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      setDeleteError('Failed to delete post. Please try again.');
+      
+      // Clear error message after 8 seconds
+      setTimeout(() => setDeleteError(''), 8000);
     }
   };
 
@@ -128,6 +143,28 @@ const MyPosts: React.FC = () => {
           onClose={clearError}
         >
           {error}
+        </Alert>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 2 }}
+          onClose={() => setSuccessMessage('')}
+        >
+          {successMessage}
+        </Alert>
+      )}
+
+      {/* Delete Error Message */}
+      {deleteError && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          onClose={() => setDeleteError('')}
+        >
+          {deleteError}
         </Alert>
       )}
 
