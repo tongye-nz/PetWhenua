@@ -44,13 +44,15 @@ const PetBasicInfoForm: React.FC<PetBasicInfoFormProps> = ({
 
       {/* Birth Date and Gender Row */}
       <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-        <PetBirthDateSelector
-          formData={formData}
-          errors={errors}
-          onInputChange={onInputChange}
-        />
+        <Box sx={{ flex: '1' }}>
+          <PetBirthDateSelector
+            formData={formData}
+            errors={errors}
+            onInputChange={onInputChange}
+          />
+        </Box>
 
-        <FormControl fullWidth>
+        <FormControl sx={{ flex: '0 0 180px' }}>
           <InputLabel>Gender</InputLabel>
           <Select
             value={formData.gender}

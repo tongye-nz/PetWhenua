@@ -37,7 +37,7 @@ const PetBirthDateSelector: React.FC<PetBirthDateSelectorProps> = ({
 
   return (
     <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-      <FormControl fullWidth error={!!errors.birthYear} required>
+      <FormControl sx={{ flex: '0 0 100px' }} error={!!errors.birthYear} required>
         <InputLabel>Birth Year</InputLabel>
         <Select
           value={formData.birthYear}
@@ -53,7 +53,7 @@ const PetBirthDateSelector: React.FC<PetBirthDateSelectorProps> = ({
         {errors.birthYear && <FormHelperText>{errors.birthYear}</FormHelperText>}
       </FormControl>
 
-      <FormControl fullWidth>
+      <FormControl sx={{ flex: '1' }}>
         <InputLabel>Birth Month (Optional)</InputLabel>
         <Select
           value={formData.birthMonth || ''}

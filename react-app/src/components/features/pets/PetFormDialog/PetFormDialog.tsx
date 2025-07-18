@@ -46,7 +46,7 @@ const PetFormDialog: React.FC<PetFormDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
     >
       <DialogTitle>
