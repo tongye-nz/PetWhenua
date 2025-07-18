@@ -129,6 +129,9 @@ namespace PetWhenua.Services
                 throw new UnauthorizedAccessException("Invalid username/email or password.");
             }
 
+            // Update last login time
+            await _userService.UpdateLastLoginAsync(user.UserId);
+
             // Generate JWT token
             var token = GenerateJwtToken(user);
             var userDto = MapToUserDto(user);

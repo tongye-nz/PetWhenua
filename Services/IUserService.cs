@@ -18,6 +18,7 @@ namespace PetWhenua.Services
         Task<bool> UsernameExistsAsync(string username);
         Task<bool> EmailExistsAsync(string email);
         Task<IEnumerable<User>> SearchUsersAsync(string query, int limit = 10);
+        Task<User> UpdateLastLoginAsync(int userId);
         
         // Admin methods
         Task<IEnumerable<AdminUserListDto>> GetUsersForAdminAsync();

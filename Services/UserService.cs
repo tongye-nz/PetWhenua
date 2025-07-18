@@ -159,6 +159,20 @@ namespace PetWhenua.Services
             return await _userRepository.SearchUsersAsync(query, limit);
         }
 
+        public async Task<User> UpdateLastLoginAsync(int userId)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID {userId} not found.");
+            }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            return await _userRepository.UpdateUserAsync(user);
+        }
+
         // Admin methods
         public async Task<IEnumerable<AdminUserListDto>> GetUsersForAdminAsync()
         {
@@ -174,7 +188,7 @@ namespace PetWhenua.Services
                 Role = user.Role,
                 IsActive = user.IsActive,
                 CreatedAt = user.CreatedAt,
-                LastLoginAt = null // TODO: Implement last login tracking if needed
+                LastLoginAt = user.LastLoginAt
             });
         }
 
