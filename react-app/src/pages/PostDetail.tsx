@@ -97,10 +97,9 @@ const PostDetail: React.FC = () => {
     }
   };
 
+  // Only post authors can edit or delete their own posts
   const canEditOrDelete = user && currentPost && (
-    user.userId === currentPost.userId || 
-    user.role === 'site_admin' || 
-    user.role === 'meetup_admin'
+    user.userId === currentPost.userId
   );
 
   if (loading && !currentPost) {

@@ -43,7 +43,8 @@ const PostCard: React.FC<PostCardProps> = ({
     post.status === PostStatus.Inactive || 
     post.status === PostStatus.Pending
   );
-  const canDelete = isOwner || user?.role === 'site_admin';
+  // Only post authors can delete their own posts
+  const canDelete = isOwner;
   const hasActions = showActions && (canEdit || canDelete);
 
   // Load comment count for engagement display
