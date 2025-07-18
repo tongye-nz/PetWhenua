@@ -18,6 +18,8 @@ import { PostsGrid } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import { NZ_REGIONS, type District } from '../data/nzLocations';
+import { userFollowService } from '../api/userFollow.api';
+import { postService } from '../api/post.api';
 import type { Post, PostFilters, PostType } from '../models/post.types';
 
 const Posts: React.FC = () => {
@@ -26,6 +28,9 @@ const Posts: React.FC = () => {
   const { user } = useAuth();
   const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
   const [availableDistricts, setAvailableDistricts] = useState<District[]>([]);
+  const [showingFollowingPosts, setShowingFollowingPosts] = useState<boolean>(false);
+  const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
+  const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
   // Get districts for a selected region
   const getDistrictsForRegion = (regionName: string): District[] => {
@@ -102,6 +107,58 @@ const Posts: React.FC = () => {
     navigate(`/post/${post.postId}`);
   };
 
+  // Handle following posts toggle
+  const handleFollowingPostsToggle = useCallback(async () => {
+    if (showingFollowingPosts) {
+      // If already showing following posts, switch back to all posts
+      setShowingFollowingPosts(false);
+      setFollowingPosts([]);
+      // Refresh the main posts list
+      fetchPosts(filters);
+    } else {
+      // Show posts from followed users
+      try {
+        setFollowingLoading(true);
+        setShowingFollowingPosts(true);
+        
+        // Get list of users the current user is following
+        const followedUsers = await userFollowService.getMyFollowing();
+        
+        if (followedUsers.length === 0) {
+          // User is not following anyone
+          setFollowingPosts([]);
+          setFollowingLoading(false);
+          return;
+        }
+        
+        // Get posts from all followed users
+        const allFollowingPosts: Post[] = [];
+        
+        // Fetch posts from each followed user
+        await Promise.all(
+          followedUsers.map(async (user) => {
+            try {
+              const userPosts = await postService.getUserPosts(user.userId);
+              allFollowingPosts.push(...userPosts);
+            } catch (error) {
+              console.error(`Failed to fetch posts for user ${user.userId}:`, error);
+            }
+          })
+        );
+        
+        // Sort posts by creation date (newest first)
+        allFollowingPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        
+        setFollowingPosts(allFollowingPosts);
+      } catch (error) {
+        console.error('Failed to fetch following posts:', error);
+        setShowingFollowingPosts(false);
+      } finally {
+        setFollowingLoading(false);
+      }
+    }
+  }, [showingFollowingPosts, filters, fetchPosts]);
+
   // Get display name for current post type
   const getPostTypeDisplayName = (postType?: PostType): string => {
     if (postType === undefined) return 'All Posts';
@@ -141,7 +198,7 @@ const Posts: React.FC = () => {
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
         <Text variant="h4" component="h1" fontWeight="bold">
-          {getPostTypeDisplayName(filters.postType)}
+          {showingFollowingPosts ? 'Posts from Following' : getPostTypeDisplayName(filters.postType)}
         </Text>
         {user && (
           <Button 
@@ -235,24 +292,27 @@ const Posts: React.FC = () => {
             
             {user && (
               <Button 
-                variant={filters.userId === user.userId ? 'primary' : 'outline'}
-                onClick={() => handleFilterChange({ 
-                  userId: filters.userId === user.userId ? undefined : user.userId 
-                })}
+                variant={showingFollowingPosts ? 'primary' : 'outline'}
+                onClick={handleFollowingPostsToggle}
                 fullWidth
+                disabled={followingLoading}
               >
-                My Posts
+                {followingLoading ? 'Loading...' : showingFollowingPosts ? 'All Posts' : 'Following Posts'}
               </Button>
             )}
             
             <Button 
               variant="outline" 
-              onClick={() => handleFilterChange({ 
-                postType: undefined, 
-                userId: undefined, 
-                region: undefined, 
-                district: undefined 
-              })}
+              onClick={() => {
+                setShowingFollowingPosts(false);
+                setFollowingPosts([]);
+                handleFilterChange({ 
+                  postType: undefined, 
+                  userId: undefined, 
+                  region: undefined, 
+                  district: undefined 
+                });
+              }}
               fullWidth
             >
               Clear Filters
@@ -274,14 +334,16 @@ const Posts: React.FC = () => {
 
       {/* Posts Grid */}
       <PostsGrid
-        posts={posts}
+        posts={showingFollowingPosts ? followingPosts : posts}
         onViewPost={handleViewPost}
         onEditPost={user ? handleEditPost : undefined}
         onDeletePost={user ? handleDeletePost : undefined}
-        isLoading={loading}
+        isLoading={showingFollowingPosts ? followingLoading : loading}
         showActions={!!user}
         emptyMessage={
-          filters.postType !== undefined || filters.userId !== undefined
+          showingFollowingPosts
+            ? 'No posts from users you follow. Try following some users to see their posts here!'
+            : filters.postType !== undefined || filters.userId !== undefined
             ? 'No posts found matching your filters'
             : 'No posts found'
         }
