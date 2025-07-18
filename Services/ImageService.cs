@@ -365,5 +365,218 @@ namespace PetWhenua.Services
         }
 
         #endregion
+
+        #region Profile Picture Methods
+
+        public async Task<string> UploadUserProfilePictureAsync(IFormFile file, int userId)
+        {
+            if (!IsValidImageFile(file))
+            {
+                throw new InvalidOperationException("Invalid image file.");
+            }
+
+            if (file.Length > _settings.ProfilePictureMaxFileSize)
+            {
+                throw new InvalidOperationException($"Profile picture file size exceeds maximum limit of {_settings.ProfilePictureMaxFileSize / 1024 / 1024}MB.");
+            }
+
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+
+            // Compress and resize for user profile picture
+            var compressedBytes = await CompressProfilePictureAsync(imageBytes, _settings.UserProfilePictureSize, _settings.ProfilePictureCompressionQuality);
+            
+            // Generate unique filename for user profile picture
+            var fileName = GenerateProfilePictureFileName(file.FileName, userId, "user");
+            var filePath = GetUserProfilePicturePath(fileName);
+
+            // Ensure directory exists
+            EnsureProfileDirectoryExists(_settings.UserProfilePicturePath);
+
+            // Delete old profile picture if exists
+            await DeleteOldUserProfilePictureAsync(userId);
+
+            // Save compressed image to disk
+            await File.WriteAllBytesAsync(filePath, compressedBytes);
+
+            return GetUserProfilePictureUrl(fileName);
+        }
+
+        public async Task<string> UploadPetProfilePictureAsync(IFormFile file, int userId, int petId)
+        {
+            if (!IsValidImageFile(file))
+            {
+                throw new InvalidOperationException("Invalid image file.");
+            }
+
+            if (file.Length > _settings.ProfilePictureMaxFileSize)
+            {
+                throw new InvalidOperationException($"Profile picture file size exceeds maximum limit of {_settings.ProfilePictureMaxFileSize / 1024 / 1024}MB.");
+            }
+
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            var imageBytes = memoryStream.ToArray();
+
+            // Compress and resize for pet profile picture
+            var compressedBytes = await CompressProfilePictureAsync(imageBytes, _settings.PetProfilePictureSize, _settings.ProfilePictureCompressionQuality);
+            
+            // Generate unique filename for pet profile picture
+            var fileName = GenerateProfilePictureFileName(file.FileName, userId, "pet", petId);
+            var filePath = GetPetProfilePicturePath(fileName);
+
+            // Ensure directory exists
+            EnsureProfileDirectoryExists(_settings.PetProfilePicturePath);
+
+            // Delete old profile picture if exists
+            await DeleteOldPetProfilePictureAsync(petId);
+
+            // Save compressed image to disk
+            await File.WriteAllBytesAsync(filePath, compressedBytes);
+
+            return GetPetProfilePictureUrl(fileName);
+        }
+
+        public async Task<bool> DeleteProfilePictureAsync(string imageUrl)
+        {
+            try
+            {
+                var fileName = ExtractFileNameFromUrl(imageUrl);
+                string filePath;
+
+                // Determine if it's a user or pet profile picture based on URL
+                if (imageUrl.Contains("/profiles/users/"))
+                {
+                    filePath = GetUserProfilePicturePath(fileName);
+                }
+                else if (imageUrl.Contains("/profiles/pets/"))
+                {
+                    filePath = GetPetProfilePicturePath(fileName);
+                }
+                else
+                {
+                    return false; // Not a profile picture
+                }
+
+                // Delete file from disk using Task.Run to avoid blocking
+                return await Task.Run(() =>
+                {
+                    if (File.Exists(filePath))
+                    {
+                        File.Delete(filePath);
+                        return true;
+                    }
+                    return false;
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete profile picture {ImageUrl}", imageUrl);
+                return false;
+            }
+        }
+
+        private async Task<byte[]> CompressProfilePictureAsync(byte[] imageBytes, int targetSize, int quality)
+        {
+            using var image = Image.Load(imageBytes);
+            
+            // Resize to exact square dimensions for profile pictures
+            image.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Size = new Size(targetSize, targetSize),
+                Mode = ResizeMode.Crop,
+                Position = AnchorPositionMode.Center
+            }));
+
+            using var outputStream = new MemoryStream();
+            await image.SaveAsJpegAsync(outputStream, new JpegEncoder { Quality = quality });
+            return outputStream.ToArray();
+        }
+
+        private string GenerateProfilePictureFileName(string originalFileName, int userId, string type, int? entityId = null)
+        {
+            var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+            var timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            var entityPart = entityId?.ToString() ?? "";
+            
+            return $"{type}_{userId}_{entityPart}_{timestamp}{extension}";
+        }
+
+        private void EnsureProfileDirectoryExists(string profilePath)
+        {
+            if (!Directory.Exists(profilePath))
+            {
+                Directory.CreateDirectory(profilePath);
+            }
+        }
+
+        private string GetUserProfilePicturePath(string fileName)
+        {
+            return Path.Combine(_settings.UserProfilePicturePath, fileName);
+        }
+
+        private string GetPetProfilePicturePath(string fileName)
+        {
+            return Path.Combine(_settings.PetProfilePicturePath, fileName);
+        }
+
+        private string GetUserProfilePictureUrl(string fileName)
+        {
+            return $"/uploads/profiles/users/{fileName}";
+        }
+
+        private string GetPetProfilePictureUrl(string fileName)
+        {
+            return $"/uploads/profiles/pets/{fileName}";
+        }
+
+        private async Task DeleteOldUserProfilePictureAsync(int userId)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    var userProfileDir = _settings.UserProfilePicturePath;
+                    if (Directory.Exists(userProfileDir))
+                    {
+                        var existingFiles = Directory.GetFiles(userProfileDir, $"user_{userId}_*");
+                        foreach (var file in existingFiles)
+                        {
+                            File.Delete(file);
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete old user profile picture for user {UserId}", userId);
+            }
+        }
+
+        private async Task DeleteOldPetProfilePictureAsync(int petId)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    var petProfileDir = _settings.PetProfilePicturePath;
+                    if (Directory.Exists(petProfileDir))
+                    {
+                        var existingFiles = Directory.GetFiles(petProfileDir, $"pet_*_{petId}_*");
+                        foreach (var file in existingFiles)
+                        {
+                            File.Delete(file);
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to delete old pet profile picture for pet {PetId}", petId);
+            }
+        }
+
+        #endregion
     }
 }

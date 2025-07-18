@@ -13,7 +13,7 @@ export interface PetFormDialogProps {
   isLoading: boolean;
   error: string | null;
   onClose: () => void;
-  onSubmit: (data: PetFormData) => Promise<void>;
+  onSubmit: (data: PetFormData, processedImageFile?: File | null) => Promise<void>;
 }
 
 const PetFormDialog: React.FC<PetFormDialogProps> = ({

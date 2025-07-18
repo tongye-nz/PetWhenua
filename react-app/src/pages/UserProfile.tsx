@@ -18,6 +18,8 @@ import {
   UserPostsFeed
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
+import type { ProcessedImageResult } from '../utils/profileImageUtils';
+import { profilePictureService } from '../api/profile.api';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
@@ -310,18 +312,43 @@ const UserProfile: React.FC = () => {
     loadUserProfile();
   }, [userId]);
 
-  // Handle profile picture change
-  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement file upload functionality
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        form.handleInputChange('profilePicture', result);
-      };
-      reader.readAsDataURL(file);
+  // Handle profile picture change with processed image
+  const handleProfilePictureChange = async (processedImage: ProcessedImageResult) => {
+    // Use the processed image data URL for immediate preview
+    form.handleInputChange('profilePicture', processedImage.dataUrl);
+    
+    try {
+      // Upload the processed file to the server
+      const uploadResult = await profilePictureService.uploadUserProfilePicture(processedImage.file);
+      
+      console.log('Profile picture upload result:', uploadResult);
+      
+      // Update the profile picture with the server URL
+      form.handleInputChange('profilePicture', uploadResult.profilePicture);
+      
+      // Update local profile data
+      setProfileData(prev => ({
+        ...prev,
+        profilePicture: uploadResult.profilePicture,
+      }));
+      
+      console.log('Updated profile data with:', uploadResult.profilePicture);
+
+      // Refresh auth context to update user data
+      await checkAuth();
+
+      console.log(`Profile picture uploaded successfully: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB`);
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+      // Keep the data URL as fallback
+      handleProfilePictureError(error instanceof Error ? error.message : 'Failed to upload profile picture');
     }
+  };
+
+  // Handle profile picture processing errors
+  const handleProfilePictureError = (error: string) => {
+    console.error('Profile picture processing error:', error);
+    // You can add toast notifications or other error handling here
   };
 
   // Show loading spinner during initial load
@@ -517,7 +544,7 @@ const UserProfile: React.FC = () => {
             onStartEditing={handleStartEditing}
             onSaveForm={handleSaveForm}
             onCancelEditing={handleCancelEditing}
-            styles={userProfileStyles}
+            styles={userProfileStyles as any}
           />
 
           <Divider style={userProfileStyles.divider} />
@@ -589,7 +616,8 @@ const UserProfile: React.FC = () => {
                     formData={form.formData}
                     isEditing={isOwnProfile && isEditing}
                     onProfilePictureChange={handleProfilePictureChange}
-                    styles={userProfileStyles}
+                    onProfilePictureError={handleProfilePictureError}
+                    styles={userProfileStyles as any}
                   />
                 </>
               )}
@@ -638,7 +666,7 @@ const UserProfile: React.FC = () => {
                     errors={form.errors}
                     isEditing={isOwnProfile && isEditing}
                     onInputChange={form.handleInputChange}
-                    styles={userProfileStyles}
+                    styles={userProfileStyles as any}
                   />
                 </Box>
               )}

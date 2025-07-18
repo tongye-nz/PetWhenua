@@ -22,9 +22,10 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { petConnectionService } from '../api/petConnection.api';
-
-import type { PetConnection } from '../models/petConnection.types';
-import { PetConnectionStatus } from '../models/petConnection.types';
+import { useAuth } from '../contexts/AuthContext';
+import type { PetConnection, PetConnectionStatus } from '../models/petConnection.types';
+import { formatDate } from '../utils/dateUtils';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 const PetConnectionRequests: React.FC = () => {
   const navigate = useNavigate();
@@ -209,7 +210,7 @@ const PetConnectionRequests: React.FC = () => {
                     <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
-                          src={requestingPet?.profilePicture || undefined}
+                          src={getProfilePictureUrl(requestingPet?.profilePicture)}
                           sx={{ 
                             width: 60, 
                             height: 60,
@@ -250,7 +251,7 @@ const PetConnectionRequests: React.FC = () => {
                     <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
-                          src={targetPet?.profilePicture || undefined}
+                          src={getProfilePictureUrl(targetPet?.profilePicture)}
                           sx={{ 
                             width: 60, 
                             height: 60,

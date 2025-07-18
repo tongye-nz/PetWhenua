@@ -8,17 +8,32 @@ import {
   Typography,
   Avatar,
   Button,
+  Chip,
+  Divider,
   Alert,
-  Divider
+  CircularProgress
 } from '@mui/material';
-import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner, LikeButton, StatusChip, FollowButton } from '../components/ui';
-import { CommentSection } from '../components/features/comments';
-import { usePost } from '../contexts/PostContext';
+import {
+  ArrowBack,
+  LocationOn,
+  Event,
+  Edit,
+  Person,
+  Delete,
+  AttachMoney
+} from '@mui/icons-material';
+import { postService } from '../api/post.api';
+import { PostType, PostStatus } from '../models/post.types';
+import type { Post } from '../models/post.types';
 import { useAuth } from '../contexts/AuthContext';
+import { formatDate } from '../utils/dateUtils';
+import { StatusChip } from '../components/ui';
+import { CommentSection } from '../components/features/comments';
+import PostImageGallery from '../components/PostImageGallery';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { LoadingSpinner, LikeButton, FollowButton } from '../components/ui';
+import { usePost } from '../contexts/PostContext';
 import { userFollowService } from '../api/userFollow.api';
-import type { PostType } from '../models/post.types';
-import { PostStatus } from '../models/post.types';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -267,7 +282,7 @@ const PostDetail: React.FC = () => {
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
             <Box display="flex" alignItems="center">
               <Avatar 
-                src={currentPost.user?.profilePicture || undefined}
+                src={getProfilePictureUrl(currentPost.user?.profilePicture)}
                 sx={{ 
                   mr: 2,
                   cursor: 'pointer',

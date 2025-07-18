@@ -46,6 +46,43 @@ export const userProfileStyles: Record<string, CSSProperties> = {
     borderRadius: '8px',
   },
 
+  // Layout sections for profile components
+  leftSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    marginBottom: '1.5rem',
+  },
+
+  rightSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: 1,
+  },
+
+  formSection: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  },
+
+  // Form field layouts
+  nameRow: {
+    display: 'flex',
+    gap: '1rem',
+    alignItems: 'flex-start',
+  },
+
+  halfWidth: {
+    flex: '1 1 50%',
+    minWidth: '0',
+  },
+
+  textField: {
+    width: '100%',
+    marginBottom: '1rem',
+  },
+
   // Enhanced Avatar Section
   avatarSection: {
     display: 'flex',

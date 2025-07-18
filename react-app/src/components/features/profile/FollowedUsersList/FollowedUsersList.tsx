@@ -13,6 +13,7 @@ import { PersonAdd, Group } from '@mui/icons-material';
 import { Text, FollowButton } from '../../../ui';
 import { userFollowService } from '../../../../api/userFollow.api';
 import type { User } from '../../../../models/auth.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface FollowedUsersListProps {
   userId: number;
@@ -245,7 +246,7 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
               >
                 {/* User Avatar */}
                 <Avatar 
-                  src={user.profilePicture}
+                  src={getProfilePictureUrl(user.profilePicture)}
                   sx={{ width: 40, height: 40 }}
                 >
                   {user.firstName?.charAt(0) || user.username.charAt(0)}

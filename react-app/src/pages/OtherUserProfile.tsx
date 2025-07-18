@@ -24,6 +24,7 @@ import type { User } from '../models/auth.types';
 import type { Post } from '../models/post.types';
 import type { Pet } from '../models/pet.types';
 import { PostStatus } from '../models/post.types';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 const OtherUserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -197,7 +198,7 @@ const OtherUserProfile: React.FC = () => {
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             {/* User Avatar */}
             <Avatar
-              src={profileUser.profilePicture || undefined}
+              src={getProfilePictureUrl(profileUser.profilePicture)}
               sx={{ 
                 width: 120, 
                 height: 120, 
@@ -306,7 +307,7 @@ const OtherUserProfile: React.FC = () => {
                       {pet.profilePicture ? (
                         <Box
                           component="img"
-                          src={pet.profilePicture}
+                          src={getProfilePictureUrl(pet.profilePicture)}
                           alt={pet.name}
                           sx={{
                             position: 'absolute',

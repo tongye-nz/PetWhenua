@@ -9,10 +9,12 @@ using System.Security.Claims;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IImageService _imageService;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IImageService imageService)
     {
         _userService = userService;
+        _imageService = imageService;
     }
 
     [HttpGet]
@@ -233,6 +235,45 @@ public class UsersController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("me/profile-picture")]
+    [Authorize]
+    public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile file)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid user token.");
+        }
+
+        try
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file provided.");
+            }
+
+            var imageUrl = await _imageService.UploadUserProfilePictureAsync(file, userId);
+            
+            // Update user's profile picture in database
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user != null)
+            {
+                user.ProfilePicture = imageUrl;
+                await _userService.UpdateUserAsync(user);
+            }
+
+            return Ok(new { profilePicture = imageUrl });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Failed to upload profile picture: {ex.Message}");
         }
     }
 

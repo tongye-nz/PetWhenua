@@ -3,7 +3,7 @@ import type { PetFormData, PetFormErrors } from '../models/pet.types';
 
 interface UsePetFormProps {
   initialData?: Partial<PetFormData>;
-  onSubmit: (data: PetFormData) => Promise<void>;
+  onSubmit: (data: PetFormData, processedImageFile?: File | null) => Promise<void>;
 }
 
 const initialFormData: PetFormData = {
@@ -24,6 +24,7 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
   });
   const [errors, setErrors] = useState<PetFormErrors>({});
   const [picturePreview, setPicturePreview] = useState<string>(initialData.profilePicture || '');
+  const [processedImageFile, setProcessedImageFile] = useState<File | null>(null);
 
   // Validation function
   const validateForm = (): boolean => {
@@ -82,36 +83,31 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
     }
   };
 
-  // Handle profile picture upload
-  const handlePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors(prev => ({
-          ...prev,
-          profilePicture: 'Image size must be less than 5MB'
-        }));
-        return;
-      }
+  // Handle profile picture upload with processed image
+  const handlePictureUpload = async (processedImage: import('../utils/profileImageUtils').ProcessedImageResult) => {
+    // Clear any previous errors
+    setErrors(prev => ({
+      ...prev,
+      profilePicture: undefined
+    }));
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({
-          ...prev,
-          profilePicture: 'Please select a valid image file'
-        }));
-        return;
-      }
+    // Use the processed image data URL for immediate preview
+    setPicturePreview(processedImage.dataUrl);
+    handleInputChange('profilePicture', processedImage.dataUrl);
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        setPicturePreview(result);
-        handleInputChange('profilePicture', result);
-      };
-      reader.readAsDataURL(file);
-    }
+    // Store the processed file for later upload when pet is saved
+    // We can't upload the pet profile picture until the pet is created and has an ID
+    setProcessedImageFile(processedImage.file);
+
+    console.log(`Pet picture processed: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB`);
+  };
+
+  // Handle profile picture processing errors
+  const handlePictureError = (error: string) => {
+    setErrors(prev => ({
+      ...prev,
+      profilePicture: error
+    }));
   };
 
   // Remove profile picture
@@ -129,7 +125,7 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
     }
 
     try {
-      await onSubmit(formData);
+      await onSubmit(formData, processedImageFile);
     } catch (err) {
       // Error is handled by parent component
     }
@@ -139,8 +135,10 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
     formData,
     errors,
     picturePreview,
+    processedImageFile,
     handleInputChange,
     handlePictureUpload,
+    handlePictureError,
     handleRemovePicture,
     handleSubmit,
     validateForm

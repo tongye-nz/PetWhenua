@@ -1,15 +1,22 @@
 import React from 'react';
 import { Box, Stack } from '@mui/material';
+import type { CSSProperties } from 'react';
 import { Input, LocationSelector } from '../../../';
 import { VALIDATION_RULES } from '../../../../utils/userProfileValidation';
-import type { UserProfileData } from '../../../../types/userProfile.types';
+import type { UserProfileData, UserProfileFormErrors } from '../../../../types/userProfile.types';
 
 export interface ProfileInfoFormProps {
   formData: UserProfileData;
-  errors: any; // Keep it flexible for now to match the hook's error structure
+  errors: UserProfileFormErrors;
   isEditing: boolean;
   onInputChange: (field: keyof UserProfileData, value: string) => void;
-  styles: any; // TODO: Type this properly when styles are moved to a proper system
+  styles: Record<string, CSSProperties> & {
+    rightSection: CSSProperties;
+    formSection: CSSProperties;
+    nameRow: CSSProperties;
+    halfWidth: CSSProperties;
+    textField: CSSProperties;
+  };
 }
 
 const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({

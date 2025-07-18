@@ -4,6 +4,7 @@ import { Person, Pets, Article, Group } from '@mui/icons-material';
 import { Button, Text } from '../../../ui';
 import { FollowButton } from '../../../ui';
 import type { UserProfileData } from '../../../../types/userProfile.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface ProfileSummaryProps {
   profileData: UserProfileData;
@@ -46,7 +47,7 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({
         {/* Avatar and Basic Info */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
           <Avatar
-            src={profileData.profilePicture}
+            src={getProfilePictureUrl(profileData.profilePicture)}
             sx={{ 
               width: { xs: 100, md: 120 }, 
               height: { xs: 100, md: 120 }, 

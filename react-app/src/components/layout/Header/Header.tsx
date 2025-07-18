@@ -27,6 +27,7 @@ import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NotificationCenter } from '../../features/notifications';
 import { isAdmin } from '../../../utils/userRoles';
+import { getProfilePictureUrl } from '../../../utils/imageUrlUtils';
 
 interface HeaderProps {
   onSignInClick?: () => void;
@@ -208,7 +209,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                     }}
                   >
                     <Avatar
-                      src={user?.profilePicture}
+                      src={getProfilePictureUrl(user?.profilePicture)}
                       sx={{ 
                         width: 40,
                         height: 40,
@@ -352,7 +353,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                 borderRadius: 1
               }}>
                 <Avatar 
-                  src={user?.profilePicture}
+                  src={getProfilePictureUrl(user?.profilePicture)}
                   sx={{ 
                     width: 36, 
                     height: 36, 

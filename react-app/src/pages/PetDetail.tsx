@@ -28,6 +28,7 @@ import { petConnectionService } from '../api/petConnection.api';
 import type { Pet, PetFormData } from '../models/pet.types';
 import type { PetConnectionStatus } from '../models/petConnection.types';
 import { formatPetAge, calculateAgeInYears } from '../models/pet.types';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 const PetDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -527,7 +528,7 @@ const PetDetail: React.FC = () => {
               onClick={() => navigate(`/pet/${connectedPet.petId}`)}
               >
                 <Avatar 
-                  src={connectedPet.profilePicture || undefined}
+                  src={getProfilePictureUrl(connectedPet.profilePicture)}
                   sx={{ 
                     width: 48, 
                     height: 48, 

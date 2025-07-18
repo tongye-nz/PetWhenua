@@ -25,6 +25,7 @@ import { chatService } from '../api/chat.api';
 import { useAuth } from '../contexts/AuthContext';
 import type { ChatMessage, ChatRoom } from '../models/chat.types';
 import type { User } from '../models/auth.types';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -224,7 +225,7 @@ const Messages: React.FC = () => {
                               variant="dot"
                               invisible={!isUserOnline(otherUser.userId)}
                             >
-                              <Avatar src={otherUser.profilePicture || undefined}>
+                              <Avatar src={getProfilePictureUrl(otherUser.profilePicture)}>
                                 {otherUser.firstName?.charAt(0)}
                               </Avatar>
                             </Badge>
@@ -260,7 +261,7 @@ const Messages: React.FC = () => {
                                 variant="dot"
                                 invisible={!isUserOnline(otherUser.userId)}
                               >
-                                <Avatar src={otherUser.profilePicture || undefined}>
+                                <Avatar src={getProfilePictureUrl(otherUser.profilePicture)}>
                                   {otherUser.firstName?.charAt(0)}
                                 </Avatar>
                               </Badge>
@@ -387,7 +388,7 @@ const Messages: React.FC = () => {
                         variant="dot"
                         invisible={!isUserOnline(searchUser.userId)}
                       >
-                        <Avatar src={searchUser.profilePicture || undefined}>
+                        <Avatar src={getProfilePictureUrl(searchUser.profilePicture)}>
                           {searchUser.firstName?.charAt(0)}
                         </Avatar>
                       </Badge>

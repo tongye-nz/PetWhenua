@@ -10,6 +10,7 @@ import { PostType, PostStatus } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../../utils/dateUtils';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface PostCardProps {
   post: Post;
@@ -187,7 +188,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar 
-            src={post.user?.profilePicture || undefined}
+            src={getProfilePictureUrl(post.user?.profilePicture)}
             sx={{ 
               width: 32, 
               height: 32,

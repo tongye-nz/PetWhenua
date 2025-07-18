@@ -9,6 +9,7 @@ export const API_CONFIG = {
     USERS: '/users',
     PETS: '/pets',
     POSTS: '/posts',
+    IMAGES: '/image',
   },
   TOKEN_KEY: 'authToken',
   USER_KEY: 'authUser',

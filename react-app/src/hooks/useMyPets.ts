@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
 import type { Pet, PetFormData } from '../models/pet.types';
 import { calculateAgeInYears } from '../models/pet.types';
+import { handlePetProfilePictureUpload } from '../utils/petProfileUpload';
 
 export const useMyPets = () => {
   const { user } = useAuth();
@@ -38,7 +39,7 @@ export const useMyPets = () => {
   }, [user?.userId]);
 
   // Handle create/edit pet
-  const handleSavePet = async (formData: PetFormData) => {
+  const handleSavePet = async (formData: PetFormData, processedImageFile?: File | null) => {
     if (!user?.userId) return;
 
     try {
@@ -56,17 +57,34 @@ export const useMyPets = () => {
         birthMonth: formData.birthMonth !== '' ? formData.birthMonth as number : undefined
       };
 
+      let petId: number;
+      
       if (editingPet) {
         // Update existing pet
         await petService.updatePet(editingPet.petId!, {
           ...petData,
           petId: editingPet.petId!
         });
+        petId = editingPet.petId!;
         setSuccess('Pet Profile updated successfully!');
       } else {
         // Create new pet
-        await petService.createPet(petData);
+        const createdPet = await petService.createPet(petData);
+        petId = createdPet.petId!;
         setSuccess('Pet created successfully!');
+      }
+
+      // Upload profile picture if provided
+      if (processedImageFile) {
+        try {
+          const profilePictureUrl = await handlePetProfilePictureUpload(petId, processedImageFile);
+          if (profilePictureUrl) {
+            console.log(`Profile picture uploaded for pet ${petId}: ${profilePictureUrl}`);
+          }
+        } catch (error) {
+          console.error('Failed to upload pet profile picture:', error);
+          // Don't fail the whole operation if profile picture upload fails
+        }
       }
 
       // Reload pets and close form
