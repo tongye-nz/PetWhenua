@@ -330,7 +330,15 @@ const AdminPanel: React.FC = () => {
                     Registration
                   </TableSortLabel>
                 </TableCell>
-                                 <TableCell>Last Login</TableCell>
+                <TableCell>
+                  <TableSortLabel
+                    active={sortConfig.field === 'lastLoginAt'}
+                    direction={sortConfig.direction}
+                    onClick={() => handleSort('lastLoginAt')}
+                  >
+                    Last Login
+                  </TableSortLabel>
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
