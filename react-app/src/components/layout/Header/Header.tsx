@@ -26,6 +26,7 @@ import { Avatar } from '@mui/material';
 import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NotificationCenter } from '../../features/notifications';
+import { isAdmin } from '../../../utils/userRoles';
 
 interface HeaderProps {
   onSignInClick?: () => void;
@@ -90,6 +91,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'messages':
         navigate('/messages');
         break;
+      case 'admin':
+        navigate('/admin');
+        break;
       case 'signout':
         logout();
         navigate('/');
@@ -115,6 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { key: 'posts', label: 'My Posts', icon: '📝' },
     { key: 'connections', label: 'Connection Requests', icon: '🤝' },
     { key: 'messages', label: 'Messages', icon: '💬' },
+    ...(isAdmin(user?.role || '') ? [{ key: 'admin', label: 'Admin Panel', icon: '⚙️' }] : []),
     { key: 'signout', label: 'Sign Out', icon: '🚪' }
   ];
 
@@ -242,6 +247,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                             color: 'error.main',
                             borderTop: '1px solid',
                             borderColor: 'divider'
+                          }),
+                          ...(item.key === 'admin' && {
+                            color: 'warning.main',
+                            fontWeight: 600
                           })
                         }}
                       >
@@ -374,6 +383,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                         borderTop: '1px solid',
                         borderColor: 'divider',
                         mt: 1
+                      }),
+                      ...(item.key === 'admin' && {
+                        color: 'warning.main',
+                        fontWeight: 600
                       })
                     }}
                   >

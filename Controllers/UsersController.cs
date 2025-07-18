@@ -235,4 +235,122 @@ public class UsersController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    // Admin endpoints - require site admin authorization
+    [HttpGet("admin")]
+    [Authorize]
+    public async Task<IActionResult> GetUsersForAdmin()
+    {
+        // Check if current user is a site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsAdmin(userRoleClaim))
+        {
+            return Forbid("Only site administrators can access user management.");
+        }
+
+        try
+        {
+            var users = await _userService.GetUsersForAdminAsync();
+            return Ok(users);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve users for admin", error = ex.Message });
+        }
+    }
+
+    [HttpPatch("admin/{id}/role")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUserRole(int id, [FromBody] UpdateUserRoleRequest request)
+    {
+        // Check if current user is a site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsAdmin(userRoleClaim))
+        {
+            return Forbid("Only site administrators can update user roles.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var response = await _userService.UpdateUserRoleAsync(id, request.Role);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update user role", error = ex.Message });
+        }
+    }
+
+    [HttpPatch("admin/{id}/status")]
+    [Authorize]
+    public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] UpdateUserStatusRequest request)
+    {
+        // Check if current user is a site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsAdmin(userRoleClaim))
+        {
+            return Forbid("Only site administrators can update user status.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            var response = await _userService.UpdateUserStatusAsync(id, request.IsActive);
+            return Ok(response);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to update user status", error = ex.Message });
+        }
+    }
+
+    [HttpGet("admin/roles")]
+    [Authorize]
+    public IActionResult GetAvailableRoles()
+    {
+        // Check if current user is a site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsAdmin(userRoleClaim))
+        {
+            return Forbid("Only site administrators can access role information.");
+        }
+
+        var roles = UserRoles.AllRoles.Select(role => new
+        {
+            value = role,
+            label = UserRoles.GetDisplayName(role),
+            description = GetRoleDescription(role)
+        }).ToList();
+
+        return Ok(roles);
+    }
+
+    private static string GetRoleDescription(string role)
+    {
+        return role switch
+        {
+            UserRoles.Member => "Standard user with basic permissions",
+            UserRoles.Vet => "Veterinarian with access to create Library posts",
+            UserRoles.MeetupAdmin => "Administrator for meetup posts and events",
+            UserRoles.SiteAdmin => "Full administrator with all permissions",
+            _ => "Unknown role"
+        };
+    }
 }

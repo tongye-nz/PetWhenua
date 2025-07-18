@@ -21,12 +21,13 @@ import PetsNearMe from './pages/PetsNearMe.tsx';
 import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import Messages from './pages/Messages.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
-import { ProtectedRoute } from './components/common';
+import { ProtectedRoute, AdminRoute } from './components/common';
 import './App.css';
 
 // Lazy load heavier components
 const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
 const OtherUserProfile = lazy(() => import('./pages/OtherUserProfile.tsx'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel.tsx'));
 
 function App() {
   return (
@@ -101,6 +102,11 @@ function App() {
                 <Route path="/pets-near-me" element={<PetsNearMe />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
+                } />
                 <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
               </Routes>
             </Suspense>

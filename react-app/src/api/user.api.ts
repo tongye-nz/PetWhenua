@@ -44,6 +44,55 @@ export interface UpdateUserProfileRequest {
   profilePicture?: string;
 }
 
+export interface AdminUserUpdateRequest {
+  role?: string;
+  isActive?: boolean;
+}
+
+export interface UserListResponse {
+  userId: number;
+  username: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt?: string;
+}
+
+export interface UpdateUserRoleRequest {
+  role: string;
+}
+
+export interface UpdateUserStatusRequest {
+  isActive: boolean;
+}
+
+export interface UpdateUserRoleResponse {
+  userId: number;
+  username: string;
+  oldRole: string;
+  newRole: string;
+  updatedAt: string;
+  message: string;
+}
+
+export interface UpdateUserStatusResponse {
+  userId: number;
+  username: string;
+  oldStatus: boolean;
+  newStatus: boolean;
+  updatedAt: string;
+  message: string;
+}
+
+export interface RoleOption {
+  value: string;
+  label: string;
+  description: string;
+}
+
 export const userAPI = {
   // Get current user profile
   getCurrentUser: async (): Promise<User> => {
@@ -67,5 +116,37 @@ export const userAPI = {
   getUserById: async (id: number): Promise<User> => {
     const response = await userApi.get(`/users/${id}`);
     return response.data;
+  },
+
+  // Admin operations
+  
+  // Get all users for admin dashboard
+  getAllUsersForAdmin: async (): Promise<UserListResponse[]> => {
+    const response = await userApi.get('/users/admin');
+    return response.data;
+  },
+
+  // Update user status (activate/deactivate)
+  updateUserStatus: async (userId: number, isActive: boolean): Promise<UpdateUserStatusResponse> => {
+    const response = await userApi.patch(`/users/admin/${userId}/status`, { isActive });
+    return response.data;
+  },
+
+  // Update user role
+  updateUserRole: async (userId: number, role: string): Promise<UpdateUserRoleResponse> => {
+    const response = await userApi.patch(`/users/admin/${userId}/role`, { role });
+    return response.data;
+  },
+
+  // Get available roles for admin
+  getAvailableRoles: async (): Promise<RoleOption[]> => {
+    const response = await userApi.get('/users/admin/roles');
+    return response.data;
+  },
+
+  // Delete user (admin only)
+  deleteUser: async (_userId: number): Promise<{ message: string }> => {
+    // Backend endpoint not implemented yet
+    throw new Error('User deletion not yet implemented on backend. Please implement DELETE /admin/users/{id} endpoint.');
   }
 };
