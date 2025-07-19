@@ -20,10 +20,57 @@ export const PostStatus = {
 
 export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
 
+// String enum types for backend compatibility after NZ timezone changes
+export type PostTypeString = 'Meetup' | 'PetWedding' | 'BuySell' | 'Library' | 'Announcement' | 'Moment';
+export type PostStatusString = 'Active' | 'Sold' | 'Expired' | 'Inactive' | 'Cancelled' | 'Pending';
+
+// Utility functions for safe enum comparisons
+export const PostStatusUtils = {
+  isActive: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Active || status === 'Active';
+  },
+  isSold: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Sold || status === 'Sold';
+  },
+  isExpired: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Expired || status === 'Expired';
+  },
+  isInactive: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Inactive || status === 'Inactive';
+  },
+  isCancelled: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Cancelled || status === 'Cancelled';
+  },
+  isPending: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Pending || status === 'Pending';
+  }
+};
+
+export const PostTypeUtils = {
+  isMeetup: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.Meetup || type === 'Meetup';
+  },
+  isPetWedding: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.PetWedding || type === 'PetWedding';
+  },
+  isBuySell: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.BuySell || type === 'BuySell';
+  },
+  isLibrary: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.Library || type === 'Library';
+  },
+  isAnnouncement: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.Announcement || type === 'Announcement';
+  },
+  isMoment: (type: PostType | PostTypeString): boolean => {
+    return type === PostType.Moment || type === 'Moment';
+  }
+};
+
 export interface Post {
   postId: number;
   userId: number;
-  postType: PostType;
+  postType: PostType | PostTypeString; // Support both integer and string enum values
   title: string;
   content: string;
   images: string[];
@@ -32,7 +79,7 @@ export interface Post {
   price?: number;
   eventDate?: string;
   category?: string;
-  status: PostStatus;
+  status: PostStatus | PostStatusString; // Support both integer and string enum values
   createdAt: string;
   updatedAt: string;
   user: {

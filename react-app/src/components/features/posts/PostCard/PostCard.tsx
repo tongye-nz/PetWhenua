@@ -6,7 +6,7 @@ import { commentService } from '../../../../api';
 import { userFollowService } from '../../../../api/userFollow.api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
-import { PostType, PostStatus } from '../../../../models/post.types';
+import { PostStatusUtils, PostTypeUtils } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../../utils/dateUtils';
@@ -41,9 +41,9 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
   // Users can edit their own posts only if status is Active, Inactive, or Pending
   // Cannot edit if status is Sold, Expired, or Cancelled
   const canEdit = isOwner && (
-    post.status === PostStatus.Active || 
-    post.status === PostStatus.Inactive || 
-    post.status === PostStatus.Pending
+    PostStatusUtils.isActive(post.status) || 
+    PostStatusUtils.isInactive(post.status) || 
+    PostStatusUtils.isPending(post.status)
   );
   // Only post authors can delete their own posts
   const canDelete = isOwner;
@@ -150,12 +150,40 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
     return content.substring(0, maxLength) + '...';
   };
 
-  const getStatusLabel = (status: number) => {
+  const getStatusLabel = (status: number | string): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof status === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Active': 'Active',
+        'Sold': 'Sold',
+        'Expired': 'Expired',
+        'Inactive': 'Inactive',
+        'Cancelled': 'Cancelled',
+        'Pending': 'Pending'
+      };
+      return stringToLabelMap[status] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled', 'Pending'];
     return labels[status] || 'Unknown';
   };
 
-  const getTypeLabel = (type: number) => {
+  const getTypeLabel = (type: number | string): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof type === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Meetup': 'Meetup',
+        'PetWedding': 'Pet Wedding',
+        'BuySell': 'Buy/Sell',
+        'Library': 'Library',
+        'Announcement': 'Announcement',
+        'Moment': 'Moment'
+      };
+      return stringToLabelMap[type] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const labels = ['Meetup', 'Pet Wedding', 'Buy/Sell', 'Library', 'Announcement', 'Moment'];
     return labels[type] || 'Unknown';
   };
@@ -262,7 +290,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
         </Text>
 
         {/* Pet Wedding Participants - show the two pets */}
-        {post.postType === 1 && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
+        {PostTypeUtils.isPetWedding(post.postType) && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
           <Box sx={{ mb: 2, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
             <Text variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
               💍 Pet Wedding Participants
@@ -333,7 +361,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
         )}
 
         {/* Location and Address info for Meetup and Wedding posts */}
-        {(post.postType === 0 || post.postType === 1) && (
+                    {(PostTypeUtils.isMeetup(post.postType) || PostTypeUtils.isPetWedding(post.postType)) && (
           <Box sx={{ mb: 2 }}>
             {post.location && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
@@ -374,7 +402,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
         {/* Status and type chips */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
           {/* Only show status chip for post types that need status management */}
-          {post.postType !== PostType.Library && post.postType !== PostType.Moment && (
+          {!PostTypeUtils.isLibrary(post.postType) && !PostTypeUtils.isMoment(post.postType) && (
             <StatusChip 
               statusVariant="status"
               status={post.status}

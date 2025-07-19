@@ -19,7 +19,8 @@ import {
   Delete,
   AttachMoney
 } from '@mui/icons-material';
-import { PostType, PostStatus } from '../models/post.types';
+import { PostStatusUtils, PostTypeUtils } from '../models/post.types';
+import type { PostType, PostTypeString, PostStatus, PostStatusString } from '../models/post.types';
 import { useAuth } from '../contexts/AuthContext';
 import { StatusChip } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
@@ -72,7 +73,21 @@ const PostDetail: React.FC = () => {
     setIsFollowing(newFollowStatus);
   };
 
-  const getPostTypeLabel = (postType: PostType): string => {
+  const getPostTypeLabel = (postType: PostType | PostTypeString): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof postType === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Meetup': 'Meetup',
+        'PetWedding': 'Pet Wedding',
+        'BuySell': 'Buy & Sell',
+        'Library': 'Library',
+        'Announcement': 'Announcement',
+        'Moment': 'Moment'
+      };
+      return stringToLabelMap[postType] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const typeMap: { [key: number]: string } = {
       0: 'Meetup',
       1: 'Pet Wedding',
@@ -84,9 +99,21 @@ const PostDetail: React.FC = () => {
     return typeMap[postType] || 'Unknown';
   };
 
-
-
-  const getStatusLabel = (status: number): string => {
+  const getStatusLabel = (status: PostStatus | PostStatusString): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof status === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Active': 'Active',
+        'Sold': 'Sold',
+        'Expired': 'Expired',
+        'Inactive': 'Inactive',
+        'Cancelled': 'Cancelled',
+        'Pending': 'Pending'
+      };
+      return stringToLabelMap[status] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const statusMap: { [key: number]: string } = {
       0: 'Active',
       1: 'Sold',
@@ -144,9 +171,9 @@ const PostDetail: React.FC = () => {
   // Users can edit their own posts only if status is Active, Inactive, or Pending
   // Cannot edit if status is Sold, Expired, or Cancelled
   const canEdit = isOwner && (
-    currentPost.status === PostStatus.Active || 
-    currentPost.status === PostStatus.Inactive || 
-    currentPost.status === PostStatus.Pending
+    PostStatusUtils.isActive(currentPost.status) || 
+    PostStatusUtils.isInactive(currentPost.status) || 
+    PostStatusUtils.isPending(currentPost.status)
   );
   
   // Users can always delete their own posts regardless of status
@@ -319,7 +346,7 @@ const PostDetail: React.FC = () => {
           </Typography>
 
           {/* Pet Wedding Participants - show the two pets */}
-          {currentPost.postType === 1 && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
+                {PostTypeUtils.isPetWedding(currentPost.postType) && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
             <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 💍 Pet Wedding Participants
@@ -428,7 +455,7 @@ const PostDetail: React.FC = () => {
             )}
 
             {/* Address - for Meetup and Pet Wedding posts */}
-            {currentPost.address && (currentPost.postType === 0 || currentPost.postType === 1) && (
+            {currentPost.address && (PostTypeUtils.isMeetup(currentPost.postType) || PostTypeUtils.isPetWedding(currentPost.postType)) && (
               <Box display="flex" alignItems="center" mb={2}>
                 <LocationOn color="primary" sx={{ mr: 1 }} />
                 <Typography variant="body1" fontWeight="medium">

@@ -23,7 +23,7 @@ import { petService } from '../api/pet.api';
 import type { User } from '../models/auth.types';
 import type { Post } from '../models/post.types';
 import type { Pet } from '../models/pet.types';
-import { PostStatus } from '../models/post.types';
+import { PostStatusUtils } from '../models/post.types';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
 
 const OtherUserProfile: React.FC = () => {
@@ -123,9 +123,9 @@ const OtherUserProfile: React.FC = () => {
   // Filter posts to only show Active, Sold, or Expired posts when viewing other users' profiles
   const getVisiblePosts = (): Post[] => {
     return userPosts.filter(post => 
-      post.status === PostStatus.Active || 
-      post.status === PostStatus.Sold || 
-      post.status === PostStatus.Expired
+      PostStatusUtils.isActive(post.status) || 
+      PostStatusUtils.isSold(post.status) || 
+      PostStatusUtils.isExpired(post.status)
     );
   };
 

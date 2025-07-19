@@ -14,7 +14,7 @@ import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import ImageUpload from '../../ImageUpload';
 import type { UploadedImage } from '../../ImageUpload';
 import { imageApi } from '../../../api/imageApi';
-import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus } from '../../../models/post.types';
+import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus, PostTypeString, PostStatusString } from '../../../models/post.types';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -30,9 +30,9 @@ export interface PostFormData {
   price?: number;
   eventDate?: string;
   category?: string;
-  postType: PostType;
+  postType: PostType | PostTypeString;
   selectedPetIds?: number[];
-  status?: PostStatus;
+  status?: PostStatus | PostStatusString;
   createdAt?: string;
 }
 
