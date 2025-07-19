@@ -16,6 +16,10 @@ export { default as MyPetsLoading } from './MyPetsLoading';
 export { default as MyPetsErrorAlert } from './MyPetsErrorAlert';
 export { default as MyPetsFab } from './MyPetsFab';
 export { PetSelectionDialog } from './PetSelectionDialog';
+export { PetProfileHeader } from './PetProfileHeader';
+export { PetProfileOwnerView } from './PetProfileOwnerView';
+export { PetProfilePublicView } from './PetProfilePublicView';
+export { PetConnectionsSection } from './PetConnectionsSection';
 
 export type { PetCardProps } from './PetCard';
 export type { PetCardImageProps } from './PetCardImage';
