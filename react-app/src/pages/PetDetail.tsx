@@ -20,6 +20,7 @@ import {
   Male,
   Female
 } from '@mui/icons-material';
+import { blue, pink, grey } from '@mui/material/colors';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { PetFormDialog, PetSelectionDialog } from '../components/features/pets';
 import { useAuth } from '../contexts/AuthContext';
@@ -258,9 +259,9 @@ const PetDetail: React.FC = () => {
     
     const gender = pet.gender.toLowerCase();
     if (gender === 'male' || gender === 'm') {
-      return <Male sx={{ color: '#2196f3', fontSize: 20 }} />;
+      return <Male sx={{ color: blue[500], fontSize: 20 }} />;
     } else if (gender === 'female' || gender === 'f') {
-      return <Female sx={{ color: '#e91e63', fontSize: 20 }} />;
+      return <Female sx={{ color: pink[500], fontSize: 20 }} />;
     }
     return null;
   };
@@ -357,154 +358,364 @@ const PetDetail: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Main Pet Card */}
-      <Card sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
-          {/* Pet Image Section */}
-          <Box sx={{ 
-            width: { xs: '100%', md: '300px' }, 
-            height: { xs: '250px', md: '350px' },
-            position: 'relative'
-          }}>
-            {pet.profilePicture ? (
-              <CardMedia
-                component="img"
-                image={getProfilePictureUrl(pet.profilePicture)}
-                alt={pet.name}
-                sx={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover',
-                  borderRadius: { xs: '4px 4px 0 0', md: '4px 0 0 4px' }
-                }}
-              />
-            ) : (
-              <Box sx={{
-                width: '100%',
-                height: '100%',
-                bgcolor: 'grey.200',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: { xs: '4px 4px 0 0', md: '4px 0 0 4px' }
-              }}>
-                <Pets sx={{ fontSize: 60, color: 'grey.400' }} />
-              </Box>
-            )}
-            
-            {/* Pet Owner Avatar Overlay */}
-            {pet.user && (
+      {/* Conditional Layout based on ownership */}
+      {isOwnPet ? (
+        /* Owner Layout - Keep existing horizontal layout */
+        <>
+          {/* Main Pet Card */}
+          <Card sx={{ mb: 4 }}>
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
+              {/* Pet Image Section */}
               <Box sx={{ 
-                position: 'absolute', 
-                bottom: 16, 
-                left: 16,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                bgcolor: 'rgba(255, 255, 255, 0.9)',
-                borderRadius: '20px',
-                padding: '4px 12px 4px 4px',
-                backdropFilter: 'blur(4px)'
+                width: { xs: '100%', md: '300px' }, 
+                height: { xs: '250px', md: '350px' },
+                position: 'relative'
               }}>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  {pet.user.firstName?.[0] || pet.user.username[0]}
-                </Avatar>
-                <Text variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {pet.user.firstName && pet.user.lastName 
-                    ? `${pet.user.firstName} ${pet.user.lastName}`
-                    : pet.user.firstName || pet.user.lastName || pet.user.username}
-                </Text>
+                {pet.profilePicture ? (
+                  <CardMedia
+                    component="img"
+                    image={getProfilePictureUrl(pet.profilePicture)}
+                    alt={pet.name}
+                    sx={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      borderRadius: { xs: '4px 4px 0 0', md: '4px 0 0 4px' }
+                    }}
+                  />
+                ) : (
+                  <Box sx={{
+                    width: '100%',
+                    height: '100%',
+                    bgcolor: grey[200],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: { xs: '4px 4px 0 0', md: '4px 0 0 4px' }
+                  }}>
+                    <Pets sx={{ fontSize: 60, color: grey[400] }} />
+                  </Box>
+                )}
+                
+                {/* Pet Owner Avatar Overlay */}
+                {pet.user && (
+                  <Box sx={{ 
+                    position: 'absolute', 
+                    bottom: 16, 
+                    left: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.9)',
+                    borderRadius: '20px',
+                    padding: '4px 12px 4px 4px',
+                    backdropFilter: 'blur(4px)'
+                  }}>
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {pet.user.firstName?.[0] || pet.user.username[0]}
+                    </Avatar>
+                    <Text variant="caption" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                      {pet.user.firstName && pet.user.lastName 
+                        ? `${pet.user.firstName} ${pet.user.lastName}`
+                        : pet.user.firstName || pet.user.lastName || pet.user.username}
+                    </Text>
+                  </Box>
+                )}
               </Box>
-            )}
-          </Box>
 
-          {/* Pet Details Section */}
-          <CardContent sx={{ flex: 1, p: 3 }}>
-            {/* Pet Name and Basic Info */}
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Text variant="h4" component="h1" sx={{ fontWeight: 600 }}>
-                  {pet.name}
-                </Text>
-                {getGenderIcon()}
+              {/* Pet Details Section */}
+              <CardContent sx={{ flex: 1, p: 3 }}>
+                {/* Pet Name and Basic Info */}
+                <Box sx={{ mb: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                    <Text variant="h4" component="h1" sx={{ fontWeight: 600 }}>
+                      {pet.name}
+                    </Text>
+                    {getGenderIcon()}
+                  </Box>
+                  
+                  {/* Species and Breed Tags */}
+                  <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                    {pet.species && (
+                      <Chip 
+                        icon={<Pets />}
+                        label={pet.species}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    )}
+                    {pet.breed && (
+                      <Chip 
+                        label={pet.breed}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    )}
+                    <Chip 
+                      icon={<Cake />}
+                      label={getAgeDisplay()}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                    />
+                  </Box>
+                </Box>
+
+                {/* Pet Details Grid */}
+                <Paper sx={{ p: 2, mb: 3, bgcolor: grey[50] }}>
+                  <Text variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Pet Details
+                  </Text>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                    <Box>
+                      <Text variant="body2" color="text.secondary">Species:</Text>
+                      <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.species || 'Not specified'}</Text>
+                    </Box>
+                    <Box>
+                      <Text variant="body2" color="text.secondary">Breed:</Text>
+                      <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.breed || 'Not specified'}</Text>
+                    </Box>
+                    <Box>
+                      <Text variant="body2" color="text.secondary">Age:</Text>
+                      <Text variant="body2" sx={{ fontWeight: 500 }}>{getAgeDisplay()}</Text>
+                    </Box>
+                    <Box>
+                      <Text variant="body2" color="text.secondary">Gender:</Text>
+                      <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.gender || 'Not specified'}</Text>
+                    </Box>
+                    <Box sx={{ gridColumn: '1 / -1' }}>
+                      <Text variant="body2" color="text.secondary">Registered:</Text>
+                      <Text variant="body2" sx={{ fontWeight: 500 }}>
+                        {pet.createdAt ? formatDate(pet.createdAt) : 'Unknown'}
+                      </Text>
+                    </Box>
+                  </Box>
+                </Paper>
+
+                {/* Description */}
+                {pet.description && (
+                  <Box sx={{ mb: 3 }}>
+                    <Text variant="body1" sx={{ lineHeight: 1.6, color: 'text.secondary' }}>
+                      {pet.description}
+                    </Text>
+                  </Box>
+                )}
+              </CardContent>
+            </Box>
+          </Card>
+        </>
+      ) : (
+        /* Other User's Pet Layout - Single column, centered */
+        <>
+          {/* Centered Pet Avatar */}
+          <Card sx={{ mb: 4 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              p: 4
+            }}>
+              {/* Large Centered Pet Avatar */}
+              <Box sx={{ mb: 3 }}>
+                {pet.profilePicture ? (
+                  <Avatar
+                    src={getProfilePictureUrl(pet.profilePicture)}
+                    sx={{ 
+                      width: 200, 
+                      height: 200, 
+                      boxShadow: 3,
+                      border: '4px solid',
+                      borderColor: 'primary.main'
+                    }}
+                  />
+                ) : (
+                  <Avatar sx={{ 
+                    width: 200, 
+                    height: 200, 
+                    bgcolor: grey[200],
+                    boxShadow: 3,
+                    border: '4px solid',
+                    borderColor: 'primary.main'
+                  }}>
+                    <Pets sx={{ fontSize: 80, color: grey[400] }} />
+                  </Avatar>
+                )}
               </Box>
-              
-              {/* Species and Breed Tags */}
-              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                {pet.species && (
+
+              {/* Pet Name and Basic Info - Centered */}
+              <Box sx={{ textAlign: 'center', mb: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 2 }}>
+                  <Text variant="h3" component="h1" sx={{ fontWeight: 600 }}>
+                    {pet.name}
+                  </Text>
+                  {getGenderIcon()}
+                </Box>
+                
+                {/* Owner Info */}
+                {pet.user && (
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 1,
+                    mb: 2,
+                    p: 1.5,
+                    bgcolor: grey[50],
+                    borderRadius: 2
+                  }}>
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {pet.user.firstName?.[0] || pet.user.username[0]}
+                    </Avatar>
+                    <Text variant="body2" sx={{ fontWeight: 500 }}>
+                      Owned by {pet.user.firstName && pet.user.lastName 
+                        ? `${pet.user.firstName} ${pet.user.lastName}`
+                        : pet.user.firstName || pet.user.lastName || pet.user.username}
+                    </Text>
+                  </Box>
+                )}
+                
+                {/* Species and Breed Tags - Centered */}
+                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  {pet.species && (
+                    <Chip 
+                      icon={<Pets />}
+                      label={pet.species}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  )}
+                  {pet.breed && (
+                    <Chip 
+                      label={pet.breed}
+                      color="secondary"
+                      variant="outlined"
+                    />
+                  )}
                   <Chip 
-                    icon={<Pets />}
-                    label={pet.species}
-                    size="small"
-                    color="primary"
+                    icon={<Cake />}
+                    label={getAgeDisplay()}
+                    color="info"
                     variant="outlined"
                   />
-                )}
-                {pet.breed && (
-                  <Chip 
-                    label={pet.breed}
-                    size="small"
-                    color="secondary"
-                    variant="outlined"
-                  />
-                )}
-                <Chip 
-                  icon={<Cake />}
-                  label={getAgeDisplay()}
-                  size="small"
-                  color="info"
-                  variant="outlined"
-                />
+                </Box>
               </Box>
             </Box>
+          </Card>
 
-            {/* Pet Details Grid */}
-            <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
-              <Text variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                Pet Details
+          {/* Pet Basic Information Card */}
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Text variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: 'center' }}>
+                Pet Information
               </Text>
-              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                <Box>
-                  <Text variant="body2" color="text.secondary">Species:</Text>
-                  <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.species || 'Not specified'}</Text>
+              
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, 
+                gap: 3,
+                maxWidth: 500,
+                mx: 'auto'
+              }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Text variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                    Species
+                  </Text>
+                  <Text variant="body1" sx={{ fontWeight: 500 }}>
+                    {pet.species || 'Not specified'}
+                  </Text>
                 </Box>
-                <Box>
-                  <Text variant="body2" color="text.secondary">Breed:</Text>
-                  <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.breed || 'Not specified'}</Text>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Text variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                    Breed
+                  </Text>
+                  <Text variant="body1" sx={{ fontWeight: 500 }}>
+                    {pet.breed || 'Not specified'}
+                  </Text>
                 </Box>
-                <Box>
-                  <Text variant="body2" color="text.secondary">Age:</Text>
-                  <Text variant="body2" sx={{ fontWeight: 500 }}>{getAgeDisplay()}</Text>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Text variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                    Age
+                  </Text>
+                  <Text variant="body1" sx={{ fontWeight: 500 }}>
+                    {getAgeDisplay()}
+                  </Text>
                 </Box>
-                <Box>
-                  <Text variant="body2" color="text.secondary">Gender:</Text>
-                  <Text variant="body2" sx={{ fontWeight: 500 }}>{pet.gender || 'Not specified'}</Text>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Text variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                    Gender
+                  </Text>
+                  <Text variant="body1" sx={{ fontWeight: 500 }}>
+                    {pet.gender || 'Not specified'}
+                  </Text>
                 </Box>
-                <Box sx={{ gridColumn: '1 / -1' }}>
-                  <Text variant="body2" color="text.secondary">Registered:</Text>
-                  <Text variant="body2" sx={{ fontWeight: 500 }}>
+                <Box sx={{ textAlign: 'center', gridColumn: { xs: '1', sm: '1 / -1' } }}>
+                  <Text variant="body2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                    Member Since
+                  </Text>
+                  <Text variant="body1" sx={{ fontWeight: 500 }}>
                     {pet.createdAt ? formatDate(pet.createdAt) : 'Unknown'}
                   </Text>
                 </Box>
               </Box>
-            </Paper>
 
-            {/* Description */}
-            {pet.description && (
-              <Box sx={{ mb: 3 }}>
-                <Text variant="body1" sx={{ lineHeight: 1.6, color: 'text.secondary' }}>
-                  {pet.description}
-                </Text>
-              </Box>
-            )}
-          </CardContent>
-        </Box>
-      </Card>
+              {/* Description */}
+              {pet.description && (
+                <Box sx={{ mt: 4, textAlign: 'center' }}>
+                  <Text variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    About {pet.name}
+                  </Text>
+                  <Text variant="body1" sx={{ 
+                    lineHeight: 1.6, 
+                    color: 'text.secondary',
+                    maxWidth: 600,
+                    mx: 'auto'
+                  }}>
+                    {pet.description}
+                  </Text>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Connection Section */}
+          {/* Connect Button Card */}
+          <Card sx={{ mb: 4 }}>
+            <CardContent sx={{ p: 4, textAlign: 'center' }}>
+              <Text variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                Connect with {pet.name}
+              </Text>
+              <Text variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 400, mx: 'auto' }}>
+                Send a connection request to enable interactions and potential playdates between your pets.
+              </Text>
+              <Button 
+                variant="primary" 
+                size="large"
+                startIcon={<Pets />}
+                onClick={handleConnectClick}
+                disabled={loadingConnection || connectionStatus === 'Pending'}
+                sx={{ 
+                  minWidth: 200,
+                  py: 1.5,
+                  fontSize: '1.1rem'
+                }}
+              >
+                {connectionStatus === 'Pending' 
+                  ? 'Request Sent' 
+                  : connectionStatus === 'Accepted'
+                  ? 'Connected'
+                  : 'Connect Pets'
+                }
+              </Button>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Social Connections Section */}
       <Paper sx={{ p: 3 }}>
-        <Text variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-          Connection
+        <Text variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: isOwnPet ? 'left' : 'center' }}>
+          {isOwnPet ? 'Connections' : `${pet.name}'s Friends`}
         </Text>
         
         {/* Connected Pets */}
@@ -513,25 +724,38 @@ const PetDetail: React.FC = () => {
             <LoadingSpinner size="small" />
           </Box>
         ) : connectedPets.length > 0 ? (
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            gap: 2, 
+            flexWrap: 'wrap',
+            justifyContent: isOwnPet ? 'flex-start' : 'center'
+          }}>
             {connectedPets.map((connectedPet) => (
               <Box key={connectedPet.petId} sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
                 alignItems: 'center',
                 gap: 0.5,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                p: 1,
+                borderRadius: 2,
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  bgcolor: grey[50],
+                  transform: 'translateY(-2px)'
+                }
               }}
               onClick={() => navigate(`/pet/${connectedPet.petId}`)}
               >
                 <Avatar 
                   src={getProfilePictureUrl(connectedPet.profilePicture)}
                   sx={{ 
-                    width: 48, 
-                    height: 48, 
+                    width: isOwnPet ? 48 : 56, 
+                    height: isOwnPet ? 48 : 56, 
                     bgcolor: 'primary.main',
                     fontSize: '1.2rem',
-                    fontWeight: 600
+                    fontWeight: 600,
+                    boxShadow: 1
                   }}
                 >
                   {!connectedPet.profilePicture && connectedPet.name?.charAt(0)?.toUpperCase()}
@@ -550,30 +774,16 @@ const PetDetail: React.FC = () => {
             ))}
           </Box>
         ) : (
-          <Text variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
-            No connected pets yet.
+          <Text variant="body2" color="text.secondary" sx={{ 
+            fontStyle: 'italic',
+            textAlign: 'center',
+            py: 2
+          }}>
+            {isOwnPet 
+              ? 'No connections yet. Connect with other pets to build your network!' 
+              : `${pet.name} hasn't connected with any pets yet.`
+            }
           </Text>
-        )}
-
-        {!isOwnPet && user && (
-          <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-            <Text variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              Connect your pet with {pet.name} to enable interactions and potential playdates.
-            </Text>
-            <Button 
-              variant="primary" 
-              size="small"
-              onClick={handleConnectClick}
-              disabled={loadingConnection || connectionStatus === 'Pending'}
-            >
-              {connectionStatus === 'Pending' 
-                ? 'Request Sent' 
-                : connectionStatus === 'Accepted'
-                ? 'Connected'
-                : 'Connect Pets'
-              }
-            </Button>
-          </Box>
         )}
       </Paper>
 
