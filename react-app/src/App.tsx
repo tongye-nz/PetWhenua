@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PostProvider } from './contexts/PostContext';
 import { SignalRProvider } from './contexts/SignalRContext';
@@ -33,9 +34,10 @@ const WeddingRequests = lazy(() => import('./pages/WeddingRequests.tsx'));
 
 function App() {
   return (
-    <AuthProvider>
-      <SignalRProvider>
-        <PostProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <SignalRProvider>
+          <PostProvider>
           <Router>
             <NotificationToast />
             <ChatButton variant="fab" showUnreadBadge={true} />
@@ -127,6 +129,7 @@ function App() {
       </PostProvider>
       </SignalRProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

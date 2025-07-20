@@ -23,17 +23,17 @@ const ProfileStats: React.FC<ProfileStatsProps> = ({
     <Box sx={{ 
       display: 'flex', 
       justifyContent: 'space-around', 
-      padding: 2,
-      backgroundColor: '#f5f5f5',
+      p: 2,
+      bgcolor: 'action.hover',
       borderRadius: 2,
-      marginTop: 2,
+      mt: 2,
     }}>
       {stats.map((stat, index) => (
         <Box key={index} sx={{ textAlign: 'center' }}>
-          <Text variant="h6" weight="bold" sx={{ color: '#4caf50' }}>
+          <Text variant="h6" weight="bold" sx={{ color: 'success.main' }}>
             {stat.value}
           </Text>
-          <Text variant="body2" sx={{ color: '#666' }}>
+          <Text variant="body2" sx={{ color: 'text.secondary' }}>
             {stat.label}
           </Text>
         </Box>

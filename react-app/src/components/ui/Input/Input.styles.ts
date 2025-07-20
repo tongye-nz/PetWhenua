@@ -4,19 +4,19 @@ export const inputStyles: Record<string, SxProps<Theme>> = {
   base: {
     '& .MuiOutlinedInput-root': {
       '& fieldset': {
-        borderColor: '#e0e0e0',
+        borderColor: 'divider',
       },
       '&:hover fieldset': {
-        borderColor: '#667eea',
+        borderColor: 'primary.main',
       },
       '&.Mui-focused fieldset': {
-        borderColor: '#667eea',
+        borderColor: 'primary.main',
       },
     },
     '& .MuiInputLabel-root': {
-      color: '#666',
+      color: 'text.secondary',
       '&.Mui-focused': {
-        color: '#667eea',
+        color: 'primary.main',
       },
     },
   },

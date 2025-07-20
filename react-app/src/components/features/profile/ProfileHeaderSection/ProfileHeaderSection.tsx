@@ -12,7 +12,7 @@ export interface ProfileHeaderSectionProps {
   onStartEditing: () => void;
   onSaveForm: () => void;
   onCancelEditing: () => void;
-  styles: Record<string, CSSProperties> & {
+  styles?: Record<string, CSSProperties> & {
     header: CSSProperties;
     title: CSSProperties;
   };
@@ -27,7 +27,6 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
   onStartEditing,
   onSaveForm,
   onCancelEditing,
-  styles
 }) => {
   const getTitle = () => {
     if (isOwnProfile) {
@@ -40,8 +39,18 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
   };
 
   return (
-    <Box style={styles.header}>
-      <Text variant="h4" style={styles.title}>
+    <Box sx={{ 
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      mb: 3,
+      flexWrap: 'wrap',
+      gap: 2,
+    }}>
+      <Text variant="h4" sx={{ 
+        color: 'text.primary',
+        fontWeight: 'bold',
+      }}>
         {getTitle()}
       </Text>
       {!isEditing && isOwnProfile ? (

@@ -9,7 +9,7 @@ import {
   Menu,
   MenuItem,
   Typography,
-  useTheme,
+  useTheme as useMuiTheme,
   useMediaQuery,
   Drawer,
   List,
@@ -23,7 +23,7 @@ import {
   Close as CloseIcon
 } from '@mui/icons-material';
 import { Avatar } from '@mui/material';
-import { Button } from '../../ui';
+import { Button, ThemeToggle } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NotificationCenter } from '../../features/notifications';
 import { isAdmin, isMeetupAdmin } from '../../../utils/userRoles';
@@ -36,7 +36,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useTheme();
+  const theme = useMuiTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAuthenticated, logout, user } = useAuth();
   
@@ -202,6 +202,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
 
           {/* Right Section */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
             {/* Desktop Profile/Sign In */}
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 1 }}>
               {isAuthenticated ? (
@@ -349,6 +352,13 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
               </ListItem>
             ))}
           </List>
+
+          <Divider sx={{ my: 2 }} />
+
+          {/* Theme Toggle in Mobile */}
+          <Box sx={{ px: 2, py: 1, mb: 2 }}>
+            <ThemeToggle showLabel />
+          </Box>
 
           <Divider sx={{ my: 2 }} />
 

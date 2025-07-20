@@ -2,63 +2,70 @@ import type { SxProps, Theme } from '@mui/material';
 
 export const buttonStyles: Record<string, SxProps<Theme>> = {
   primary: {
-    backgroundColor: '#667eea',
-    color: 'white',
+    backgroundColor: 'primary.main',
+    color: 'primary.contrastText',
     '&:hover': {
-      backgroundColor: '#5a6fd8',
+      backgroundColor: 'primary.dark',
     },
     '&:disabled': {
-      backgroundColor: '#ccc',
-      color: '#666',
+      backgroundColor: 'action.disabledBackground',
+      color: 'action.disabled',
     },
   },
   secondary: {
-    backgroundColor: '#764ba2',
-    color: 'white',
+    backgroundColor: 'secondary.main',
+    color: 'secondary.contrastText',
     '&:hover': {
-      backgroundColor: '#6a4190',
+      backgroundColor: 'secondary.dark',
     },
     '&:disabled': {
-      backgroundColor: '#ccc',
-      color: '#666',
+      backgroundColor: 'action.disabledBackground',
+      color: 'action.disabled',
     },
   },
   outline: {
     backgroundColor: 'transparent',
-    color: '#667eea',
-    border: '1px solid #667eea',
+    color: 'primary.main',
+    border: '1px solid',
+    borderColor: 'primary.main',
     '&:hover': {
-      backgroundColor: '#f0f2ff',
+      backgroundColor: (theme: Theme) => 
+        theme.palette.mode === 'light' ? 'primary.light' : 'primary.dark',
+      opacity: 0.1,
     },
     '&:disabled': {
       backgroundColor: 'transparent',
-      color: '#ccc',
-      borderColor: '#ccc',
+      color: 'action.disabled',
+      borderColor: 'action.disabled',
     },
   },
   text: {
     backgroundColor: 'transparent',
-    color: '#667eea',
+    color: 'primary.main',
     '&:hover': {
-      backgroundColor: '#f0f2ff',
+      backgroundColor: (theme: Theme) => 
+        theme.palette.mode === 'light' ? 'primary.light' : 'primary.dark',
+      opacity: 0.1,
     },
     '&:disabled': {
       backgroundColor: 'transparent',
-      color: '#ccc',
+      color: 'action.disabled',
     },
   },
   error: {
     backgroundColor: 'transparent',
-    color: '#f44336',
-    border: '1px solid #f44336',
+    color: 'error.main',
+    border: '1px solid',
+    borderColor: 'error.main',
     '&:hover': {
-      backgroundColor: '#ffebee',
-      borderColor: '#d32f2f',
+      backgroundColor: 'error.light',
+      opacity: 0.1,
+      borderColor: 'error.dark',
     },
     '&:disabled': {
       backgroundColor: 'transparent',
-      color: '#ccc',
-      borderColor: '#ccc',
+      color: 'action.disabled',
+      borderColor: 'action.disabled',
     },
   },
 };
