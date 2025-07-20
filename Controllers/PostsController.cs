@@ -93,7 +93,7 @@ public class PostsController : ControllerBase
             // Check if user can edit this post
             if (!_authorizationService.CanEditPost(userRoleClaim, existingPost, userId))
             {
-                return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active, Inactive, or Pending.");
+                return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active or Pending. Inactive posts can only be deleted.");
             }
 
             // Update the existing tracked entity instead of creating a new one

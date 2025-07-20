@@ -38,11 +38,11 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
   const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
   
   const isOwner = user?.userId === post.userId;
-  // Users can edit their own posts only if status is Active, Inactive, or Pending
-  // Cannot edit if status is Sold, Expired, or Cancelled
+  // Users can edit their own posts only if status is Active or Pending
+  // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
+  // Inactive posts can only be deleted, not edited
   const canEdit = isOwner && (
     PostStatusUtils.isActive(post.status) || 
-    PostStatusUtils.isInactive(post.status) || 
     PostStatusUtils.isPending(post.status)
   );
   // Only post authors can delete their own posts

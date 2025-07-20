@@ -168,11 +168,11 @@ const PostDetail: React.FC = () => {
   // Only post authors can edit or delete their own posts
   const isOwner = user && currentPost && user.userId === currentPost.userId;
   
-  // Users can edit their own posts only if status is Active, Inactive, or Pending
-  // Cannot edit if status is Sold, Expired, or Cancelled
+  // Users can edit their own posts only if status is Active or Pending
+  // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
+  // Inactive posts can only be deleted, not edited
   const canEdit = isOwner && (
     PostStatusUtils.isActive(currentPost.status) || 
-    PostStatusUtils.isInactive(currentPost.status) || 
     PostStatusUtils.isPending(currentPost.status)
   );
   
