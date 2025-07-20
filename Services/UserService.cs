@@ -247,5 +247,14 @@ namespace PetWhenua.Services
                 Message = $"User status successfully updated to {(isActive ? "Active" : "Inactive")}"
             };
         }
+
+        public async Task<List<int>> GetUserIdsByRoleAsync(string role)
+        {
+            var users = await _userRepository.GetAllUsersAsync(includePets: false, includePosts: false);
+            return users
+                .Where(u => u.IsActive && u.Role == role)
+                .Select(u => u.UserId)
+                .ToList();
+        }
     }
 }

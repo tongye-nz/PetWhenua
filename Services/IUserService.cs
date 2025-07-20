@@ -24,5 +24,6 @@ namespace PetWhenua.Services
         Task<IEnumerable<AdminUserListDto>> GetUsersForAdminAsync();
         Task<UpdateUserRoleResponse> UpdateUserRoleAsync(int userId, string newRole);
         Task<UpdateUserStatusResponse> UpdateUserStatusAsync(int userId, bool isActive);
+        Task<List<int>> GetUserIdsByRoleAsync(string role);
     }
 }

@@ -14,17 +14,23 @@ namespace PetWhenua.Services
         private readonly IPostFactory _postFactory;
         private readonly IPostAuthorizationService _authorizationService;
         private readonly PostExpiryService _expiryService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
         public PostService(
             IPostRepository postRepository,
             IPostFactory postFactory,
             IPostAuthorizationService authorizationService,
-            PostExpiryService expiryService)
+            PostExpiryService expiryService,
+            INotificationService notificationService,
+            IUserService userService)
         {
             _postRepository = postRepository;
             _postFactory = postFactory;
             _authorizationService = authorizationService;
             _expiryService = expiryService;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null)
@@ -79,7 +85,30 @@ namespace PetWhenua.Services
             post.Status = initialStatus; // Override the default Active status with role-based status
             post.UpdatedAt = DateTime.UtcNow;
 
-            return await _postRepository.AddPostAsync(post);
+            var createdPost = await _postRepository.AddPostAsync(post);
+
+            // Send notification to meetup admins if this is a pending meetup
+            if (postType == PostType.Meetup && initialStatus == PostStatus.Pending)
+            {
+                try
+                {
+                    var creator = await _userService.GetUserByIdAsync(userId);
+                    var creatorName = creator?.FirstName ?? creator?.Username ?? "Someone";
+                    
+                    await _notificationService.CreateMeetupPendingNotificationAsync(
+                        createdPost.PostId, 
+                        title, 
+                        creatorName
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail post creation if notification fails
+                    Console.WriteLine($"Failed to send meetup pending notification: {ex.Message}");
+                }
+            }
+
+            return createdPost;
         }
 
         public async Task<Post> UpdatePostAsync(Post post)
