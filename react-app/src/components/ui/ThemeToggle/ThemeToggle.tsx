@@ -3,6 +3,17 @@ import { Switch, FormControlLabel, Tooltip, styled, Box } from '@mui/material';
 import { LightMode, DarkMode } from '@mui/icons-material';
 import { useTheme } from '../../../contexts/ThemeContext';
 
+// Extract shared track styles
+const trackStyles = {
+  opacity: 1,
+  backgroundColor: '#aab4be',
+  borderRadius: 10,
+};
+
+const darkTrackStyles = {
+  backgroundColor: '#8796A5',
+};
+
 const MaterialUISwitch = styled(Switch)(({ theme }) => ({
   width: 62,
   height: 34,
@@ -15,11 +26,8 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
       color: '#fff',
       transform: 'translateX(22px)',
       '& + .MuiSwitch-track': {
-        opacity: 1,
-        backgroundColor: '#aab4be',
-        ...theme.applyStyles('dark', {
-          backgroundColor: '#8796A5',
-        }),
+        ...trackStyles,
+        ...theme.applyStyles('dark', darkTrackStyles),
       },
     },
   },
@@ -31,70 +39,69 @@ const MaterialUISwitch = styled(Switch)(({ theme }) => ({
     boxShadow: 'none',
   },
   '& .MuiSwitch-track': {
-    opacity: 1,
-    backgroundColor: '#aab4be',
-    borderRadius: 20 / 2,
-    ...theme.applyStyles('dark', {
-      backgroundColor: '#8796A5',
-    }),
+    ...trackStyles,
+    ...theme.applyStyles('dark', darkTrackStyles),
   },
 }));
+
+// Extract shared icon container styles
+const createIconBox = (backgroundColor: string, shadowIntensity: number) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 32,
+  height: 32,
+  backgroundColor,
+  borderRadius: '50%',
+  boxShadow: `0 2px 8px rgba(0,0,0,${shadowIntensity})`,
+});
+
+// Icon component configuration
+const iconConfig = {
+  light: {
+    backgroundColor: '#ffa000',
+    shadowIntensity: 0.3,
+    IconComponent: LightMode,
+    iconColor: '#ffffff',
+  },
+  dark: {
+    backgroundColor: '#003892',
+    shadowIntensity: 0.5,
+    IconComponent: DarkMode,
+    iconColor: '#90caf9',
+  },
+};
 
 interface ThemeToggleProps {
   showLabel?: boolean;
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ 
+const ThemeToggle: React.FC<ThemeToggleProps> = ({
   showLabel = false
 }) => {
   const { mode, toggleTheme, isDarkMode } = useTheme();
 
-  const handleToggle = () => {
-    toggleTheme();
+  // Factory function to create icon components
+  const createIcon = (type: 'light' | 'dark') => {
+    const config = iconConfig[type];
+    const { IconComponent, iconColor, backgroundColor, shadowIntensity } = config;
+    
+    return (
+      <Box sx={createIconBox(backgroundColor, shadowIntensity)}>
+        <IconComponent sx={{
+          fontSize: 18,
+          color: iconColor
+        }} />
+      </Box>
+    );
   };
 
   const switchControl = (
     <MaterialUISwitch
       checked={isDarkMode}
-      onChange={handleToggle}
-      icon={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            backgroundColor: '#001e3c',
-            borderRadius: '50%',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}
-        >
-          <LightMode sx={{ 
-            fontSize: 18, 
-            color: '#ffa726'
-          }} />
-        </Box>
-      }
-      checkedIcon={
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 32,
-            height: 32,
-            backgroundColor: '#003892',
-            borderRadius: '50%',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-          }}
-        >
-          <DarkMode sx={{ 
-            fontSize: 18, 
-            color: '#90caf9'
-          }} />
-        </Box>
-      }
+      onChange={toggleTheme}
+      icon={createIcon('light')}
+      checkedIcon={createIcon('dark')}
     />
   );
 
@@ -122,4 +129,4 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({
   );
 };
 
-export default ThemeToggle; 
+export default ThemeToggle;
