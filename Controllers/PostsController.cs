@@ -75,7 +75,52 @@ public class PostsController : ControllerBase
             }
 
             var posts = await _postService.GetPostsAsync(parsedPostType, userId, region, district);
-            return Ok(posts);
+            
+            // Convert to DTOs to avoid circular reference issues
+            var postDtos = posts.Select(p => new
+            {
+                p.PostId,
+                p.UserId,
+                p.PostType,
+                p.Title,
+                p.Content,
+                p.Status,
+                p.Images,
+                p.Location,
+                p.Address,
+                p.Price,
+                p.EventDate,
+                p.Category,
+                p.CreatedAt,
+                p.UpdatedAt,
+                User = p.User != null ? new
+                {
+                    p.User.UserId,
+                    p.User.Username,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.ProfilePicture
+                } : null,
+                PetWeddingParticipants = p.PetWeddingParticipants?.Select(pwp => new
+                {
+                    pwp.ParticipantId,
+                    pwp.PostId,
+                    pwp.PetId,
+                    pwp.OwnerId,
+                    pwp.HasApproved,
+                    pwp.ApprovedAt,
+                    Pet = pwp.Pet != null ? new
+                    {
+                        pwp.Pet.PetId,
+                        pwp.Pet.Name,
+                        pwp.Pet.Species,
+                        pwp.Pet.Breed,
+                        pwp.Pet.ProfilePicture
+                    } : null
+                }).ToList()
+            }).ToList();
+            
+            return Ok(postDtos);
         }
         catch (Exception ex)
         {
@@ -98,7 +143,51 @@ public class PostsController : ControllerBase
                 return NotFound($"Post with ID {id} not found.");
             }
 
-            return Ok(post);
+            // Convert to DTO to avoid circular reference issues
+            var postDto = new
+            {
+                post.PostId,
+                post.UserId,
+                post.PostType,
+                post.Title,
+                post.Content,
+                post.Status,
+                post.Images,
+                post.Location,
+                post.Address,
+                post.Price,
+                post.EventDate,
+                post.Category,
+                post.CreatedAt,
+                post.UpdatedAt,
+                User = post.User != null ? new
+                {
+                    post.User.UserId,
+                    post.User.Username,
+                    post.User.FirstName,
+                    post.User.LastName,
+                    post.User.ProfilePicture
+                } : null,
+                PetWeddingParticipants = post.PetWeddingParticipants?.Select(pwp => new
+                {
+                    pwp.ParticipantId,
+                    pwp.PostId,
+                    pwp.PetId,
+                    pwp.OwnerId,
+                    pwp.HasApproved,
+                    pwp.ApprovedAt,
+                    Pet = pwp.Pet != null ? new
+                    {
+                        pwp.Pet.PetId,
+                        pwp.Pet.Name,
+                        pwp.Pet.Species,
+                        pwp.Pet.Breed,
+                        pwp.Pet.ProfilePicture
+                    } : null
+                }).ToList()
+            };
+
+            return Ok(postDto);
         }
         catch (Exception ex)
         {
@@ -243,7 +332,52 @@ public class PostsController : ControllerBase
         try
         {
             var posts = await _postService.GetPostsByUserAsync(userId);
-            return Ok(posts);
+            
+            // Convert to DTOs to avoid circular reference issues
+            var postDtos = posts.Select(p => new
+            {
+                p.PostId,
+                p.UserId,
+                p.PostType,
+                p.Title,
+                p.Content,
+                p.Status,
+                p.Images,
+                p.Location,
+                p.Address,
+                p.Price,
+                p.EventDate,
+                p.Category,
+                p.CreatedAt,
+                p.UpdatedAt,
+                User = p.User != null ? new
+                {
+                    p.User.UserId,
+                    p.User.Username,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.ProfilePicture
+                } : null,
+                PetWeddingParticipants = p.PetWeddingParticipants?.Select(pwp => new
+                {
+                    pwp.ParticipantId,
+                    pwp.PostId,
+                    pwp.PetId,
+                    pwp.OwnerId,
+                    pwp.HasApproved,
+                    pwp.ApprovedAt,
+                    Pet = pwp.Pet != null ? new
+                    {
+                        pwp.Pet.PetId,
+                        pwp.Pet.Name,
+                        pwp.Pet.Species,
+                        pwp.Pet.Breed,
+                        pwp.Pet.ProfilePicture
+                    } : null
+                }).ToList()
+            }).ToList();
+            
+            return Ok(postDtos);
         }
         catch (InvalidOperationException ex)
         {
@@ -254,8 +388,61 @@ public class PostsController : ControllerBase
     [HttpGet("type/{postType}")]
     public async Task<IActionResult> GetPostsByType(PostType postType)
     {
-        var posts = await _postService.GetPostsByTypeAsync(postType);
-        return Ok(posts);
+        try
+        {
+            var posts = await _postService.GetPostsByTypeAsync(postType);
+            
+            // Convert to DTOs to avoid circular reference issues
+            var postDtos = posts.Select(p => new
+            {
+                p.PostId,
+                p.UserId,
+                p.PostType,
+                p.Title,
+                p.Content,
+                p.Status,
+                p.Images,
+                p.Location,
+                p.Address,
+                p.Price,
+                p.EventDate,
+                p.Category,
+                p.CreatedAt,
+                p.UpdatedAt,
+                User = p.User != null ? new
+                {
+                    p.User.UserId,
+                    p.User.Username,
+                    p.User.FirstName,
+                    p.User.LastName,
+                    p.User.ProfilePicture
+                } : null,
+                PetWeddingParticipants = p.PetWeddingParticipants?.Select(pwp => new
+                {
+                    pwp.ParticipantId,
+                    pwp.PostId,
+                    pwp.PetId,
+                    pwp.OwnerId,
+                    pwp.HasApproved,
+                    pwp.ApprovedAt,
+                    Pet = pwp.Pet != null ? new
+                    {
+                        pwp.Pet.PetId,
+                        pwp.Pet.Name,
+                        pwp.Pet.Species,
+                        pwp.Pet.Breed,
+                        pwp.Pet.ProfilePicture
+                    } : null
+                }).ToList()
+            }).ToList();
+            
+            return Ok(postDtos);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in GetPostsByType: {ex.Message}");
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
     }
 
     [HttpPost("with-role")]
