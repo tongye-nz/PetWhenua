@@ -667,7 +667,7 @@ const UserProfile: React.FC = () => {
                     justifyContent: 'center', 
                     alignItems: 'center', 
                     height: '200px',
-                    backgroundColor: 'white',
+                    bgcolor: 'background.paper',
                     borderRadius: '12px'
                   }}>
                     <Typography color="text.secondary">
@@ -678,10 +678,12 @@ const UserProfile: React.FC = () => {
               ) : (
                 // Edit form for own profile
                 <Box sx={{ 
-                  backgroundColor: 'white',
+                  bgcolor: 'background.paper',
                   borderRadius: '12px',
                   padding: 2,
-                  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                  boxShadow: (theme) => theme.palette.mode === 'dark' 
+                    ? '0 2px 8px rgba(0, 0, 0, 0.3)' 
+                    : '0 2px 8px rgba(0, 0, 0, 0.1)'
                 }}>
                   <ProfileInfoForm
                     formData={form.formData}

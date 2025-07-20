@@ -82,7 +82,7 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
           height: size,
           fontSize: size / 4,
           fontWeight: 'bold',
-          backgroundColor: '#4caf50',
+          bgcolor: 'primary.main',
           color: 'white',
         }}
       >
@@ -108,22 +108,26 @@ const ProfilePicture: React.FC<ProfilePictureProps> = ({
             <IconButton
               component="span"
               disabled={isProcessing}
-              sx={{
-                backgroundColor: '#e8f5e8',
-                color: '#4caf50',
+              sx={(theme) => ({
+                bgcolor: theme.palette.mode === 'dark' 
+                  ? 'rgba(255, 255, 255, 0.08)' 
+                  : 'rgba(25, 118, 210, 0.08)',
+                color: 'primary.main',
                 '&:hover': {
-                  backgroundColor: '#c8e6c9',
+                  bgcolor: theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.12)' 
+                    : 'rgba(25, 118, 210, 0.12)',
                 },
                 '&:disabled': {
-                  backgroundColor: '#f5f5f5',
-                  color: '#999',
+                  bgcolor: 'action.disabledBackground',
+                  color: 'action.disabled',
                 },
-              }}
+              })}
             >
               {isProcessing ? <CircularProgress size={24} /> : <PhotoCamera />}
             </IconButton>
           </label>
-          <Text variant="caption" sx={{ color: '#666' }}>
+          <Text variant="caption" sx={{ color: 'text.secondary' }}>
             {isProcessing ? 'Processing...' : 'Change Photo'}
           </Text>
           
