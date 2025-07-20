@@ -153,7 +153,7 @@ namespace PetWhenua.Controllers
         }
 
         [HttpPost("validate-file")]
-        public IActionResult ValidateImageFile([FromForm] IFormFile file)
+        public IActionResult ValidateImageFile(IFormFile file)
         {
             try
             {

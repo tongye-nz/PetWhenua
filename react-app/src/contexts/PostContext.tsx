@@ -94,8 +94,12 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'FETCH_START' });
       const posts = await postService.getPosts(filters);
       dispatch({ type: 'FETCH_POSTS_SUCCESS', payload: posts });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch posts' });
+    } catch (error: any) {
+      console.error('fetchPosts error details:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch posts';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
     }
   }, []);
 

@@ -103,9 +103,9 @@ public class PetsController : ControllerBase
         return Ok(pets);
     }
 
-    [HttpPost("{id}/profile-picture")]
+        [HttpPost("{id}/profile-picture")]
     [Authorize]
-    public async Task<IActionResult> UploadPetProfilePicture(int id, [FromForm] IFormFile file)
+    public async Task<IActionResult> UploadPetProfilePicture(int id, IFormFile file)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
