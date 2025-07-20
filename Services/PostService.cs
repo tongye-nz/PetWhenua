@@ -185,9 +185,48 @@ namespace PetWhenua.Services
                 throw new InvalidOperationException($"Cannot change {post.PostType} post status from {post.Status} to {newStatus}. Allowed statuses for {post.PostType} posts are: {allowedStatusNames}");
             }
 
+            var oldStatus = post.Status;
             post.Status = newStatus;
             post.UpdatedAt = DateTime.UtcNow;
-            return await _postRepository.UpdatePostAsync(post);
+            
+            var updatedPost = await _postRepository.UpdatePostAsync(post);
+
+            // Send notification to meetup creator if this is a meetup status change
+            if (post.PostType == PostType.Meetup && oldStatus != newStatus)
+            {
+                try
+                {
+                    // Only notify if the status change is from Pending to Active/Inactive
+                    if (oldStatus == PostStatus.Pending)
+                    {
+                        if (newStatus == PostStatus.Active)
+                        {
+                            // Meetup approved
+                            await _notificationService.CreateMeetupApprovedNotificationAsync(
+                                post.UserId, 
+                                post.PostId, 
+                                post.Title
+                            );
+                        }
+                        else if (newStatus == PostStatus.Inactive)
+                        {
+                            // Meetup rejected
+                            await _notificationService.CreateMeetupRejectedNotificationAsync(
+                                post.UserId, 
+                                post.PostId, 
+                                post.Title
+                            );
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail status change if notification fails
+                    Console.WriteLine($"Failed to send meetup status change notification: {ex.Message}");
+                }
+            }
+
+            return updatedPost;
         }
 
         public async Task<bool> DeletePostAsync(int id)

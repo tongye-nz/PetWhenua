@@ -31,6 +31,8 @@ namespace PetWhenua.Services
         Task CreatePetWeddingApprovalNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName);
         Task CreateMeetupActivationNotificationAsync(int targetUserId, int postId, string postTitle);
         Task CreateMeetupPendingNotificationAsync(int postId, string postTitle, string creatorName);
+        Task CreateMeetupApprovedNotificationAsync(int targetUserId, int postId, string postTitle);
+        Task CreateMeetupRejectedNotificationAsync(int targetUserId, int postId, string postTitle);
         Task CreatePostLikedNotificationAsync(int targetUserId, int likerUserId, int postId, string postTitle, string likerName);
         Task CreatePostCommentedNotificationAsync(int targetUserId, int commenterUserId, int postId, string postTitle, string commenterName);
         Task CreateUserFollowedNotificationAsync(int targetUserId, int followerUserId, string followerName);

@@ -16,7 +16,8 @@ namespace PetWhenua.Models
         PostCommented = 9,
         UserFollowed = 10,
         ChatMessage = 11,
-        General = 12
+        General = 12,
+        MeetupRejected = 13
     }
 
     public enum NotificationStatus

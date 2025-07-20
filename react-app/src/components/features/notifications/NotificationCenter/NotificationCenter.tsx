@@ -155,6 +155,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       case NotificationType.MeetupPendingActivation:
       case NotificationType.MeetupActivated:
         return '📅';
+      case NotificationType.MeetupRejected:
+        return '❌';
       case NotificationType.PostLiked:
         return '❤️';
       case NotificationType.PostCommented:

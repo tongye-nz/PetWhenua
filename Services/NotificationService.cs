@@ -311,6 +311,34 @@ namespace PetWhenua.Services
             _logger.LogInformation("Notified {AdminCount} admin(s) about pending meetup {PostId}", adminUserIds.Count, postId);
         }
 
+        public async Task CreateMeetupApprovedNotificationAsync(int targetUserId, int postId, string postTitle)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.MeetupActivated,
+                Title = "Meetup Approved",
+                Message = $"Great news! Your meetup '{postTitle}' has been approved and is now active",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
+        public async Task CreateMeetupRejectedNotificationAsync(int targetUserId, int postId, string postTitle)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.MeetupRejected,
+                Title = "Meetup Not Approved",
+                Message = $"Your meetup '{postTitle}' was not approved. Please contact support if you have questions",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
         public async Task CreatePostLikedNotificationAsync(int targetUserId, int likerUserId, int postId, string postTitle, string likerName)
         {
             var request = new CreateNotificationRequest

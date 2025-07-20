@@ -11,7 +11,8 @@ export const NotificationType = {
   PostCommented: 9,
   UserFollowed: 10,
   ChatMessage: 11,
-  General: 12
+  General: 12,
+  MeetupRejected: 13
 } as const;
 
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
