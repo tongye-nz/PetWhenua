@@ -1,15 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { homeStyles } from './Home.styles';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Card, 
+  CardContent, 
+  Button,
+  useTheme,
+  useMediaQuery 
+} from '@mui/material';
 
 const Home: React.FC = () => {
-  const [hoveredCards, setHoveredCards] = useState<{ [key: number]: boolean }>({});
-  const [hoveredJoinBtn, setHoveredJoinBtn] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
-
-  const handleCardHover = (cardIndex: number, isHovered: boolean) => {
-    setHoveredCards(prev => ({ ...prev, [cardIndex]: isHovered }));
-  };
 
   const handleCardClick = (cardIndex: number) => {
     switch (cardIndex) {
@@ -30,116 +35,297 @@ const Home: React.FC = () => {
     }
   };
 
-  const getCardStyle = (cardIndex: number) => 
-    hoveredCards[cardIndex] ? homeStyles.stepCardHover : homeStyles.stepCard;
-
-  const getJoinBtnStyle = () => 
-    hoveredJoinBtn ? homeStyles.joinEventBtnHover : homeStyles.joinEventBtn;
-
-  const iconCircleStyles = [homeStyles.iconCircle1, homeStyles.iconCircle2, homeStyles.iconCircle3, homeStyles.iconCircle4];
+  const steps = [
+    {
+      icon: '👤',
+      title: 'Create your Pet Profile',
+      description: 'Share your furry friend\'s story and connect with your community',
+      gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)'
+    },
+    {
+      icon: '📍', 
+      title: 'Find a pet owner near you',
+      description: 'Find pet owners near you and build relationships for your pets',
+      gradient: 'linear-gradient(135deg, #4ecdc4, #44a08d)'
+    },
+    {
+      icon: '🐕',
+      title: 'Find pets near you',
+      description: 'Discover adorable pets in your area and connect with their owners',
+      gradient: 'linear-gradient(135deg, #45b7d1, #96c93d)'
+    },
+    {
+      icon: '📅',
+      title: 'Join Meetups & Events', 
+      description: 'Attend local playdates and build lasting friendships',
+      gradient: 'linear-gradient(135deg, #ffa726, #fb8c00)'
+    }
+  ];
 
   return (
-    <div style={homeStyles.homePage}>
+    <Box sx={{ width: '100%' }}>
       {/* Hero Section */}
-      <section style={homeStyles.hero}>
-        <div style={homeStyles.heroContent}>
-          <h1 style={homeStyles.heroTitle}>
+      <Box
+        sx={{
+          background: 'linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url("/homepage.jpg") center/cover no-repeat',
+          height: '70vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          color: 'white',
+        }}
+      >
+        <Box sx={{ maxWidth: '800px', px: 2 }}>
+          <Typography
+            variant="h1"
+            sx={{
+              fontSize: isMobile ? '2.5rem' : '3.5rem',
+              fontWeight: 'bold',
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+              mb: 2
+            }}
+          >
             PetWhenua: Our Kiwi Pet Networking Community
-            <br />
-            <span style={homeStyles.heroSubtitle}>Networking for your pet</span>
-          </h1>
-        </div>
-      </section>
+          </Typography>
+          <Typography
+            variant="h2"
+            sx={{
+              fontSize: isMobile ? '1.5rem' : '2rem',
+              fontWeight: 'normal',
+              opacity: 0.9,
+            }}
+          >
+            Networking for your pet
+          </Typography>
+        </Box>
+      </Box>
 
       {/* How It Works Section */}
-      <section style={homeStyles.howItWorks}>
-        <div style={homeStyles.container}>
-          <h2 style={homeStyles.sectionTitle}>How It Works</h2>
-          <p style={homeStyles.sectionSubtitle}>
+      <Box
+        sx={{
+          py: 8,
+          bgcolor: 'background.default',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Typography
+            variant="h2"
+            sx={{
+              textAlign: 'center',
+              fontSize: '2.5rem',
+              fontWeight: 'bold',
+              color: 'text.primary',
+              mb: 2
+            }}
+          >
+            How It Works
+          </Typography>
+          <Typography
+            variant="body1"
+            sx={{
+              textAlign: 'center',
+              color: 'text.secondary',
+              fontSize: '1.1rem',
+              mb: 6,
+              lineHeight: 1.6,
+            }}
+          >
             content1
             <br />
             content2
-          </p>
+          </Typography>
           
-          <div style={homeStyles.stepsGrid}>
-            {[
-              {
-                icon: '👤',
-                title: 'Create your Pet Profile',
-                description: 'Share your furry friend\'s story and\nconnect with your community'
-              },
-              {
-                icon: '📍', 
-                title: 'Find a pet owner near you',
-                description: 'Find pet owners near you and build\nrelationships for your pets'
-              },
-              {
-                icon: '🐕',
-                title: 'Find pets near you',
-                description: 'Discover adorable pets in your area\nand connect with their owners'
-              },
-              {
-                icon: '📅',
-                title: 'Join Meetups & Events', 
-                description: 'Attend local playdates and build lasting\nfriendships'
-              }
-            ].map((step, index) => (
-              <div 
-                key={index}
-                style={getCardStyle(index)}
-                onMouseEnter={() => handleCardHover(index, true)}
-                onMouseLeave={() => handleCardHover(index, false)}
-                onClick={() => handleCardClick(index)}
-              >
-                <div style={homeStyles.stepIcon}>
-                  <div style={iconCircleStyles[index]}>
-                    <span style={homeStyles.icon}>{step.icon}</span>
-                  </div>
-                </div>
-                <h3 style={homeStyles.stepTitle}>{step.title}</h3>
-                <p style={homeStyles.stepDescription}>
-                  {step.description.split('\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                      {line}
-                      {i < step.description.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                     <Box 
+             sx={{
+               display: 'grid',
+               gridTemplateColumns: {
+                 xs: '1fr',
+                 sm: 'repeat(2, 1fr)',
+                 lg: 'repeat(4, 1fr)'
+               },
+               gap: 4,
+               maxWidth: '1000px',
+               mx: 'auto'
+             }}
+           >
+             {steps.map((step, index) => (
+               <Card 
+                 key={index}
+                 sx={{
+                   height: '100%',
+                   textAlign: 'center',
+                   cursor: 'pointer',
+                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                   '&:hover': {
+                     transform: 'translateY(-5px)',
+                     boxShadow: theme.shadows[8],
+                   },
+                   bgcolor: 'background.paper',
+                 }}
+                 onClick={() => handleCardClick(index)}
+               >
+                 <CardContent sx={{ p: 3 }}>
+                   <Box sx={{ mb: 3 }}>
+                     <Box
+                       sx={{
+                         width: 80,
+                         height: 80,
+                         borderRadius: '50%',
+                         background: step.gradient,
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'center',
+                         mx: 'auto',
+                         fontSize: '2rem',
+                         color: 'white',
+                       }}
+                     >
+                       {step.icon}
+                     </Box>
+                   </Box>
+                   <Typography
+                     variant="h6"
+                     sx={{
+                       fontWeight: 'bold',
+                       color: 'text.primary',
+                       mb: 2
+                     }}
+                   >
+                     {step.title}
+                   </Typography>
+                   <Typography
+                     variant="body2"
+                     sx={{
+                       color: 'text.secondary',
+                       lineHeight: 1.6,
+                     }}
+                   >
+                     {step.description}
+                   </Typography>
+                 </CardContent>
+               </Card>
+             ))}
+           </Box>
+        </Container>
+      </Box>
 
       {/* Upcoming Meetup Section */}
-      <section style={homeStyles.upcomingMeetup}>
-        <div style={homeStyles.container}>
-          <div style={homeStyles.meetupCard}>
-            <div style={homeStyles.meetupContent}>
-              <div style={homeStyles.meetupIcon}>
-                <span>🏃‍♂️</span>
-              </div>
-              <div>
-                <h3 style={homeStyles.meetupTitle}>Upcoming Meetup</h3>
-                <p style={homeStyles.meetupInfo}>Christchurch - 20 July at Hagley Park</p>
-                <button 
-                  style={getJoinBtnStyle()}
-                  onMouseEnter={() => setHoveredJoinBtn(true)}
-                  onMouseLeave={() => setHoveredJoinBtn(false)}
+      <Box
+        sx={{
+          py: 6,
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Container maxWidth="lg">
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: 4,
+              color: 'white',
+              maxWidth: '800px',
+              mx: 'auto',
+              position: 'relative',
+            }}
+          >
+            <CardContent sx={{ p: 4 }}>
+              <Box 
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 3,
+                  flexDirection: isMobile ? 'column' : 'row',
+                  textAlign: isMobile ? 'center' : 'left'
+                }}
+              >
+                <Box
+                  sx={{
+                    fontSize: '2.5rem',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    p: 2,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 80,
+                    height: 80,
+                    flexShrink: 0
+                  }}
                 >
-                  Join Event
-                </button>
-              </div>
-            </div>
-            <div style={homeStyles.meetupDots}>
-              <span style={homeStyles.dot}></span>
-              <span style={homeStyles.dotActive}></span>
-              <span style={homeStyles.dot}></span>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
+                  🏃‍♂️
+                </Box>
+                <Box sx={{ flex: 1 }}>
+                  <Typography
+                    variant="h4"
+                    sx={{
+                      fontWeight: 'bold',
+                      mb: 1
+                    }}
+                  >
+                    Upcoming Meetup
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      mb: 2,
+                      opacity: 0.9,
+                    }}
+                  >
+                    Christchurch - 20 July at Hagley Park
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#667eea',
+                      fontWeight: 600,
+                      '&:hover': {
+                        bgcolor: '#f0f0f0',
+                      },
+                    }}
+                  >
+                    Join Event
+                  </Button>
+                </Box>
+              </Box>
+              <Box 
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: 1,
+                  mt: 3
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: 'white',
+                  }}
+                />
+                <Box
+                  sx={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Container>
+      </Box>
+    </Box>
   );
 };
 

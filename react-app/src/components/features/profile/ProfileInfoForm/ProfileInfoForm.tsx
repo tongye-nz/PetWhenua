@@ -10,7 +10,7 @@ export interface ProfileInfoFormProps {
   errors: UserProfileFormErrors;
   isEditing: boolean;
   onInputChange: (field: keyof UserProfileData, value: string) => void;
-  styles: Record<string, CSSProperties> & {
+  styles?: Record<string, CSSProperties> & {
     rightSection: CSSProperties;
     formSection: CSSProperties;
     nameRow: CSSProperties;
@@ -24,14 +24,25 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
   errors,
   isEditing,
   onInputChange,
-  styles
 }) => {
   return (
-    <Box style={styles.rightSection}>
-      <Box style={styles.formSection}>
+    <Box sx={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      flex: 1,
+    }}>
+      <Box sx={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+      }}>
         <Stack spacing={2}>
           {/* Name Fields */}
-          <Box style={styles.nameRow}>
+          <Box sx={{ 
+            display: 'flex',
+            gap: 2,
+            alignItems: 'flex-start',
+          }}>
             <Input
               label="First Name"
               value={formData.firstName}
@@ -39,7 +50,7 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
               disabled={!isEditing}
               error={!!errors.firstName}
               helperText={errors.firstName}
-              style={styles.halfWidth}
+              sx={{ flex: '1 1 50%', minWidth: 0 }}
             />
             <Input
               label="Last Name"
@@ -48,7 +59,7 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
               disabled={!isEditing}
               error={!!errors.lastName}
               helperText={errors.lastName}
-              style={styles.halfWidth}
+              sx={{ flex: '1 1 50%', minWidth: 0 }}
             />
           </Box>
 
@@ -58,7 +69,6 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
             value={formData.username}
             disabled={true}
             fullWidth
-            style={styles.textField}
             helperText="Username cannot be changed"
           />
 
@@ -72,7 +82,6 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
             error={!!errors.email}
             helperText={errors.email}
             fullWidth
-            style={styles.textField}
           />
 
           {/* Location Selection */}
@@ -96,7 +105,6 @@ const ProfileInfoForm: React.FC<ProfileInfoFormProps> = ({
             error={!!errors.bio}
             helperText={errors.bio || `${formData.bio.length}/${VALIDATION_RULES.BIO_MAX_LENGTH} characters`}
             fullWidth
-            style={styles.textField}
             placeholder="Tell us about yourself and your pets..."
           />
         </Stack>

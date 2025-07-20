@@ -29,7 +29,7 @@ import { postService } from '../api/post.api';
 import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
-import { userProfileStyles } from './UserProfile.styles';
+
 import { formatDate } from '../utils/dateUtils';
 
 const UserProfile: React.FC = () => {
@@ -355,7 +355,7 @@ const UserProfile: React.FC = () => {
   // Show loading spinner during initial load
   if (isLoading || (!profileData.id && form.loading)) {
     return (
-      <Container style={userProfileStyles.container}>
+      <Container maxWidth="xl" sx={{ maxWidth: '1400px', px: 2, py: 4 }}>
         <LoadingSpinner 
           size="large"
           centered
@@ -368,8 +368,8 @@ const UserProfile: React.FC = () => {
   // Enhanced Error States
   if (error) {
     return (
-      <Container style={userProfileStyles.container}>
-        <Paper elevation={3} style={userProfileStyles.profileCard}>
+      <Container maxWidth="xl" sx={{ maxWidth: '1400px', px: 2, py: 4 }}>
+        <Paper elevation={3} sx={{ bgcolor: 'background.paper', borderRadius: 4, p: 4 }}>
           {isUserNotFound ? (
             // User Not Found Error
             <Box sx={{ 
@@ -529,9 +529,32 @@ const UserProfile: React.FC = () => {
   }
 
   return (
-    <div style={userProfileStyles.background}>
-      <Container style={userProfileStyles.container}>
-        <Paper elevation={3} style={userProfileStyles.profileCard}>
+    <Box 
+      sx={{
+        bgcolor: 'background.default',
+        minHeight: '100vh',
+        py: 4,
+      }}
+    >
+      <Container 
+        maxWidth="xl"
+        sx={{
+          maxWidth: '1400px',
+          px: 2,
+        }}
+      >
+        <Paper 
+          elevation={3} 
+          sx={{
+            bgcolor: 'background.paper',
+            borderRadius: 4,
+            p: 4,
+            boxShadow: (theme) => 
+              theme.palette.mode === 'light' 
+                ? '0 8px 32px rgba(0, 0, 0, 0.1)' 
+                : '0 8px 32px rgba(0, 0, 0, 0.3)',
+          }}
+        >
           {/* Header */}
           <ProfileHeaderSection
             isEditing={isEditing}
@@ -545,19 +568,18 @@ const UserProfile: React.FC = () => {
             onStartEditing={handleStartEditing}
             onSaveForm={handleSaveForm}
             onCancelEditing={handleCancelEditing}
-            styles={userProfileStyles as any}
           />
 
-          <Divider style={userProfileStyles.divider} />
+          <Divider sx={{ mb: 4, bgcolor: 'divider' }} />
 
           {/* Success/Error Messages */}
           {form.success && (
-            <Alert severity="success" style={userProfileStyles.alert}>
+            <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
               {form.success}
             </Alert>
           )}
           {form.error && (
-            <Alert severity="error" style={userProfileStyles.alert}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
               {form.error}
             </Alert>
           )}
@@ -618,7 +640,6 @@ const UserProfile: React.FC = () => {
                     isEditing={isOwnProfile && isEditing}
                     onProfilePictureChange={handleProfilePictureChange}
                     onProfilePictureError={handleProfilePictureError}
-                    styles={userProfileStyles as any}
                   />
                 </>
               )}
@@ -667,7 +688,6 @@ const UserProfile: React.FC = () => {
                     errors={form.errors}
                     isEditing={isOwnProfile && isEditing}
                     onInputChange={form.handleInputChange}
-                    styles={userProfileStyles as any}
                   />
                 </Box>
               )}
@@ -675,7 +695,7 @@ const UserProfile: React.FC = () => {
           </Box>
         </Paper>
       </Container>
-    </div>
+    </Box>
   );
 };
 

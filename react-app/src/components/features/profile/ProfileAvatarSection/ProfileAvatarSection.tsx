@@ -12,7 +12,7 @@ export interface ProfileAvatarSectionProps {
   isEditing: boolean;
   onProfilePictureChange: (processedImage: ProcessedImageResult) => void;
   onProfilePictureError?: (error: string) => void;
-  styles: Record<string, CSSProperties> & {
+  styles?: Record<string, CSSProperties> & {
     leftSection: CSSProperties;
     avatarSection: CSSProperties;
     stats: CSSProperties;
@@ -28,29 +28,59 @@ const ProfileAvatarSection: React.FC<ProfileAvatarSectionProps> = ({
   isEditing,
   onProfilePictureChange,
   onProfilePictureError,
-  styles
 }) => {
   return (
-    <Box style={styles.leftSection}>
-      <Box style={styles.avatarSection}>
+    <Box sx={{ 
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      mb: 3,
+    }}>
+      <Box sx={{ 
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        textAlign: 'center',
+        mb: 3,
+      }}>
         <ProfilePicture
           src={formData.profilePicture || profileData.profilePicture}
           firstName={formData.firstName}
           lastName={formData.lastName}
           isEditing={isEditing}
-          size={150} // Match the size from styles.avatar
+          size={150}
           onImageChange={onProfilePictureChange}
           onImageError={onProfilePictureError}
         />
         
-        <Box style={styles.stats}>
-          <Text variant="h6" style={styles.statNumber}>
+        <Box sx={{ 
+          bgcolor: 'primary.50',
+          p: 3,
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'primary.100',
+          width: '100%',
+          mt: 2,
+        }}>
+          <Text variant="h6" sx={{ 
+            color: 'primary.main',
+            fontWeight: 'bold',
+            fontSize: '2rem',
+            mb: 1,
+          }}>
             {profileData.petCount}
           </Text>
-          <Text variant="body2" style={styles.statLabel}>
+          <Text variant="body2" sx={{ 
+            color: 'text.secondary',
+            fontWeight: '500',
+            mb: 1,
+          }}>
             Pets Registered
           </Text>
-          <Text variant="body2" style={styles.joinDate}>
+          <Text variant="body2" sx={{ 
+            color: 'text.disabled',
+            fontSize: '0.875rem',
+          }}>
             Joined {profileData.joinDate}
           </Text>
         </Box>

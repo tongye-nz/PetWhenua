@@ -66,11 +66,15 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   if (isLoading) {
     return (
       <Box sx={{ 
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: 3,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-        border: '1px solid rgba(0, 0, 0, 0.05)'
+        bgcolor: 'background.paper',
+        borderRadius: 4,
+        p: 3,
+        boxShadow: (theme) => 
+          theme.palette.mode === 'light' 
+            ? '0 4px 20px rgba(0, 0, 0, 0.1)' 
+            : '0 4px 20px rgba(0, 0, 0, 0.3)',
+        border: '1px solid',
+        borderColor: 'divider'
       }}>
         <Typography variant="h6" gutterBottom sx={{ 
           display: 'flex', 
@@ -95,11 +99,15 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   if (error) {
     return (
       <Box sx={{ 
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: 3,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-        border: '1px solid rgba(0, 0, 0, 0.05)'
+        bgcolor: 'background.paper',
+        borderRadius: 4,
+        p: 3,
+        boxShadow: (theme) => 
+          theme.palette.mode === 'light' 
+            ? '0 4px 20px rgba(0, 0, 0, 0.1)' 
+            : '0 4px 20px rgba(0, 0, 0, 0.3)',
+        border: '1px solid',
+        borderColor: 'divider'
       }}>
         <Typography variant="h6" gutterBottom sx={{ 
           display: 'flex', 
@@ -127,11 +135,15 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   if (posts.length === 0) {
     return (
       <Box sx={{ 
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        padding: 3,
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-        border: '1px solid rgba(0, 0, 0, 0.05)'
+        bgcolor: 'background.paper',
+        borderRadius: 4,
+        p: 3,
+        boxShadow: (theme) => 
+          theme.palette.mode === 'light' 
+            ? '0 4px 20px rgba(0, 0, 0, 0.1)' 
+            : '0 4px 20px rgba(0, 0, 0, 0.3)',
+        border: '1px solid',
+        borderColor: 'divider'
       }}>
         <Typography variant="h6" gutterBottom sx={{ 
           display: 'flex', 
@@ -148,9 +160,10 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
         <Box sx={{ 
           textAlign: 'center', 
           py: 4,
-          borderRadius: '12px',
-          border: '1px solid rgba(0, 0, 0, 0.05)',
-          backgroundColor: 'rgba(102, 126, 234, 0.02)'
+          borderRadius: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'action.hover'
         }}>
           <PhotoCamera sx={{ 
             fontSize: 64, 
@@ -181,11 +194,15 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   // Posts display using PostCard component
   return (
     <Box sx={{ 
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: 3,
-      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(0, 0, 0, 0.05)'
+      bgcolor: 'background.paper',
+      borderRadius: 4,
+      p: 3,
+      boxShadow: (theme) => 
+        theme.palette.mode === 'light' 
+          ? '0 4px 20px rgba(0, 0, 0, 0.1)' 
+          : '0 4px 20px rgba(0, 0, 0, 0.3)',
+      border: '1px solid',
+      borderColor: 'divider'
     }}>
       <Typography variant="h6" gutterBottom sx={{ 
         display: 'flex', 
