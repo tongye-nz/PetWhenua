@@ -135,13 +135,13 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> GetPost(int id)
     {
         try
-        {
-            var post = await _postService.GetPostByIdAsync(id);
+    {
+        var post = await _postService.GetPostByIdAsync(id);
 
-            if (post == null)
-            {
-                return NotFound($"Post with ID {id} not found.");
-            }
+        if (post == null)
+        {
+            return NotFound($"Post with ID {id} not found.");
+        }
 
             // Convert to DTO to avoid circular reference issues
             var postDto = new
@@ -389,8 +389,8 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> GetPostsByType(PostType postType)
     {
         try
-        {
-            var posts = await _postService.GetPostsByTypeAsync(postType);
+    {
+        var posts = await _postService.GetPostsByTypeAsync(postType);
             
             // Convert to DTOs to avoid circular reference issues
             var postDtos = posts.Select(p => new

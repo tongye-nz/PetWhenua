@@ -18,6 +18,7 @@ namespace PetWhenua.Repositories.Concrete
                 .Include(p => p.User)
                 .Include(p => p.PetWeddingParticipants)
                 .ThenInclude(pwp => pwp.Pet)
+                .AsNoTracking() // Prevent change tracking and reduce circular references
                 .AsQueryable();
 
             // Only show active posts for public browsing (unless filtering by specific userId for user's own posts)
@@ -55,6 +56,7 @@ namespace PetWhenua.Repositories.Concrete
                 .Include(p => p.User)
                 .Include(p => p.PetWeddingParticipants)
                 .ThenInclude(pwp => pwp.Pet)
+                .AsNoTracking() // Prevent change tracking and reduce circular references
                 .FirstOrDefaultAsync(p => p.PostId == id);
         }
 
@@ -113,6 +115,7 @@ namespace PetWhenua.Repositories.Concrete
                 .Include(p => p.User)
                 .Include(p => p.PetWeddingParticipants)
                 .ThenInclude(pwp => pwp.Pet)
+                .AsNoTracking() // Prevent change tracking and reduce circular references
                 .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
@@ -122,6 +125,7 @@ namespace PetWhenua.Repositories.Concrete
         {
             return await _context.Posts
                 .Include(p => p.User)
+                .AsNoTracking() // Prevent change tracking and reduce circular references
                 .Where(p => p.PostType == postType && p.Status == PostStatus.Active)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
