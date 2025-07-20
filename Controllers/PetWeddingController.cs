@@ -145,20 +145,5 @@ namespace PetWhenua.Controllers
         }
     }
 
-    public class CreatePetWeddingDto
-    {
-        public string Title { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
-        public List<int> PetIds { get; set; } = new();
-        public string Location { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
-        public DateTime EventDate { get; set; }
-        public List<string>? Images { get; set; }
-        public string? Category { get; set; }
-    }
 
-    public class UpdatePetWeddingParticipantsDto
-    {
-        public List<int> PetIds { get; set; } = new();
-    }
 }
