@@ -21,11 +21,15 @@ import PetsNearMe from './pages/PetsNearMe.tsx';
 import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import Messages from './pages/Messages.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
-import { ProtectedRoute } from './components/common';
+import { ProtectedRoute, AdminRoute, MeetupAdminRoute } from './components/common';
 import './App.css';
 
 // Lazy load heavier components
 const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
+const OtherUserProfile = lazy(() => import('./pages/OtherUserProfile.tsx'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel.tsx'));
+const MeetupManagement = lazy(() => import('./pages/MeetupManagement.tsx'));
+const WeddingRequests = lazy(() => import('./pages/WeddingRequests.tsx'));
 
 function App() {
   return (
@@ -70,6 +74,11 @@ function App() {
                     <UserProfile />
                   </ProtectedRoute>
                 } />
+                <Route path="/user/:userId" element={
+                  <ProtectedRoute>
+                    <OtherUserProfile />
+                  </ProtectedRoute>
+                } />
                 <Route path="/pets" element={<AllPets />} />
                 <Route path="/my-pets" element={
                   <ProtectedRoute>
@@ -95,6 +104,21 @@ function App() {
                 <Route path="/pets-near-me" element={<PetsNearMe />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminPanel />
+                  </AdminRoute>
+                } />
+                <Route path="/admin/meetups" element={
+                  <MeetupAdminRoute>
+                    <MeetupManagement />
+                  </MeetupAdminRoute>
+                } />
+                <Route path="/wedding-requests" element={
+                  <ProtectedRoute>
+                    <WeddingRequests />
+                  </ProtectedRoute>
+                } />
                 <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
               </Routes>
             </Suspense>

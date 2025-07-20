@@ -15,5 +15,10 @@ namespace PetWhenua.Services
         Task<bool> DeleteImageMetadataAsync(string fileName);
         string GetImageUrl(string fileName);
         Task<bool> ImageExistsAsync(string fileName);
+        
+        // Profile picture specific methods
+        Task<string> UploadUserProfilePictureAsync(IFormFile file, int userId);
+        Task<string> UploadPetProfilePictureAsync(IFormFile file, int userId, int petId);
+        Task<bool> DeleteProfilePictureAsync(string imageUrl);
     }
 }

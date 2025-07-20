@@ -42,6 +42,8 @@ public class User
 
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
+    public DateTime? LastLoginAt { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     [MaxLength(50)]

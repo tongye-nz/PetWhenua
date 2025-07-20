@@ -46,7 +46,11 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     }
   }, [postId, user]);
 
-  const handleLikeToggle = async () => {
+  const handleLikeToggle = async (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components (like PostCard)
+    event.preventDefault();
+    event.stopPropagation();
+    
     if (!user || loading || disabled) return;
 
     setLoading(true);

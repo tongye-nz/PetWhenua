@@ -18,6 +18,7 @@ namespace PetWhenua.Services
         Task<IEnumerable<Post>> GetPostsByUserAsync(int userId);
         Task<IEnumerable<Post>> GetPostsByTypeAsync(PostType postType);
         Task<IEnumerable<Post>> GetInactiveMeetupPostsAsync();
+        Task<IEnumerable<Post>> GetPendingMeetupPostsAsync();
         Task<bool> PostExistsAsync(int id);
         Task<bool> CanUserChangePostStatusAsync(int postId, int userId, string userRole);
         Task<List<PostStatus>> GetAvailableStatusTransitionsAsync(int postId, int userId, string userRole);

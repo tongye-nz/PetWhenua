@@ -158,5 +158,103 @@ namespace PetWhenua.Services
         {
             return await _userRepository.SearchUsersAsync(query, limit);
         }
+
+        public async Task<User> UpdateLastLoginAsync(int userId)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID {userId} not found.");
+            }
+
+            user.LastLoginAt = DateTime.UtcNow;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            return await _userRepository.UpdateUserAsync(user);
+        }
+
+        // Admin methods
+        public async Task<IEnumerable<AdminUserListDto>> GetUsersForAdminAsync()
+        {
+            var users = await _userRepository.GetAllUsersAsync(includePets: false, includePosts: false);
+            
+            return users.Select(user => new AdminUserListDto
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Role = user.Role,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
+                LastLoginAt = user.LastLoginAt
+            });
+        }
+
+        public async Task<UpdateUserRoleResponse> UpdateUserRoleAsync(int userId, string newRole)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID {userId} not found.");
+            }
+
+            // Validate the new role
+            if (!UserRoles.IsValidRole(newRole))
+            {
+                throw new InvalidOperationException($"Invalid role: {newRole}. Valid roles are: {string.Join(", ", UserRoles.AllRoles)}");
+            }
+
+            var oldRole = user.Role;
+            user.Role = newRole;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var updatedUser = await _userRepository.UpdateUserAsync(user);
+
+            return new UpdateUserRoleResponse
+            {
+                UserId = updatedUser.UserId,
+                Username = updatedUser.Username,
+                OldRole = oldRole,
+                NewRole = updatedUser.Role,
+                UpdatedAt = updatedUser.UpdatedAt,
+                Message = $"User role successfully updated from '{UserRoles.GetDisplayName(oldRole)}' to '{UserRoles.GetDisplayName(newRole)}'"
+            };
+        }
+
+        public async Task<UpdateUserStatusResponse> UpdateUserStatusAsync(int userId, bool isActive)
+        {
+            var user = await _userRepository.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException($"User with ID {userId} not found.");
+            }
+
+            var oldStatus = user.IsActive;
+            user.IsActive = isActive;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            var updatedUser = await _userRepository.UpdateUserAsync(user);
+
+            return new UpdateUserStatusResponse
+            {
+                UserId = updatedUser.UserId,
+                Username = updatedUser.Username,
+                OldStatus = oldStatus,
+                NewStatus = updatedUser.IsActive,
+                UpdatedAt = updatedUser.UpdatedAt,
+                Message = $"User status successfully updated to {(isActive ? "Active" : "Inactive")}"
+            };
+        }
+
+        public async Task<List<int>> GetUserIdsByRoleAsync(string role)
+        {
+            var users = await _userRepository.GetAllUsersAsync(includePets: false, includePosts: false);
+            return users
+                .Where(u => u.IsActive && u.Role == role)
+                .Select(u => u.UserId)
+                .ToList();
+        }
     }
 }

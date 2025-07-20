@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Avatar, 
-  IconButton,
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Avatar,
   Skeleton,
+  Button,
   Alert
 } from '@mui/material';
-import { PersonAdd, MoreVert } from '@mui/icons-material';
+import { PersonAdd, Group } from '@mui/icons-material';
 import { Text, FollowButton } from '../../../ui';
 import { userFollowService } from '../../../../api/userFollow.api';
 import type { User } from '../../../../models/auth.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface FollowedUsersListProps {
   userId: number;
@@ -30,8 +31,8 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
   const [error, setError] = useState<string>('');
   const [followStatusMap, setFollowStatusMap] = useState<Record<number, boolean>>({});
 
-  // Load followed users
-  const loadFollowedUsers = async () => {
+  // **PERFORMANCE OPTIMIZATION: Memoize the load function and use parallel API calls**
+  const loadFollowedUsers = useCallback(async () => {
     setLoading(true);
     setError('');
 
@@ -50,20 +51,24 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
       const limitedUsers = users.slice(0, maxUsers);
       setFollowedUsers(limitedUsers);
 
-      // For non-own profiles, load follow status for each user
-      if (!isOwnProfile) {
-        const statusMap: Record<number, boolean> = {};
-        await Promise.all(
-          limitedUsers.map(async (user) => {
-            try {
-              const status = await userFollowService.isFollowing(user.userId);
-              statusMap[user.userId] = status;
-            } catch (error) {
-              console.debug('Failed to load follow status for user:', user.userId);
-              statusMap[user.userId] = false;
-            }
-          })
+      // **PERFORMANCE OPTIMIZATION: Use Promise.allSettled for parallel follow status checks**
+      // Only check follow status for non-own profiles and when we have users to check
+      if (!isOwnProfile && limitedUsers.length > 0) {
+        const followStatusPromises = limitedUsers.map(async (user) => 
+          userFollowService.isFollowing(user.userId)
+            .then(status => ({ userId: user.userId, status }))
+            .catch(() => ({ userId: user.userId, status: false }))
         );
+
+        const followStatusResults = await Promise.allSettled(followStatusPromises);
+        
+        const statusMap: Record<number, boolean> = {};
+        followStatusResults.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            statusMap[result.value.userId] = result.value.status;
+          }
+        });
+        
         setFollowStatusMap(statusMap);
       }
     } catch (err) {
@@ -72,7 +77,7 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, isOwnProfile, maxUsers]); // Memoize with all dependencies
 
   useEffect(() => {
     // Only load if userId is valid
@@ -82,7 +87,7 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
       setError('Invalid user ID');
       setLoading(false);
     }
-  }, [userId, isOwnProfile]);
+  }, [loadFollowedUsers]); // Use the memoized function
 
   // Handle follow/unfollow changes
   const handleFollowChange = (targetUserId: number, isFollowing: boolean) => {
@@ -191,12 +196,12 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
           </Typography>
           
           {followedUsers.length > maxUsers && (
-            <IconButton size="small" sx={{ 
+            <Button size="small" sx={{ 
               bgcolor: 'rgba(102, 126, 234, 0.1)',
               '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' }
             }}>
-              <MoreVert sx={{ color: 'primary.main' }} />
-            </IconButton>
+              <Group sx={{ color: 'primary.main' }} />
+            </Button>
           )}
         </Box>
 
@@ -217,7 +222,8 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
             flexDirection: 'column', 
             gap: 1,
             maxHeight: '300px',
-            overflowY: 'auto'
+            overflowY: 'auto',
+            overflowX: 'hidden' // Prevent horizontal scrollbar
           }}>
             {followedUsers.map((user) => (
               <Box 
@@ -233,13 +239,14 @@ const FollowedUsersList: React.FC<FollowedUsersListProps> = ({
                   '&:hover': {
                     backgroundColor: 'rgba(102, 126, 234, 0.05)',
                     borderColor: 'rgba(102, 126, 234, 0.2)',
-                    transform: 'translateX(4px)'
+                    transform: 'scale(1.02)', // Use scale instead of translateX to avoid overflow
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.15)'
                   }
                 }}
               >
                 {/* User Avatar */}
                 <Avatar 
-                  src={user.profilePicture}
+                  src={getProfilePictureUrl(user.profilePicture)}
                   sx={{ width: 40, height: 40 }}
                 >
                   {user.firstName?.charAt(0) || user.username.charAt(0)}

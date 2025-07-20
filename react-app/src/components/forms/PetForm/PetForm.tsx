@@ -10,11 +10,12 @@ import type { PetFormData } from '../../../models/pet.types';
 
 export interface PetFormProps {
   initialData?: Partial<PetFormData>;
-  onSubmit: (data: PetFormData) => Promise<void>;
+  onSubmit: (data: PetFormData, processedImageFile?: File | null) => Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
   error?: string | null;
   submitLabel?: string;
+  petId?: number; // For existing pets to enable immediate avatar uploads
 }
 
 const PetForm: React.FC<PetFormProps> = ({
@@ -23,17 +24,25 @@ const PetForm: React.FC<PetFormProps> = ({
   onCancel,
   isLoading = false,
   error = null,
-  submitLabel = 'Save Pet'
+  submitLabel = 'Save Pet',
+  petId
 }) => {
   const {
     formData,
     errors,
     picturePreview,
+    processedImageFile,
     handleInputChange,
     handlePictureUpload,
+    handlePictureUploadSuccess,
+    handlePictureError,
     handleRemovePicture,
     handleSubmit
   } = usePetForm({ initialData, onSubmit });
+
+  // processedImageFile is used by the usePetForm hook internally for upload after pet creation
+  // We don't use it directly in this component, but we need to destructure it to access other values
+  void processedImageFile; // Explicitly mark as intentionally unused
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
@@ -50,8 +59,11 @@ const PetForm: React.FC<PetFormProps> = ({
       <PetPictureUpload
         profilePicture={picturePreview}
         onPictureUpload={handlePictureUpload}
+        onPictureUploadSuccess={handlePictureUploadSuccess}
+        onPictureError={handlePictureError}
         onRemovePicture={handleRemovePicture}
         error={errors.profilePicture}
+        petId={petId}
       />
 
       <PetBasicInfoForm

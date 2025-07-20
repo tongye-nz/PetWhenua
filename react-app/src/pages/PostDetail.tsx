@@ -8,15 +8,27 @@ import {
   Typography,
   Avatar,
   Button,
-  Alert,
-  Divider
+  Divider,
+  Alert
 } from '@mui/material';
-import { ArrowBack, Edit, Delete, LocationOn, Event, AttachMoney } from '@mui/icons-material';
-import { LoadingSpinner, LikeButton, StatusChip } from '../components/ui';
-import { CommentSection } from '../components/features/comments';
-import { usePost } from '../contexts/PostContext';
+import {
+  ArrowBack,
+  LocationOn,
+  Event,
+  Edit,
+  Delete,
+  AttachMoney
+} from '@mui/icons-material';
+import { PostStatusUtils, PostTypeUtils } from '../models/post.types';
+import type { PostType, PostTypeString, PostStatus, PostStatusString } from '../models/post.types';
 import { useAuth } from '../contexts/AuthContext';
-import type { PostType } from '../models/post.types';
+import { StatusChip } from '../components/ui';
+import { CommentSection } from '../components/features/comments';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { LoadingSpinner, LikeButton, FollowButton } from '../components/ui';
+import { usePost } from '../contexts/PostContext';
+import { userFollowService } from '../api/userFollow.api';
+import { formatDateTime } from '../utils/dateUtils';
 
 const PostDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,6 +36,8 @@ const PostDetail: React.FC = () => {
   const { user } = useAuth();
   const { currentPost, loading, error, fetchPost, deletePost } = usePost();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -31,7 +45,49 @@ const PostDetail: React.FC = () => {
     }
   }, [id, fetchPost]);
 
-  const getPostTypeLabel = (postType: PostType): string => {
+  // Load follow status for the post author
+  useEffect(() => {
+    const loadFollowStatus = async () => {
+      if (!user?.userId || !currentPost?.user?.userId || user.userId === currentPost.userId) {
+        setFollowStatusLoaded(true);
+        return;
+      }
+
+      try {
+        const status = await userFollowService.isFollowing(currentPost.user.userId);
+        setIsFollowing(status);
+      } catch (error) {
+        console.debug('Failed to load follow status:', error);
+      } finally {
+        setFollowStatusLoaded(true);
+      }
+    };
+
+    if (currentPost) {
+      loadFollowStatus();
+    }
+  }, [currentPost?.user?.userId, user?.userId]);
+
+  // Handle follow status change
+  const handleFollowChange = (newFollowStatus: boolean) => {
+    setIsFollowing(newFollowStatus);
+  };
+
+  const getPostTypeLabel = (postType: PostType | PostTypeString): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof postType === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Meetup': 'Meetup',
+        'PetWedding': 'Pet Wedding',
+        'BuySell': 'Buy & Sell',
+        'Library': 'Library',
+        'Announcement': 'Announcement',
+        'Moment': 'Moment'
+      };
+      return stringToLabelMap[postType] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const typeMap: { [key: number]: string } = {
       0: 'Meetup',
       1: 'Pet Wedding',
@@ -43,9 +99,21 @@ const PostDetail: React.FC = () => {
     return typeMap[postType] || 'Unknown';
   };
 
-
-
-  const getStatusLabel = (status: number): string => {
+  const getStatusLabel = (status: PostStatus | PostStatusString): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof status === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Active': 'Active',
+        'Sold': 'Sold',
+        'Expired': 'Expired',
+        'Inactive': 'Inactive',
+        'Cancelled': 'Cancelled',
+        'Pending': 'Pending'
+      };
+      return stringToLabelMap[status] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const statusMap: { [key: number]: string } = {
       0: 'Active',
       1: 'Sold',
@@ -73,18 +141,44 @@ const PostDetail: React.FC = () => {
     try {
       setIsDeleting(true);
       await deletePost(currentPost.postId);
-      navigate('/posts', { replace: true });
+      // After deleting, go back to the previous page (could be /posts, /my-posts, etc.)
+      navigate(-1);
     } catch (error) {
       console.error('Failed to delete post:', error);
       setIsDeleting(false);
     }
   };
 
-  const canEditOrDelete = user && currentPost && (
-    user.userId === currentPost.userId || 
-    user.role === 'site_admin' || 
-    user.role === 'meetup_admin'
+  const handleProfilePictureClick = (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!currentPost?.user?.userId) return;
+    
+    // Navigate to appropriate profile page
+    if (user?.userId === currentPost.user.userId) {
+      // Current user's profile
+      navigate('/profile');
+    } else {
+      // Other user's profile
+      navigate(`/user/${currentPost.user.userId}`);
+    }
+  };
+
+  // Only post authors can edit or delete their own posts
+  const isOwner = user && currentPost && user.userId === currentPost.userId;
+  
+  // Users can edit their own posts only if status is Active or Pending
+  // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
+  // Inactive posts can only be deleted, not edited
+  const canEdit = isOwner && (
+    PostStatusUtils.isActive(currentPost.status) || 
+    PostStatusUtils.isPending(currentPost.status)
   );
+  
+  // Users can always delete their own posts regardless of status
+  const canDelete = isOwner;
 
   if (loading && !currentPost) {
     return (
@@ -105,9 +199,9 @@ const PostDetail: React.FC = () => {
           </Alert>
           <Button 
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/posts')}
+            onClick={() => navigate(-1)}
           >
-            Back to Posts
+            Back
           </Button>
         </Box>
       </Container>
@@ -123,9 +217,9 @@ const PostDetail: React.FC = () => {
           </Alert>
           <Button 
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/posts')}
+            onClick={() => navigate(-1)}
           >
-            Back to Posts
+            Back
           </Button>
         </Box>
       </Container>
@@ -133,13 +227,7 @@ const PostDetail: React.FC = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-NZ', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatDateTime(dateString);
   };
 
   return (
@@ -148,32 +236,36 @@ const PostDetail: React.FC = () => {
       <Box display="flex" alignItems="center" mb={3}>
         <Button 
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/posts')}
+          onClick={() => navigate(-1)}
           sx={{ mr: 2 }}
         >
-          Back to Posts
+          Back
         </Button>
         
-        {canEditOrDelete && (
+        {(canEdit || canDelete) && (
           <Box ml="auto" display="flex" gap={1}>
-            <Button
-              startIcon={<Edit />}
-              onClick={handleEdit}
-              variant="outlined"
-              size="small"
-            >
-              Edit
-            </Button>
-            <Button
-              startIcon={<Delete />}
-              onClick={handleDelete}
-              variant="outlined"
-              color="error"
-              size="small"
-              disabled={isDeleting}
-            >
-              {isDeleting ? 'Deleting...' : 'Delete'}
-            </Button>
+            {canEdit && (
+              <Button
+                startIcon={<Edit />}
+                onClick={handleEdit}
+                variant="outlined"
+                size="small"
+              >
+                Edit
+              </Button>
+            )}
+            {canDelete && (
+              <Button
+                startIcon={<Delete />}
+                onClick={handleDelete}
+                variant="outlined"
+                color="error"
+                size="small"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            )}
           </Box>
         )}
       </Box>
@@ -203,23 +295,48 @@ const PostDetail: React.FC = () => {
           </Typography>
 
           {/* Author and Date */}
-          <Box display="flex" alignItems="center" mb={3}>
-            <Avatar 
-              src={currentPost.user?.profilePicture || undefined}
-              sx={{ mr: 2 }}
-            >
-              {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
-            </Avatar>
-            <Box>
-              <Typography variant="subtitle1" fontWeight="medium">
-                {currentPost.user?.firstName && currentPost.user?.lastName 
-                  ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
-                  : currentPost.user?.username}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Posted {formatDate(currentPost.createdAt)}
-              </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
+            <Box display="flex" alignItems="center">
+              <Avatar 
+                src={getProfilePictureUrl(currentPost.user?.profilePicture)}
+                sx={{ 
+                  mr: 2,
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                  }
+                }}
+                onClick={handleProfilePictureClick}
+              >
+                {!currentPost.user?.profilePicture && currentPost.user?.username?.charAt(0).toUpperCase()}
+              </Avatar>
+              <Box>
+                <Typography variant="subtitle1" fontWeight="medium">
+                  {currentPost.user?.firstName && currentPost.user?.lastName 
+                    ? `${currentPost.user.firstName} ${currentPost.user.lastName}` 
+                    : currentPost.user?.username}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Posted {formatDate(currentPost.createdAt)}
+                </Typography>
+              </Box>
             </Box>
+            
+            {/* Follow button - only show for authenticated users viewing other users' posts */}
+            {user && !isOwner && currentPost.user && (
+              <>
+                {followStatusLoaded && (
+                  <FollowButton
+                    userId={currentPost.user.userId}
+                    isFollowing={isFollowing}
+                    onFollowChange={handleFollowChange}
+                    size="medium"
+                    variant="outlined"
+                  />
+                )}
+              </>
+            )}
           </Box>
 
           <Divider sx={{ my: 3 }} />
@@ -230,7 +347,7 @@ const PostDetail: React.FC = () => {
           </Typography>
 
           {/* Pet Wedding Participants - show the two pets */}
-          {currentPost.postType === 1 && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
+                {PostTypeUtils.isPetWedding(currentPost.postType) && currentPost.petWeddingParticipants && currentPost.petWeddingParticipants.length === 2 && (
             <Box sx={{ mt: 4, p: 3, bgcolor: 'background.default', borderRadius: 2 }}>
               <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
                 💍 Pet Wedding Participants
@@ -256,17 +373,8 @@ const PostDetail: React.FC = () => {
                         // If it's already a full URL, use it directly
                         if (profilePic.startsWith('http')) return profilePic;
                         
-                        // If it's a data URL (base64), use it directly 
-                        if (profilePic.startsWith('data:')) {
-                          return profilePic;
-                        }
-                        
                         // If it's a file path, construct the full URL
-                        if (profilePic.length < 500) {
-                          return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                        }
-                        
-                        return undefined;
+                        return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
                       })()}
                       sx={{
                         width: 80,
@@ -348,7 +456,7 @@ const PostDetail: React.FC = () => {
             )}
 
             {/* Address - for Meetup and Pet Wedding posts */}
-            {currentPost.address && (currentPost.postType === 0 || currentPost.postType === 1) && (
+            {currentPost.address && (PostTypeUtils.isMeetup(currentPost.postType) || PostTypeUtils.isPetWedding(currentPost.postType)) && (
               <Box display="flex" alignItems="center" mb={2}>
                 <LocationOn color="primary" sx={{ mr: 1 }} />
                 <Typography variant="body1" fontWeight="medium">

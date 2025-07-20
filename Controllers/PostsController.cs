@@ -93,7 +93,7 @@ public class PostsController : ControllerBase
             // Check if user can edit this post
             if (!_authorizationService.CanEditPost(userRoleClaim, existingPost, userId))
             {
-                return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active, Inactive, or Pending.");
+                return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active or Pending. Inactive posts can only be deleted.");
             }
 
             // Update the existing tracked entity instead of creating a new one
@@ -121,16 +121,55 @@ public class PostsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> DeletePost(int id)
     {
-        var deleted = await _postService.DeletePostAsync(id);
-        
-        if (!deleted)
+        try
         {
-            return NotFound($"Post with ID {id} not found.");
-        }
+            // Get current user info
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        return NoContent();
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            if (string.IsNullOrEmpty(userRoleClaim))
+            {
+                return Unauthorized("User role not found.");
+            }
+
+            // Get the post to check ownership
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            // Check if user can delete this post (owner or admin)
+            bool canDelete = post.UserId == userId || UserRoles.IsAdmin(userRoleClaim);
+            
+            if (!canDelete)
+            {
+                return Forbid("You can only delete your own posts.");
+            }
+
+            var deleted = await _postService.DeletePostAsync(id);
+            
+            if (!deleted)
+            {
+                return StatusCode(500, "Failed to delete post. Please try again.");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't expose internal details
+            Console.WriteLine($"Error deleting post {id}: {ex.Message}");
+            return StatusCode(500, "An error occurred while deleting the post.");
+        }
     }
 
     [HttpGet("user/{userId}")]
@@ -198,6 +237,28 @@ public class PostsController : ControllerBase
     {
         var posts = await _postService.GetInactiveMeetupPostsAsync();
         return Ok(posts);
+    }
+
+    [HttpGet("meetups/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetPendingMeetupPosts()
+    {
+        // Check if current user is a meetup admin or site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsMeetupAdmin(userRoleClaim))
+        {
+            return Forbid("Only meetup administrators and site administrators can access pending meetup posts.");
+        }
+
+        try
+        {
+            var posts = await _postService.GetPendingMeetupPostsAsync();
+            return Ok(posts);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve pending meetup posts", error = ex.Message });
+        }
     }
 
     [HttpGet("{id}/can-change-status")]

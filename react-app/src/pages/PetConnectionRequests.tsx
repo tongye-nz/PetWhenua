@@ -22,9 +22,10 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { petConnectionService } from '../api/petConnection.api';
-
 import type { PetConnection } from '../models/petConnection.types';
 import { PetConnectionStatus } from '../models/petConnection.types';
+import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { formatDateTime } from '../utils/dateUtils';
 
 const PetConnectionRequests: React.FC = () => {
   const navigate = useNavigate();
@@ -209,7 +210,7 @@ const PetConnectionRequests: React.FC = () => {
                     <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
-                          src={requestingPet?.profilePicture || undefined}
+                          src={getProfilePictureUrl(requestingPet?.profilePicture)}
                           sx={{ 
                             width: 60, 
                             height: 60,
@@ -250,7 +251,7 @@ const PetConnectionRequests: React.FC = () => {
                     <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 33%' }, minWidth: 200 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Avatar
-                          src={targetPet?.profilePicture || undefined}
+                          src={getProfilePictureUrl(targetPet?.profilePicture)}
                           sx={{ 
                             width: 60, 
                             height: 60,
@@ -330,13 +331,7 @@ const PetConnectionRequests: React.FC = () => {
                 {/* Request Date */}
                 <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="caption" color="text.secondary">
-                    Request sent: {new Date(connection.requestedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    Request sent: {formatDateTime(connection.requestedAt)}
                   </Typography>
                 </Box>
               </CardContent>

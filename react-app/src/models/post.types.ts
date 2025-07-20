@@ -20,10 +20,113 @@ export const PostStatus = {
 
 export type PostStatus = typeof PostStatus[keyof typeof PostStatus];
 
+// String enum types for backend compatibility after NZ timezone changes
+export type PostTypeString = 'Meetup' | 'PetWedding' | 'BuySell' | 'Library' | 'Announcement' | 'Moment';
+export type PostStatusString = 'Active' | 'Sold' | 'Expired' | 'Inactive' | 'Cancelled' | 'Pending';
+
+// Utility functions for safe enum comparisons
+export const PostStatusUtils = {
+  isActive: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Active || status === 'Active';
+  },
+  isSold: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Sold || status === 'Sold';
+  },
+  isExpired: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Expired || status === 'Expired';
+  },
+  isInactive: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Inactive || status === 'Inactive';
+  },
+  isCancelled: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Cancelled || status === 'Cancelled';
+  },
+  isPending: (status: PostStatus | PostStatusString): boolean => {
+    return status === PostStatus.Pending || status === 'Pending';
+  }
+};
+
+export const PostTypeUtils = {
+  isMeetup: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.Meetup;
+    }
+    // Handle both 'Meetup' and 'meetup' for robustness
+    return type === 'Meetup' || type.toLowerCase() === 'meetup';
+  },
+  isPetWedding: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.PetWedding;
+    }
+    return type === 'PetWedding' || type.toLowerCase() === 'petwedding';
+  },
+  isBuySell: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.BuySell;
+    }
+    return type === 'BuySell' || type.toLowerCase() === 'buysell';
+  },
+  isLibrary: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.Library;
+    }
+    return type === 'Library' || type.toLowerCase() === 'library';
+  },
+  isAnnouncement: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.Announcement;
+    }
+    return type === 'Announcement' || type.toLowerCase() === 'announcement';
+  },
+  isMoment: (type: PostType | PostTypeString): boolean => {
+    if (typeof type === 'number') {
+      return type === PostType.Moment;
+    }
+    return type === 'Moment' || type.toLowerCase() === 'moment';
+  },
+  
+  // Conversion functions
+  toNumeric: (type: PostType | PostTypeString): PostType => {
+    if (typeof type === 'number') return type;
+    
+    const stringToNumeric: { [key: string]: PostType } = {
+      'Meetup': PostType.Meetup,
+      'meetup': PostType.Meetup,
+      'PetWedding': PostType.PetWedding,
+      'petwedding': PostType.PetWedding,
+      'BuySell': PostType.BuySell,
+      'buysell': PostType.BuySell,
+      'Library': PostType.Library,
+      'library': PostType.Library,
+      'Announcement': PostType.Announcement,
+      'announcement': PostType.Announcement,
+      'Moment': PostType.Moment,
+      'moment': PostType.Moment
+    };
+    
+    return stringToNumeric[type] ?? stringToNumeric[type.toLowerCase()] ?? PostType.Moment;
+  },
+  
+  toString: (type: PostType | PostTypeString): PostTypeString => {
+    if (typeof type === 'string') return type;
+    
+    const numericToString: { [key: number]: PostTypeString } = {
+      [PostType.Meetup]: 'Meetup',
+      [PostType.PetWedding]: 'PetWedding',
+      [PostType.BuySell]: 'BuySell',
+      [PostType.Library]: 'Library',
+      [PostType.Announcement]: 'Announcement',
+      [PostType.Moment]: 'Moment'
+    };
+    
+    return numericToString[type] ?? 'Moment';
+  }
+};
+
 export interface Post {
   postId: number;
   userId: number;
-  postType: PostType;
+  postType: PostType | PostTypeString; // Support both integer and string enum values
   title: string;
   content: string;
   images: string[];
@@ -32,7 +135,7 @@ export interface Post {
   price?: number;
   eventDate?: string;
   category?: string;
-  status: PostStatus;
+  status: PostStatus | PostStatusString; // Support both integer and string enum values
   createdAt: string;
   updatedAt: string;
   user: {

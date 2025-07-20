@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PetWhenua.Services.Abstract;
+using PetWhenua.Models.Dtos;
 
 namespace PetWhenua.Services
 {
@@ -8,12 +9,16 @@ namespace PetWhenua.Services
         private readonly AppDbContext _context;
         private readonly IPetConnectionService _petConnectionService;
         private readonly IPostService _postService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
-        public PetWeddingService(AppDbContext context, IPetConnectionService petConnectionService, IPostService postService)
+        public PetWeddingService(AppDbContext context, IPetConnectionService petConnectionService, IPostService postService, INotificationService notificationService, IUserService userService)
         {
             _context = context;
             _petConnectionService = petConnectionService;
             _postService = postService;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         public async Task<Post> CreatePetWeddingAsync(int userId, string title, string content, List<int> petIds, 
@@ -76,6 +81,32 @@ namespace PetWhenua.Services
 
             await _context.SaveChangesAsync();
 
+            // Send notifications to invited pet owners (those who didn't create the wedding)
+            try
+            {
+                var creator = await _userService.GetUserByIdAsync(userId);
+                var creatorName = creator?.FirstName ?? creator?.Username ?? "Someone";
+
+                foreach (var participant in participants)
+                {
+                    // Only notify pet owners who didn't create the wedding
+                    if (participant.OwnerId != userId)
+                    {
+                        await _notificationService.CreatePetWeddingRequestNotificationAsync(
+                            participant.OwnerId,
+                            post.PostId,
+                            title,
+                            creatorName
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail wedding creation if notification fails
+                Console.WriteLine($"Failed to send pet wedding approval notifications: {ex.Message}");
+            }
+
             // Check if all participants have approved and update status if needed
             await UpdateWeddingStatusBasedOnApprovalsAsync(post.PostId);
 
@@ -101,15 +132,40 @@ namespace PetWhenua.Services
             return true;
         }
 
+        public async Task<bool> RejectPetWeddingParticipationAsync(int postId, int userId)
+        {
+            var participant = await _context.PetWeddingParticipants
+                .FirstOrDefaultAsync(pwp => pwp.PostId == postId && pwp.OwnerId == userId && !pwp.HasApproved);
+
+            if (participant == null)
+                return false;
+
+            var post = await _context.Posts.FindAsync(postId);
+            if (post == null || post.PostType != PostType.PetWedding)
+                return false;
+
+            // When a participant rejects, mark the entire wedding as Inactive
+            post.Status = PostStatus.Inactive;
+            post.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<IEnumerable<Post>> GetPendingWeddingApprovalsForUserAsync(int userId)
         {
             return await _context.PetWeddingParticipants
-                .Where(pwp => pwp.OwnerId == userId && !pwp.HasApproved)
+                .Where(pwp => pwp.OwnerId == userId && !pwp.HasApproved && pwp.Post.UserId != userId)
                 .Include(pwp => pwp.Post)
-                .ThenInclude(p => p.User)
+                    .ThenInclude(p => p.User)
                 .Include(pwp => pwp.Post)
-                .ThenInclude(p => p.PetWeddingParticipants)
-                .ThenInclude(pwp2 => pwp2.Pet)
+                    .ThenInclude(p => p.PetWeddingParticipants)
+                        .ThenInclude(pwp2 => pwp2.Pet)
+                            .ThenInclude(pet => pet.User)
+                .Include(pwp => pwp.Post)
+                    .ThenInclude(p => p.PetWeddingParticipants)
+                        .ThenInclude(pwp2 => pwp2.Owner)
                 .Select(pwp => pwp.Post)
                 .Distinct()
                 .ToListAsync();
@@ -138,25 +194,94 @@ namespace PetWhenua.Services
             return false;
         }
 
-        public async Task<IEnumerable<Pet>> GetSelectablePetsForWeddingAsync(int userId)
+        public async Task<IEnumerable<SelectablePetDto>> GetSelectablePetsForWeddingAsync(int userId)
         {
-            var selectablePets = new List<Pet>();
+            var selectablePets = new List<SelectablePetDto>();
 
             // Add user's own pets
             var ownPets = await _context.Pets
                 .Where(p => p.UserId == userId)
                 .Include(p => p.User)
                 .ToListAsync();
-            selectablePets.AddRange(ownPets);
+
+            foreach (var pet in ownPets)
+            {
+                selectablePets.Add(new SelectablePetDto
+                {
+                    PetId = pet.PetId,
+                    UserId = pet.UserId,
+                    Name = pet.Name,
+                    Species = pet.Species,
+                    Breed = pet.Breed,
+                    Age = pet.Age,
+                    BirthYear = pet.BirthYear,
+                    BirthMonth = pet.BirthMonth,
+                    Gender = pet.Gender,
+                    Description = pet.Description,
+                    ProfilePicture = pet.ProfilePicture,
+                    CreatedAt = pet.CreatedAt,
+                    UpdatedAt = pet.UpdatedAt,
+                    IsOwned = true,
+                    IsConnected = false,
+                    User = pet.User != null ? new UserDto
+                    {
+                        UserId = pet.User.UserId,
+                        Username = pet.User.Username,
+                        FirstName = pet.User.FirstName,
+                        LastName = pet.User.LastName,
+                        ProfilePicture = pet.User.ProfilePicture
+                    } : null
+                });
+            }
 
             // Add connected pets
             foreach (var ownPet in ownPets)
             {
                 var connectedPets = await _petConnectionService.GetConnectedPetsAsync(ownPet.PetId);
-                selectablePets.AddRange(connectedPets.Where(p => p.UserId != userId));
+                foreach (var connectedPet in connectedPets.Where(p => p.UserId != userId))
+                {
+                    // Check if we already added this pet to avoid duplicates
+                    if (!selectablePets.Any(sp => sp.PetId == connectedPet.PetId))
+                    {
+                        selectablePets.Add(new SelectablePetDto
+                        {
+                            PetId = connectedPet.PetId,
+                            UserId = connectedPet.UserId,
+                            Name = connectedPet.Name,
+                            Species = connectedPet.Species,
+                            Breed = connectedPet.Breed,
+                            Age = connectedPet.Age,
+                            BirthYear = connectedPet.BirthYear,
+                            BirthMonth = connectedPet.BirthMonth,
+                            Gender = connectedPet.Gender,
+                            Description = connectedPet.Description,
+                            ProfilePicture = connectedPet.ProfilePicture,
+                            CreatedAt = connectedPet.CreatedAt,
+                            UpdatedAt = connectedPet.UpdatedAt,
+                            IsOwned = false,
+                            IsConnected = true,
+                            User = connectedPet.User != null ? new UserDto
+                            {
+                                UserId = connectedPet.User.UserId,
+                                Username = connectedPet.User.Username,
+                                FirstName = connectedPet.User.FirstName,
+                                LastName = connectedPet.User.LastName,
+                                ProfilePicture = connectedPet.User.ProfilePicture
+                            } : null,
+                            ConnectionOwner = connectedPet.User != null ? new UserDto
+                            {
+                                UserId = connectedPet.User.UserId,
+                                Username = connectedPet.User.Username,
+                                FirstName = connectedPet.User.FirstName,
+                                LastName = connectedPet.User.LastName,
+                                ProfilePicture = connectedPet.User.ProfilePicture
+                            } : null
+                        });
+                    }
+                }
             }
 
-            return selectablePets.Distinct().ToList();
+            return selectablePets;
         }
 
         public async Task<Post> UpdateWeddingStatusBasedOnApprovalsAsync(int postId)

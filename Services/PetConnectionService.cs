@@ -125,7 +125,9 @@ namespace PetWhenua.Services
         {
             var connections = await _context.PetConnections
                 .Include(pc => pc.Pet1)
+                    .ThenInclude(p => p.User)
                 .Include(pc => pc.Pet2)
+                    .ThenInclude(p => p.User)
                 .Where(pc => pc.Status == PetConnectionStatus.Accepted &&
                            (pc.Pet1Id == petId || pc.Pet2Id == petId))
                 .ToListAsync();

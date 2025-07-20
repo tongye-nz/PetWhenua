@@ -18,16 +18,19 @@ import {
   UserPostsFeed
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
+import type { ProcessedImageResult } from '../utils/profileImageUtils';
+import { profilePictureService } from '../api/profile.api';
 import { useAuth } from '../contexts/AuthContext';
 import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
 import { userFollowService } from '../api/userFollow.api';
 import { postService } from '../api/post.api';
-import { PostType } from '../models/post.types';
+
 import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
 import { userProfileStyles } from './UserProfile.styles';
+import { formatDate } from '../utils/dateUtils';
 
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -55,7 +58,7 @@ const UserProfile: React.FC = () => {
       district,
       profilePicture: user?.profilePicture || '',
       petCount: 0, // Will be loaded from API
-      joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
+              joinDate: user?.createdAt ? formatDate(user.createdAt) : formatDate(new Date().toISOString())
     };
   };
 
@@ -106,7 +109,7 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Load profile data from API with retry logic
+  // Load profile data from API with retry logic and parallel API calls
   const loadUserProfile = async (attemptNumber: number = 0): Promise<void> => {
     if (!targetUserId) {
       setError('User ID not available');
@@ -148,16 +151,40 @@ const UserProfile: React.FC = () => {
 
       const { region, district } = parseLocation(apiUser.location || '');
       
-      // Load pet count with error handling
-      let petCount = 0;
-      try {
-        const userPets = await petService.getUserPets(apiUser.userId);
-        petCount = userPets.length;
-      } catch (petError) {
-        console.error('Failed to load pets count:', petError);
-        // Continue with petCount = 0 if pets can't be loaded
-      }
+      // **PERFORMANCE OPTIMIZATION: Use Promise.allSettled for parallel API calls**
+      // This loads all data simultaneously instead of waiting for each call to complete
+      const [
+        petsResult,
+        followStatsResult,
+        postsResult,
+        followStatusResult
+      ] = await Promise.allSettled([
+        // Load pet count
+        petService.getUserPets(apiUser.userId).then(pets => pets.length).catch(() => 0),
+        
+        // Load follow stats
+        userFollowService.getUserFollowStats(apiUser.userId).catch(() => ({ followerCount: 0, followingCount: 0 })),
+        
+        // Load posts count (all posts)
+        postService.getUserPosts(apiUser.userId)
+          .then(posts => posts.length)
+          .catch(() => 0),
+        
+        // Check follow status (only if not own profile and user is authenticated)
+        (!isOwnProfile && user?.userId) 
+          ? userFollowService.isFollowing(apiUser.userId).catch(() => false)
+          : Promise.resolve(false)
+      ]);
+
+      // Extract results with fallbacks
+      const petCount = petsResult.status === 'fulfilled' ? petsResult.value : 0;
+      const followStats = followStatsResult.status === 'fulfilled' 
+        ? followStatsResult.value 
+        : { followerCount: 0, followingCount: 0 };
+      const postsCount = postsResult.status === 'fulfilled' ? postsResult.value : 0;
+      const followStatus = followStatusResult.status === 'fulfilled' ? followStatusResult.value : false;
       
+      // Update all state in a single batch
       setProfileData({
         id: apiUser.userId.toString(),
         username: apiUser.username,
@@ -169,34 +196,16 @@ const UserProfile: React.FC = () => {
         district,
         profilePicture: apiUser.profilePicture || '',
         petCount: petCount,
-        joinDate: new Date(apiUser.createdAt).toLocaleDateString()
+        joinDate: formatDate(apiUser.createdAt)
       });
 
-      // Load follow stats with error handling
-      try {
-        await loadFollowStats(apiUser.userId);
-      } catch (followError) {
-        console.error('Failed to load follow stats:', followError);
-        // Continue without follow stats
-      }
+      setFollowStats({
+        followerCount: followStats.followerCount,
+        followingCount: followStats.followingCount
+      });
 
-      // Load posts count with error handling
-      try {
-        await loadPostsCount(apiUser.userId);
-      } catch (postsError) {
-        console.error('Failed to load posts count:', postsError);
-        // Continue without posts count
-      }
-
-      // Check if current user is following this profile (only if not own profile)
-      if (!isOwnProfile && user?.userId) {
-        try {
-          await checkFollowStatus(apiUser.userId);
-        } catch (followStatusError) {
-          console.error('Failed to check follow status:', followStatusError);
-          // Continue without follow status
-        }
-      }
+      setPostsCount(postsCount);
+      setIsFollowing(followStatus);
 
       // Reset retry count on success
       setRetryCount(0);
@@ -235,31 +244,6 @@ const UserProfile: React.FC = () => {
     }
   };
 
-  // Load follow statistics
-  const loadFollowStats = async (userId: number) => {
-    try {
-      const stats = await userFollowService.getUserFollowStats(userId);
-      setFollowStats({
-        followerCount: stats.followerCount,
-        followingCount: stats.followingCount
-      });
-    } catch (error) {
-      console.error('Error loading follow stats:', error);
-    }
-  };
-
-  // Check if current user is following the profile user
-  const checkFollowStatus = async (profileUserId: number) => {
-    if (!user?.userId) return;
-    
-    try {
-      const status = await userFollowService.isFollowing(profileUserId);
-      setIsFollowing(status);
-    } catch (error) {
-      console.error('Error checking follow status:', error);
-    }
-  };
-
   // Toggle follow status
   const handleToggleFollow = async (targetUserId: number) => {
     if (!user?.userId) return;
@@ -276,17 +260,6 @@ const UserProfile: React.FC = () => {
       }
     } catch (error) {
       console.error('Error toggling follow status:', error);
-    }
-  };
-
-  // Load posts count for the user
-  const loadPostsCount = async (userId: number) => {
-    try {
-      const userPosts = await postService.getUserPosts(userId);
-      const momentPosts = userPosts.filter(post => post.postType === PostType.Moment);
-      setPostsCount(momentPosts.length);
-    } catch (error) {
-      console.error('Error loading posts count:', error);
     }
   };
 
@@ -340,18 +313,43 @@ const UserProfile: React.FC = () => {
     loadUserProfile();
   }, [userId]);
 
-  // Handle profile picture change
-  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // TODO: Implement file upload functionality
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        form.handleInputChange('profilePicture', result);
-      };
-      reader.readAsDataURL(file);
+  // Handle profile picture change with processed image
+  const handleProfilePictureChange = async (processedImage: ProcessedImageResult) => {
+    // Use the processed image data URL for immediate preview
+    form.handleInputChange('profilePicture', processedImage.dataUrl);
+    
+    try {
+      // Upload the processed file to the server
+      const uploadResult = await profilePictureService.uploadUserProfilePicture(processedImage.file);
+      
+      console.log('Profile picture upload result:', uploadResult);
+      
+      // Update the profile picture with the server URL
+      form.handleInputChange('profilePicture', uploadResult.profilePicture);
+      
+      // Update local profile data
+      setProfileData(prev => ({
+        ...prev,
+        profilePicture: uploadResult.profilePicture,
+      }));
+      
+      console.log('Updated profile data with:', uploadResult.profilePicture);
+
+      // Refresh auth context to update user data
+      await checkAuth();
+
+      console.log(`Profile picture uploaded successfully: ${(processedImage.originalSize / 1024).toFixed(1)}KB → ${(processedImage.processedSize / 1024).toFixed(1)}KB`);
+    } catch (error) {
+      console.error('Failed to upload profile picture:', error);
+      // Keep the data URL as fallback
+      handleProfilePictureError(error instanceof Error ? error.message : 'Failed to upload profile picture');
     }
+  };
+
+  // Handle profile picture processing errors
+  const handleProfilePictureError = (error: string) => {
+    console.error('Profile picture processing error:', error);
+    // You can add toast notifications or other error handling here
   };
 
   // Show loading spinner during initial load
@@ -547,7 +545,7 @@ const UserProfile: React.FC = () => {
             onStartEditing={handleStartEditing}
             onSaveForm={handleSaveForm}
             onCancelEditing={handleCancelEditing}
-            styles={userProfileStyles}
+            styles={userProfileStyles as any}
           />
 
           <Divider style={userProfileStyles.divider} />
@@ -580,13 +578,11 @@ const UserProfile: React.FC = () => {
                 lg: '0 0 350px' 
               },
               minWidth: 0,
-              position: { md: 'sticky' },
-              top: { md: 16 },
-              maxHeight: { md: 'calc(100vh - 200px)' },
-              overflowY: { md: 'auto' },
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              gap: 2,
+              // Remove restrictive height constraints to prevent content cutoff
+              alignSelf: 'flex-start'
             }}>
               {!isOwnProfile || !isEditing ? (
                 <>
@@ -621,7 +617,8 @@ const UserProfile: React.FC = () => {
                     formData={form.formData}
                     isEditing={isOwnProfile && isEditing}
                     onProfilePictureChange={handleProfilePictureChange}
-                    styles={userProfileStyles}
+                    onProfilePictureError={handleProfilePictureError}
+                    styles={userProfileStyles as any}
                   />
                 </>
               )}
@@ -670,7 +667,7 @@ const UserProfile: React.FC = () => {
                     errors={form.errors}
                     isEditing={isOwnProfile && isEditing}
                     onInputChange={form.handleInputChange}
-                    styles={userProfileStyles}
+                    styles={userProfileStyles as any}
                   />
                 </Box>
               )}

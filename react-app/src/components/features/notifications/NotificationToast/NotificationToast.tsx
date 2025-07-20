@@ -85,6 +85,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
         return 'success';
       case NotificationType.PetConnectionRejected:
       case NotificationType.PetWeddingRejected:
+      case NotificationType.MeetupRejected:
         return 'error';
       case NotificationType.PetConnectionRequest:
       case NotificationType.PetWeddingPendingApproval:
@@ -112,6 +113,8 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       case NotificationType.MeetupPendingActivation:
       case NotificationType.MeetupActivated:
         return '📅';
+      case NotificationType.MeetupRejected:
+        return '❌';
       case NotificationType.PostLiked:
         return '❤️';
       case NotificationType.PostCommented:

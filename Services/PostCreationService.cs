@@ -10,14 +10,20 @@ namespace PetWhenua.Services
     public class PostCreationService : BasePostService
     {
         private readonly IPostAuthorizationService _authorizationService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
         public PostCreationService(
             IPostRepository postRepository, 
             IPostFactory postFactory,
-            IPostAuthorizationService authorizationService) 
+            IPostAuthorizationService authorizationService,
+            INotificationService notificationService,
+            IUserService userService) 
             : base(postRepository, postFactory)
         {
             _authorizationService = authorizationService;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -87,7 +93,30 @@ namespace PetWhenua.Services
             var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
             post.Status = initialStatus;
 
-            return await _postRepository.AddPostAsync(post);
+            var createdPost = await _postRepository.AddPostAsync(post);
+
+            // Send notification to meetup admins if this is a pending meetup
+            if (postType == PostType.Meetup && initialStatus == PostStatus.Pending)
+            {
+                try
+                {
+                    var creator = await _userService.GetUserByIdAsync(userId);
+                    var creatorName = creator?.FirstName ?? creator?.Username ?? "Someone";
+                    
+                    await _notificationService.CreateMeetupPendingNotificationAsync(
+                        createdPost.PostId, 
+                        title, 
+                        creatorName
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail post creation if notification fails
+                    Console.WriteLine($"Failed to send meetup pending notification: {ex.Message}");
+                }
+            }
+
+            return createdPost;
         }
 
         /// <summary>

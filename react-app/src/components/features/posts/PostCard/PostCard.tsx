@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
-import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
+import { Card, CardContent, Box, Avatar, IconButton } from '@mui/material';
+import { Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
 import { userFollowService } from '../../../../api/userFollow.api';
 import PostImageGallery from '../../../PostImageGallery';
 import type { Post } from '../../../../models/post.types';
-import { PostType, PostStatus } from '../../../../models/post.types';
+import { PostStatusUtils, PostTypeUtils } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../../utils/dateUtils';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface PostCardProps {
   post: Post;
@@ -19,7 +21,8 @@ export interface PostCardProps {
   compact?: boolean;
 }
 
-const PostCard: React.FC<PostCardProps> = ({
+// **PERFORMANCE OPTIMIZATION: Memoize PostCard to prevent unnecessary re-renders**
+const PostCard: React.FC<PostCardProps> = React.memo(({
   post,
   onView,
   onEdit,
@@ -28,20 +31,22 @@ const PostCard: React.FC<PostCardProps> = ({
   compact = false
 }) => {
   const { user } = useAuth();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const navigate = useNavigate();
+
   const [commentCount, setCommentCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
   
   const isOwner = user?.userId === post.userId;
-  // Users can edit their own posts only if status is Active, Inactive, or Pending
-  // Cannot edit if status is Sold, Expired, or Cancelled
+  // Users can edit their own posts only if status is Active or Pending
+  // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
+  // Inactive posts can only be deleted, not edited
   const canEdit = isOwner && (
-    post.status === PostStatus.Active || 
-    post.status === PostStatus.Inactive || 
-    post.status === PostStatus.Pending
+    PostStatusUtils.isActive(post.status) || 
+    PostStatusUtils.isPending(post.status)
   );
-  const canDelete = isOwner || user?.role === 'site_admin';
+  // Only post authors can delete their own posts
+  const canDelete = isOwner;
   const hasActions = showActions && (canEdit || canDelete);
 
   // Load comment count for engagement display
@@ -80,19 +85,14 @@ const PostCard: React.FC<PostCardProps> = ({
     loadFollowStatus();
   }, [post.user?.userId, user?.userId, isOwner]);
 
+
+
   // Handle follow status change
   const handleFollowChange = (newFollowStatus: boolean) => {
     setIsFollowing(newFollowStatus);
   };
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-  };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleCardClick = () => {
     if (onView) {
@@ -101,16 +101,40 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const handleEdit = () => {
-    handleMenuClose();
     if (onEdit) {
       onEdit(post);
     }
   };
 
-  const handleDelete = () => {
-    handleMenuClose();
+  const handleDelete = (event?: React.MouseEvent) => {
+    // Prevent event propagation to avoid triggering card click (navigation)
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // Show confirmation dialog
+    const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
+    if (!confirmed) return;
+    
     if (onDelete) {
       onDelete(post);
+    }
+  };
+
+  const handleProfilePictureClick = (event: React.MouseEvent) => {
+    // Prevent event bubbling to parent components (PostCard click)
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (!post.user?.userId) return;
+    
+    // Navigate to appropriate profile page
+    if (user?.userId === post.user.userId) {
+      // Current user's profile
+      navigate('/profile');
+    } else {
+      // Other user's profile
+      navigate(`/user/${post.user.userId}`);
     }
   };
 
@@ -119,12 +143,40 @@ const PostCard: React.FC<PostCardProps> = ({
     return content.substring(0, maxLength) + '...';
   };
 
-  const getStatusLabel = (status: number) => {
+  const getStatusLabel = (status: number | string): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof status === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Active': 'Active',
+        'Sold': 'Sold',
+        'Expired': 'Expired',
+        'Inactive': 'Inactive',
+        'Cancelled': 'Cancelled',
+        'Pending': 'Pending'
+      };
+      return stringToLabelMap[status] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const labels = ['Active', 'Sold', 'Expired', 'Inactive', 'Cancelled', 'Pending'];
     return labels[status] || 'Unknown';
   };
 
-  const getTypeLabel = (type: number) => {
+  const getTypeLabel = (type: number | string): string => {
+    // Handle string enum values (new format after NZ timezone changes)
+    if (typeof type === 'string') {
+      const stringToLabelMap: { [key: string]: string } = {
+        'Meetup': 'Meetup',
+        'PetWedding': 'Pet Wedding',
+        'BuySell': 'Buy/Sell',
+        'Library': 'Library',
+        'Announcement': 'Announcement',
+        'Moment': 'Moment'
+      };
+      return stringToLabelMap[type] || 'Unknown';
+    }
+    
+    // Handle integer enum values (legacy format)
     const labels = ['Meetup', 'Pet Wedding', 'Buy/Sell', 'Library', 'Announcement', 'Moment'];
     return labels[type] || 'Unknown';
   };
@@ -157,8 +209,17 @@ const PostCard: React.FC<PostCardProps> = ({
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Avatar 
-            src={post.user?.profilePicture || undefined}
-            sx={{ width: 32, height: 32 }}
+            src={getProfilePictureUrl(post.user?.profilePicture)}
+            sx={{ 
+              width: 32, 
+              height: 32,
+              cursor: 'pointer',
+              transition: 'transform 0.2s ease',
+              '&:hover': {
+                transform: 'scale(1.1)',
+              }
+            }}
+            onClick={handleProfilePictureClick}
           >
             {!post.user?.profilePicture && (post.user?.username ? post.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>
@@ -173,8 +234,8 @@ const PostCard: React.FC<PostCardProps> = ({
             </Text>
           </Box>
           
-          {/* Follow button - only show for other users' posts */}
-          {!isOwner && post.user && (
+          {/* Follow button - only show for authenticated users viewing other users' posts */}
+          {user && !isOwner && post.user && (
             <>
               {followStatusLoaded && (
                 <FollowButton
@@ -189,14 +250,48 @@ const PostCard: React.FC<PostCardProps> = ({
           )}
         </Box>
 
+        {/* Action buttons - show edit/delete directly */}
         {hasActions && (
-          <IconButton
-            size="small"
-            onClick={handleMenuClick}
-            sx={{ color: 'text.secondary' }}
-          >
-            <MoreVert />
-          </IconButton>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {canEdit && (
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleEdit();
+                }}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    color: 'primary.main',
+                    bgcolor: 'primary.light',
+                  }
+                }}
+                title="Edit post"
+              >
+                <Edit fontSize="small" />
+              </IconButton>
+            )}
+            {canDelete && (
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDelete(event);
+                }}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    color: 'error.main',
+                    bgcolor: 'error.light',
+                  }
+                }}
+                title="Delete post"
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
         )}
       </Box>
 
@@ -222,7 +317,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </Text>
 
         {/* Pet Wedding Participants - show the two pets */}
-        {post.postType === 1 && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
+        {PostTypeUtils.isPetWedding(post.postType) && post.petWeddingParticipants && post.petWeddingParticipants.length === 2 && (
           <Box sx={{ mb: 2, p: 1, bgcolor: 'background.default', borderRadius: 1 }}>
             <Text variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
               💍 Pet Wedding Participants
@@ -245,33 +340,12 @@ const PostCard: React.FC<PostCardProps> = ({
                       const profilePic = participant.pet?.profilePicture;
                       if (!profilePic) return undefined;
                       
-                      console.log('Pet profile picture:', {
-                        petName: participant.pet?.name,
-                        profilePicLength: profilePic.length,
-                        profilePicStart: profilePic.substring(0, 100),
-                        isHttp: profilePic.startsWith('http'),
-                        isData: profilePic.startsWith('data:')
-                      });
-                      
                       // If it's already a full URL, use it directly
                       if (profilePic.startsWith('http')) return profilePic;
                       
-                      // If it's a data URL (base64), use it directly 
-                      // Data URLs don't make HTTP requests, so length is less of an issue
-                      if (profilePic.startsWith('data:')) {
-                        console.log('Using data URL for pet:', participant.pet?.name);
-                        return profilePic;
-                      }
-                      
                       // If it's a file path, construct the full URL
-                      if (profilePic.length < 500) { // Only if path is reasonable length
-                        const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                        console.log('Constructed URL:', fullUrl);
-                        return fullUrl;
-                      }
-                      
-                      console.log('Profile picture too long, skipping');
-                      return undefined;
+                      const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
+                      return fullUrl;
                     })()}
                     sx={{
                       width: 60,
@@ -314,8 +388,8 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
 
         {/* Location and Address info for Meetup and Wedding posts */}
-        {(post.postType === 0 || post.postType === 1) && (
-          <Box sx={{ mb: 2 }}>
+        {(PostTypeUtils.isMeetup(post.postType) || PostTypeUtils.isPetWedding(post.postType)) && (
+          <Box sx={{ mb: 2 }}>            
             {post.location && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                 <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />
@@ -355,7 +429,7 @@ const PostCard: React.FC<PostCardProps> = ({
         {/* Status and type chips */}
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 2, mb: 1 }}>
           {/* Only show status chip for post types that need status management */}
-          {post.postType !== PostType.Library && post.postType !== PostType.Moment && (
+          {!PostTypeUtils.isLibrary(post.postType) && !PostTypeUtils.isMoment(post.postType) && (
             <StatusChip 
               statusVariant="status"
               status={post.status}
@@ -397,48 +471,12 @@ const PostCard: React.FC<PostCardProps> = ({
         )}
       </Box>
 
-      {/* Action menu */}
-      {hasActions && (
-        <CardActions
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            display: anchorEl ? 'flex' : 'none',
-            gap: 1
-          }}
-        >
-          {canEdit && (
-            <IconButton
-              size="small"
-              onClick={handleEdit}
-              sx={{ 
-                bgcolor: 'background.paper',
-                boxShadow: 1,
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-          )}
-          {canDelete && (
-            <IconButton
-              size="small"
-              onClick={handleDelete}
-              sx={{ 
-                bgcolor: 'background.paper',
-                boxShadow: 1,
-                color: 'error.main',
-                '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
-              }}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          )}
-        </CardActions>
-      )}
+
     </Card>
   );
-};
+});
+
+// Add display name for debugging
+PostCard.displayName = 'PostCard';
 
 export default PostCard;

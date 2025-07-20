@@ -1,9 +1,9 @@
 import React from 'react';
 import { Card, CardContent, Avatar, Box } from '@mui/material';
-import { Person } from '@mui/icons-material';
 import { Text, FollowButton } from '../../../ui';
 import { useAuth } from '../../../../contexts/AuthContext';
 import type { User } from '../../../../models/auth.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface UserCardProps {
   user: User;
@@ -24,7 +24,6 @@ const UserCard: React.FC<UserCardProps> = ({
   const isCurrentUser = currentUser?.userId === user.userId;
 
   const cardHeight = compact ? 150 : 200; // Reasonable height to accommodate 2-line names
-  const avatarSize = compact ? 40 : 56;
 
   return (
     <Card 
@@ -41,14 +40,17 @@ const UserCard: React.FC<UserCardProps> = ({
       <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
           <Avatar 
+            src={getProfilePictureUrl(user.profilePicture)}
             sx={{ 
-              width: avatarSize, 
-              height: avatarSize,
-              bgcolor: 'primary.main'
+              width: 64, 
+              height: 64, 
+              mb: 2, 
+              bgcolor: 'primary.main', 
+              fontSize: '1.5rem',
+              fontWeight: 'bold'
             }}
-            src={user.profilePicture}
           >
-            {user.username ? user.username.charAt(0).toUpperCase() : <Person />}
+            {user.firstName?.charAt(0) || user.username.charAt(0)}
           </Avatar>
           
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>

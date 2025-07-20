@@ -9,8 +9,13 @@ import {
   MenuItem,
   Chip,
   OutlinedInput,
-  Alert
+  Alert,
+  Avatar,
+  ListSubheader,
+  Divider
 } from '@mui/material';
+import { Pets } from '@mui/icons-material';
+import { getProfilePictureUrl } from '../../../utils/imageUrlUtils';
 import type { SelectablePet } from '../../../models/petWedding.types';
 
 export interface PetWeddingSelectionProps {
@@ -28,6 +33,10 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
   loading = false,
   error
 }) => {
+  // Group pets into owned and connected
+  const ownedPets = selectablePets.filter(pet => pet.isOwned);
+  const connectedPets = selectablePets.filter(pet => !pet.isOwned);
+
   const handlePetSelection = (event: any) => {
     const value = event.target.value;
     const newSelectedIds = typeof value === 'string' ? value.split(',').map(Number) : value;
@@ -45,7 +54,7 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
     const chipColor = pet.isOwned ? 'primary' : 'secondary';
     const chipLabel = pet.isOwned 
       ? `${pet.name} (Your pet)`
-      : `${pet.name} (${pet.user?.username || 'Connected'})`;
+      : `${pet.name} (${pet.user?.username || pet.connectionOwner?.username || 'Connected'})`;
 
     return (
       <Chip
@@ -54,7 +63,59 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
         color={chipColor}
         variant="outlined"
         size="small"
+        avatar={
+          <Avatar 
+            src={pet.profilePicture ? getProfilePictureUrl(pet.profilePicture) : undefined}
+            sx={{ 
+              width: 24, 
+              height: 24,
+              bgcolor: pet.isOwned ? 'primary.main' : 'secondary.main'
+            }}
+          >
+            {!pet.profilePicture && <Pets sx={{ fontSize: 14 }} />}
+          </Avatar>
+        }
       />
+    );
+  };
+
+  const renderPetMenuItem = (pet: SelectablePet) => {
+    const ownerName = pet.isOwned 
+      ? 'Your pet' 
+      : (pet.user?.username || pet.connectionOwner?.username || 'Connected pet');
+
+    return (
+      <MenuItem 
+        key={pet.petId} 
+        value={pet.petId}
+        disabled={selectedPetIds.length >= 2 && pet.petId !== undefined && !selectedPetIds.includes(pet.petId)}
+        sx={{ py: 1.5 }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
+          <Avatar 
+            src={pet.profilePicture ? getProfilePictureUrl(pet.profilePicture) : undefined}
+            sx={{ 
+              width: 40, 
+              height: 40,
+              bgcolor: pet.isOwned ? 'primary.main' : 'secondary.main'
+            }}
+          >
+            {!pet.profilePicture && <Pets />}
+          </Avatar>
+          
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body1" noWrap>
+              {pet.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {pet.species} {pet.breed && `• ${pet.breed}`}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {ownerName}
+            </Typography>
+          </Box>
+        </Box>
+      </MenuItem>
     );
   };
 
@@ -81,26 +142,58 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
             </Box>
           )}
           disabled={loading}
+          MenuProps={{
+            PaperProps: {
+              sx: { maxHeight: 400 }
+            }
+          }}
         >
-          {selectablePets.map((pet) => (
-            <MenuItem 
-              key={pet.petId} 
-              value={pet.petId}
-              disabled={selectedPetIds.length >= 2 && pet.petId !== undefined && !selectedPetIds.includes(pet.petId)}
+          {/* Your Pets Section */}
+          {ownedPets.length > 0 && (
+            <ListSubheader 
+              sx={{ 
+                bgcolor: 'primary.50',
+                color: 'primary.main',
+                fontWeight: 600,
+                py: 1,
+                position: 'sticky',
+                top: 0,
+                zIndex: 1
+              }}
             >
-              <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-                <Typography variant="body1">
-                  {pet.name} - {pet.species} {pet.breed && `(${pet.breed})`}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {pet.isOwned 
-                    ? 'Your pet' 
-                    : `Connected via ${pet.user?.username || 'unknown'}`
-                  }
-                </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Pets fontSize="small" />
+                Your Pets ({ownedPets.length})
               </Box>
-            </MenuItem>
-          ))}
+            </ListSubheader>
+          )}
+          {ownedPets.map(renderPetMenuItem)}
+          
+          {/* Divider between sections */}
+          {ownedPets.length > 0 && connectedPets.length > 0 && (
+            <Divider sx={{ my: 1 }} />
+          )}
+          
+          {/* Connected Pets Section */}
+          {connectedPets.length > 0 && (
+            <ListSubheader 
+              sx={{ 
+                bgcolor: 'secondary.50',
+                color: 'secondary.main',
+                fontWeight: 600,
+                py: 1,
+                position: 'sticky',
+                top: 0,
+                zIndex: 1
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Pets fontSize="small" />
+                Connected Pets ({connectedPets.length})
+              </Box>
+            </ListSubheader>
+          )}
+          {connectedPets.map(renderPetMenuItem)}
         </Select>
         
         {selectedPetIds.length !== 2 && (
@@ -123,6 +216,29 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
             Try adding pets to your profile or connecting with other pet owners first.
           </Typography>
         </Alert>
+      )}
+
+      {/* Summary Information */}
+      {selectablePets.length > 0 && (
+        <Box sx={{ 
+          p: 2, 
+          bgcolor: 'grey.50', 
+          borderRadius: 1,
+          border: '1px solid',
+          borderColor: 'grey.200'
+        }}>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Available for Wedding:
+          </Typography>
+          <Stack direction="row" spacing={2}>
+            <Typography variant="body2">
+              • {ownedPets.length} of your pets
+            </Typography>
+            <Typography variant="body2">
+              • {connectedPets.length} connected pets
+            </Typography>
+          </Stack>
+        </Box>
       )}
     </Stack>
   );

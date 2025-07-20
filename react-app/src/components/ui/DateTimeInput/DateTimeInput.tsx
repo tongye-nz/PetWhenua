@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import Input from '../Input';
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export interface DateTimeInputProps {
   label?: string;
@@ -25,246 +34,87 @@ const DateTimeInput: React.FC<DateTimeInputProps> = ({
   min,
   max,
 }) => {
-  // Parse the datetime string (YYYY-MM-DDTHH:MM) into separate date and time parts
-  const parseDateTime = (dateTimeString: string) => {
-    if (!dateTimeString) return { date: '', hour: '', minute: '', ampm: 'AM' };
+  const NZ_TIMEZONE = 'Pacific/Auckland';
+
+  // Convert UTC string to dayjs object in NZ timezone for display
+  const getDisplayValue = (): Dayjs | null => {
+    if (!value) return null;
     
-    const [datePart, timePart] = dateTimeString.split('T');
-    if (!timePart) return { date: datePart || '', hour: '', minute: '', ampm: 'AM' };
-    
-    const [hourStr, minuteStr] = timePart.split(':');
-    const hour24 = parseInt(hourStr, 10);
-    const minute = minuteStr || '00';
-    
-    // Convert 24-hour to 12-hour format
-    let hour12: number;
-    let ampm: 'AM' | 'PM';
-    
-    if (hour24 === 0) {
-      hour12 = 12;
-      ampm = 'AM';
-    } else if (hour24 < 12) {
-      hour12 = hour24;
-      ampm = 'AM';
-    } else if (hour24 === 12) {
-      hour12 = 12;
-      ampm = 'PM';
-    } else {
-      hour12 = hour24 - 12;
-      ampm = 'PM';
+    try {
+      // Parse the UTC value and convert to NZ timezone
+      return dayjs.utc(value).tz(NZ_TIMEZONE);
+    } catch (error) {
+      console.error('Error parsing date value:', error);
+      return null;
     }
-    
-    return {
-      date: datePart || '',
-      hour: hour12.toString(),
-      minute: minute,
-      ampm: ampm
-    };
   };
 
-  // Convert 12-hour to 24-hour format
-  const convertTo24Hour = (hour: string, minute: string, ampm: 'AM' | 'PM') => {
-    if (!hour || !minute) return null;
-    
-    let hour24: number;
-    const hour12 = parseInt(hour, 10);
-    
-    if (ampm === 'AM') {
-      hour24 = hour12 === 12 ? 0 : hour12;
-    } else {
-      hour24 = hour12 === 12 ? 12 : hour12 + 12;
+  // Convert dayjs object back to UTC string for backend
+  const handleDateTimeChange = (newValue: Dayjs | null) => {
+    if (!newValue) {
+      onChange('');
+      return;
     }
-    
-    const hour24Str = hour24.toString().padStart(2, '0');
-    return `${hour24Str}:${minute}`;
-  };
 
-  // Combine date and time parts back into datetime string
-  const combineDateTime = (date: string, hour: string, minute: string, ampm: 'AM' | 'PM') => {
-    // If we have both date and complete time, return full datetime
-    if (date && hour && minute) {
-      const timeStr = convertTo24Hour(hour, minute, ampm);
-      return timeStr ? `${date}T${timeStr}` : '';
+    try {
+      // Convert the NZ timezone value back to UTC for the backend
+      const utcValue = newValue.utc().toISOString();
+      onChange(utcValue);
+    } catch (error) {
+      console.error('Error converting datetime to UTC:', error);
+      onChange('');
     }
-    
-    // If we have date but no complete time, use default time
-    if (date && (!hour || !minute)) {
-      return date + 'T09:00'; // Default to 9:00 AM
+  };
+
+  // Convert min/max strings to dayjs objects
+  const getMinValue = (): Dayjs | undefined => {
+    if (!min) {
+      // Default to current NZ time
+      return dayjs().tz(NZ_TIMEZONE);
     }
-    
-    // If we have no date but have time, return empty string (don't pass incomplete data to parent)
-    // The time components can still be selected and displayed
-    return '';
-  };
-
-  // Internal state for time components to allow independent selection
-  const [internalHour, setInternalHour] = useState<string>('');
-  const [internalMinute, setInternalMinute] = useState<string>('');
-  const [internalAmPm, setInternalAmPm] = useState<'AM' | 'PM'>('AM');
-  
-  const { date, hour, minute, ampm } = parseDateTime(value);
-  
-  // Initialize internal state from parsed value
-  useEffect(() => {
-    setInternalHour(hour || '');
-    setInternalMinute(minute || '');
-    setInternalAmPm((ampm === 'AM' || ampm === 'PM') ? ampm : 'AM');
-  }, [hour, minute, ampm]);
-  
-  // Use internal state for time components, parsed date for date
-  const currentHour = internalHour;
-  const currentMinute = internalMinute;
-  const currentAmPm = internalAmPm;
-
-  // Generate hour options (1-12)
-  const generateHourOptions = () => {
-    const hours = [];
-    for (let i = 1; i <= 12; i++) {
-      hours.push({ value: i.toString(), label: i.toString() });
+    try {
+      return dayjs.utc(min).tz(NZ_TIMEZONE);
+    } catch {
+      return undefined;
     }
-    return hours;
   };
 
-  // Generate minute options (00, 05, 10, 15, etc.)
-  const generateMinuteOptions = () => {
-    const minutes = [];
-    for (let i = 0; i < 60; i += 5) {
-      const value = i.toString().padStart(2, '0');
-      minutes.push({ value, label: value });
+  const getMaxValue = (): Dayjs | undefined => {
+    if (!max) return undefined;
+    try {
+      return dayjs.utc(max).tz(NZ_TIMEZONE);
+    } catch {
+      return undefined;
     }
-    return minutes;
-  };
-
-  // Get min/max dates for date input
-  const getMinDate = () => {
-    if (!min) return new Date().toISOString().split('T')[0]; // Today
-    return min.split('T')[0];
-  };
-
-  const getMaxDate = () => {
-    if (!max) return '';
-    return max.split('T')[0];
-  };
-
-  // Handle date change
-  const handleDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = event.target.value;
-    const newDateTime = combineDateTime(newDate, currentHour, currentMinute, currentAmPm);
-    onChange(newDateTime);
-  };
-
-  // Handle hour change
-  const handleHourChange = (event: any) => {
-    const newHour = event.target.value;
-    setInternalHour(newHour);
-    const newDateTime = combineDateTime(date, newHour, currentMinute, currentAmPm);
-    onChange(newDateTime);
-  };
-
-  // Handle minute change
-  const handleMinuteChange = (event: any) => {
-    const newMinute = event.target.value;
-    setInternalMinute(newMinute);
-    const newDateTime = combineDateTime(date, currentHour, newMinute, currentAmPm);
-    onChange(newDateTime);
-  };
-
-  // Handle AM/PM change
-  const handleAmPmChange = (event: any) => {
-    const newAmPm = event.target.value as 'AM' | 'PM';
-    setInternalAmPm(newAmPm);
-    const newDateTime = combineDateTime(date, currentHour, currentMinute, newAmPm);
-    onChange(newDateTime);
   };
 
   return (
-    <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {label} {required && <span style={{ color: 'red' }}>*</span>}
-      </Typography>
-      
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        {/* Date Input */}
-        <Input
-          type="date"
-          value={date}
-          onChange={handleDateChange}
-          error={error}
-          disabled={disabled}
-          required={required}
-          inputProps={{
-            min: getMinDate(),
-            max: getMaxDate(),
-          }}
-          sx={{ flex: 2 }}
-          placeholder="Select date"
-        />
-        
-        {/* Hour Select */}
-        <FormControl sx={{ flex: 1 }} error={error} disabled={disabled}>
-          <InputLabel>Hour</InputLabel>
-          <Select
-            value={currentHour}
-            label="Hour"
-            onChange={handleHourChange}
-            required={required}
-          >
-            <MenuItem value="">
-              <em>--</em>
-            </MenuItem>
-            {generateHourOptions().map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        
-        {/* Minute Select */}
-        <FormControl sx={{ flex: 1 }} error={error} disabled={disabled}>
-          <InputLabel>Min</InputLabel>
-          <Select
-            value={currentMinute}
-            label="Min"
-            onChange={handleMinuteChange}
-            required={required}
-          >
-            <MenuItem value="">
-              <em>--</em>
-            </MenuItem>
-            {generateMinuteOptions().map((option) => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        
-        {/* AM/PM Select */}
-        <FormControl sx={{ flex: 1 }} error={error} disabled={disabled}>
-          <InputLabel>AM/PM</InputLabel>
-          <Select
-            value={currentAmPm}
-            label="AM/PM"
-            onChange={handleAmPmChange}
-            required={required}
-          >
-            <MenuItem value="AM">AM</MenuItem>
-            <MenuItem value="PM">PM</MenuItem>
-          </Select>
-        </FormControl>
-      </Box>
-      
-      {helperText && (
-        <Typography 
-          variant="caption" 
-          color={error ? 'error' : 'text.secondary'}
-          sx={{ mt: 0.5, display: 'block' }}
-        >
-          {helperText}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {label} {required && <span style={{ color: 'red' }}>*</span>}
         </Typography>
-      )}
-    </Box>
+        
+        <DateTimePicker
+          value={getDisplayValue()}
+          onChange={handleDateTimeChange}
+          disabled={disabled}
+          minDateTime={getMinValue()}
+          maxDateTime={getMaxValue()}
+          format="DD/MM/YYYY hh:mm A"
+          timezone={NZ_TIMEZONE}
+          slotProps={{
+            textField: {
+              error,
+              required,
+              fullWidth: true,
+              size: 'small',
+              helperText: helperText || 'Select date and time (New Zealand time)',
+            },
+          }}
+        />
+      </Box>
+    </LocalizationProvider>
   );
 };
 

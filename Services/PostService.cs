@@ -13,25 +13,42 @@ namespace PetWhenua.Services
         private readonly IPostRepository _postRepository;
         private readonly IPostFactory _postFactory;
         private readonly IPostAuthorizationService _authorizationService;
+        private readonly PostExpiryService _expiryService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
         public PostService(
             IPostRepository postRepository,
             IPostFactory postFactory,
-            IPostAuthorizationService authorizationService)
+            IPostAuthorizationService authorizationService,
+            PostExpiryService expiryService,
+            INotificationService notificationService,
+            IUserService userService)
         {
             _postRepository = postRepository;
             _postFactory = postFactory;
             _authorizationService = authorizationService;
+            _expiryService = expiryService;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         public async Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null)
         {
-            return await _postRepository.GetAllPostsAsync(postType, userId, region, district);
+            var posts = await _postRepository.GetAllPostsAsync(postType, userId, region, district);
+            return await ApplyDynamicExpiryAsync(posts);
         }
 
         public async Task<Post?> GetPostByIdAsync(int id)
         {
-            return await _postRepository.GetPostByIdAsync(id);
+            var post = await _postRepository.GetPostByIdAsync(id);
+            if (post != null)
+            {
+                await _expiryService.ExpirePostIfNeededAsync(post);
+                // Reload the post to get the updated status
+                post = await _postRepository.GetPostByIdAsync(id);
+            }
+            return post;
         }
 
         public async Task<Post> CreatePostAsync(Post post)
@@ -68,7 +85,30 @@ namespace PetWhenua.Services
             post.Status = initialStatus; // Override the default Active status with role-based status
             post.UpdatedAt = DateTime.UtcNow;
 
-            return await _postRepository.AddPostAsync(post);
+            var createdPost = await _postRepository.AddPostAsync(post);
+
+            // Send notification to meetup admins if this is a pending meetup
+            if (postType == PostType.Meetup && initialStatus == PostStatus.Pending)
+            {
+                try
+                {
+                    var creator = await _userService.GetUserByIdAsync(userId);
+                    var creatorName = creator?.FirstName ?? creator?.Username ?? "Someone";
+                    
+                    await _notificationService.CreateMeetupPendingNotificationAsync(
+                        createdPost.PostId, 
+                        title, 
+                        creatorName
+                    );
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail post creation if notification fails
+                    Console.WriteLine($"Failed to send meetup pending notification: {ex.Message}");
+                }
+            }
+
+            return createdPost;
         }
 
         public async Task<Post> UpdatePostAsync(Post post)
@@ -145,9 +185,48 @@ namespace PetWhenua.Services
                 throw new InvalidOperationException($"Cannot change {post.PostType} post status from {post.Status} to {newStatus}. Allowed statuses for {post.PostType} posts are: {allowedStatusNames}");
             }
 
+            var oldStatus = post.Status;
             post.Status = newStatus;
             post.UpdatedAt = DateTime.UtcNow;
-            return await _postRepository.UpdatePostAsync(post);
+            
+            var updatedPost = await _postRepository.UpdatePostAsync(post);
+
+            // Send notification to meetup creator if this is a meetup status change
+            if (post.PostType == PostType.Meetup && oldStatus != newStatus)
+            {
+                try
+                {
+                    // Only notify if the status change is from Pending to Active/Inactive
+                    if (oldStatus == PostStatus.Pending)
+                    {
+                        if (newStatus == PostStatus.Active)
+                        {
+                            // Meetup approved
+                            await _notificationService.CreateMeetupApprovedNotificationAsync(
+                                post.UserId, 
+                                post.PostId, 
+                                post.Title
+                            );
+                        }
+                        else if (newStatus == PostStatus.Inactive)
+                        {
+                            // Meetup rejected
+                            await _notificationService.CreateMeetupRejectedNotificationAsync(
+                                post.UserId, 
+                                post.PostId, 
+                                post.Title
+                            );
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Log error but don't fail status change if notification fails
+                    Console.WriteLine($"Failed to send meetup status change notification: {ex.Message}");
+                }
+            }
+
+            return updatedPost;
         }
 
         public async Task<bool> DeletePostAsync(int id)
@@ -157,17 +236,26 @@ namespace PetWhenua.Services
 
         public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
         {
-            return await _postRepository.GetPostsByUserAsync(userId);
+            var posts = await _postRepository.GetPostsByUserAsync(userId);
+            return await ApplyDynamicExpiryAsync(posts);
         }
 
         public async Task<IEnumerable<Post>> GetPostsByTypeAsync(PostType postType)
         {
-            return await _postRepository.GetPostsByTypeAsync(postType);
+            var posts = await _postRepository.GetPostsByTypeAsync(postType);
+            return await ApplyDynamicExpiryAsync(posts);
         }
 
         public async Task<IEnumerable<Post>> GetInactiveMeetupPostsAsync()
         {
-            return await _postRepository.GetPostsByTypeAndStatusAsync(PostType.Meetup, PostStatus.Inactive);
+            var posts = await _postRepository.GetPostsByTypeAndStatusAsync(PostType.Meetup, PostStatus.Inactive);
+            return await ApplyDynamicExpiryAsync(posts);
+        }
+
+        public async Task<IEnumerable<Post>> GetPendingMeetupPostsAsync()
+        {
+            var posts = await _postRepository.GetPostsByTypeAndStatusAsync(PostType.Meetup, PostStatus.Pending);
+            return await ApplyDynamicExpiryAsync(posts);
         }
 
         public async Task<bool> PostExistsAsync(int id)
@@ -224,6 +312,43 @@ namespace PetWhenua.Services
             return permissions;
         }
 
+        /// <summary>
+        /// Applies dynamic expiry checking to a collection of posts
+        /// </summary>
+        private async Task<IEnumerable<Post>> ApplyDynamicExpiryAsync(IEnumerable<Post> posts)
+        {
+            var postList = posts.ToList();
+            var expiredAny = false;
 
+            foreach (var post in postList)
+            {
+                var wasExpired = await _expiryService.ExpirePostIfNeededAsync(post);
+                if (wasExpired)
+                {
+                    expiredAny = true;
+                }
+            }
+
+            // If any posts were expired, reload the collection to get updated statuses
+            if (expiredAny)
+            {
+                // Re-fetch with the same filters to get updated statuses
+                var postIds = postList.Select(p => p.PostId).ToList();
+                var updatedPosts = new List<Post>();
+                
+                foreach (var id in postIds)
+                {
+                    var updatedPost = await _postRepository.GetPostByIdAsync(id);
+                    if (updatedPost != null)
+                    {
+                        updatedPosts.Add(updatedPost);
+                    }
+                }
+                
+                return updatedPosts.OrderByDescending(p => p.CreatedAt);
+            }
+
+            return postList;
+        }
     }
 }

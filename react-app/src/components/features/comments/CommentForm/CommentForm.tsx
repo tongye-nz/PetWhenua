@@ -7,10 +7,11 @@ import {
   Typography,
   Alert
 } from '@mui/material';
-import { Send } from '@mui/icons-material';
+import { Send, Person } from '@mui/icons-material';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { commentService } from '../../../../api/comment.api';
 import type { CommentResponse } from '../../../../models/comment.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 export interface CommentFormProps {
   postId: number;
@@ -73,14 +74,6 @@ const CommentForm: React.FC<CommentFormProps> = ({
     }
   };
 
-  const getDisplayName = () => {
-    if (!user) return '';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName} ${user.lastName}`;
-    }
-    return user.username;
-  };
-
   if (!user) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
@@ -102,10 +95,16 @@ const CommentForm: React.FC<CommentFormProps> = ({
       <Box display="flex" gap={2}>
         {/* User Avatar */}
         <Avatar
-          src={user.profilePicture}
-          sx={{ width: 32, height: 32 }}
+          src={getProfilePictureUrl(user.profilePicture)}
+          sx={{
+            width: 36,
+            height: 36,
+            bgcolor: 'primary.main',
+            fontSize: '1rem',
+            mr: 1.5
+          }}
         >
-          {getDisplayName().charAt(0).toUpperCase()}
+          {!user.profilePicture && (user.username ? user.username.charAt(0).toUpperCase() : <Person />)}
         </Avatar>
 
         {/* Comment Input */}

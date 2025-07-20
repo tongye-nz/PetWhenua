@@ -80,6 +80,28 @@ namespace PetWhenua.Repositories.Concrete
                 return false;
             }
 
+            // Delete related data that doesn't have cascade delete configured
+            // This prevents foreign key constraint violations
+
+            // Delete related notifications
+            var relatedNotifications = await _context.Notifications
+                .Where(n => n.RelatedPostId == id)
+                .ToListAsync();
+            if (relatedNotifications.Any())
+            {
+                _context.Notifications.RemoveRange(relatedNotifications);
+            }
+
+            // Delete related chat messages
+            var relatedChatMessages = await _context.ChatMessages
+                .Where(cm => cm.RelatedPostId == id)
+                .ToListAsync();
+            if (relatedChatMessages.Any())
+            {
+                _context.ChatMessages.RemoveRange(relatedChatMessages);
+            }
+
+            // Now delete the post (cascade delete will handle Comments, Likes, PostImages, PetWeddingParticipants)
             _context.Posts.Remove(post);
             await _context.SaveChangesAsync();
             return true;

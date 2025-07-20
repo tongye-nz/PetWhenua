@@ -38,6 +38,12 @@ export const petWeddingService = {
     return response.data;
   },
 
+  // Reject pet wedding participation
+  async rejectPetWeddingParticipation(postId: number): Promise<{ message: string }> {
+    const response = await api.post(`/petwedding/${postId}/reject`);
+    return response.data;
+  },
+
   // Get pending wedding approvals for current user
   async getPendingWeddingApprovals(): Promise<PetWeddingPost[]> {
     const response = await api.get<PetWeddingPost[]>('/petwedding/pending-approvals');

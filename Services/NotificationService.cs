@@ -12,15 +12,18 @@ namespace PetWhenua.Services
         private readonly AppDbContext _context;
         private readonly IHubContext<NotificationHub> _hubContext;
         private readonly ILogger<NotificationService> _logger;
+        private readonly IUserService _userService;
 
         public NotificationService(
             AppDbContext context,
             IHubContext<NotificationHub> hubContext,
-            ILogger<NotificationService> logger)
+            ILogger<NotificationService> logger,
+            IUserService userService)
         {
             _context = context;
             _hubContext = hubContext;
             _logger = logger;
+            _userService = userService;
         }
 
         public async Task<NotificationDto> CreateNotificationAsync(CreateNotificationRequest request)
@@ -257,6 +260,20 @@ namespace PetWhenua.Services
             await CreateAndSendNotificationAsync(request);
         }
 
+        public async Task CreatePetWeddingRequestNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.PetWeddingPendingApproval,
+                Title = "Pet Wedding Request",
+                Message = $"{requesterName} has invited your pet to participate in a wedding: {postTitle}. Please review and respond.",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
         public async Task CreateMeetupActivationNotificationAsync(int targetUserId, int postId, string postTitle)
         {
             var request = new CreateNotificationRequest
@@ -265,6 +282,71 @@ namespace PetWhenua.Services
                 Type = NotificationType.MeetupPendingActivation,
                 Title = "Meetup Needs Activation",
                 Message = $"Your meetup '{postTitle}' is pending activation",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
+        public async Task CreateMeetupPendingNotificationAsync(int postId, string postTitle, string creatorName)
+        {
+            // Get all meetup admin and site admin user IDs
+            var meetupAdminIds = await _userService.GetUserIdsByRoleAsync(UserRoles.MeetupAdmin);
+            var siteAdminIds = await _userService.GetUserIdsByRoleAsync(UserRoles.SiteAdmin);
+            
+            var adminUserIds = meetupAdminIds.Concat(siteAdminIds).Distinct().ToList();
+
+            if (!adminUserIds.Any())
+            {
+                _logger.LogWarning("No meetup admins or site admins found to notify about pending meetup {PostId}", postId);
+                return;
+            }
+
+            // Create notifications for all admin users
+            var notifications = new List<NotificationDto>();
+            foreach (var adminId in adminUserIds)
+            {
+                var request = new CreateNotificationRequest
+                {
+                    UserId = adminId,
+                    Type = NotificationType.MeetupPendingActivation,
+                    Title = "New Meetup Requires Approval",
+                    Message = $"{creatorName} created a meetup '{postTitle}' that needs your approval",
+                    RelatedPostId = postId
+                };
+
+                var notification = await CreateNotificationAsync(request);
+                notifications.Add(notification);
+            }
+
+            // Send real-time notifications to all admin users
+            await BroadcastNotificationAsync(adminUserIds, notifications.First());
+            
+            _logger.LogInformation("Notified {AdminCount} admin(s) about pending meetup {PostId}", adminUserIds.Count, postId);
+        }
+
+        public async Task CreateMeetupApprovedNotificationAsync(int targetUserId, int postId, string postTitle)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.MeetupActivated,
+                Title = "Meetup Approved",
+                Message = $"Great news! Your meetup '{postTitle}' has been approved and is now active",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
+        public async Task CreateMeetupRejectedNotificationAsync(int targetUserId, int postId, string postTitle)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.MeetupRejected,
+                Title = "Meetup Not Approved",
+                Message = $"Your meetup '{postTitle}' was not approved. Please contact support if you have questions",
                 RelatedPostId = postId
             };
 

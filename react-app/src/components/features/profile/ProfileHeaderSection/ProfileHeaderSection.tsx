@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box } from '@mui/material';
+import type { CSSProperties } from 'react';
 import { Button, Text } from '../../../ui';
 
 export interface ProfileHeaderSectionProps {
@@ -11,7 +12,10 @@ export interface ProfileHeaderSectionProps {
   onStartEditing: () => void;
   onSaveForm: () => void;
   onCancelEditing: () => void;
-  styles: any; // TODO: Type this properly when styles are moved to a proper system
+  styles: Record<string, CSSProperties> & {
+    header: CSSProperties;
+    title: CSSProperties;
+  };
 }
 
 const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({

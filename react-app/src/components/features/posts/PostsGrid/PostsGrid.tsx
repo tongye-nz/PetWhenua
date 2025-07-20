@@ -15,7 +15,8 @@ export interface PostsGridProps {
   emptyMessage?: string;
 }
 
-const PostsGrid: React.FC<PostsGridProps> = ({
+// **PERFORMANCE OPTIMIZATION: Memoize PostsGrid to prevent unnecessary re-renders**
+const PostsGrid: React.FC<PostsGridProps> = React.memo(({
   posts,
   onViewPost,
   onEditPost,
@@ -86,6 +87,9 @@ const PostsGrid: React.FC<PostsGridProps> = ({
       ))}
     </Box>
   );
-};
+});
+
+// Add display name for debugging
+PostsGrid.displayName = 'PostsGrid';
 
 export default PostsGrid;

@@ -3,6 +3,7 @@ import { IconButton, Tooltip, Badge } from '@mui/material';
 import { Chat, ChatBubble } from '@mui/icons-material';
 import { ChatWindow } from '../../features/chat/ChatWindow';
 import { chatService } from '../../../api/chat.api';
+import { useAuth } from '../../../contexts/AuthContext';
 
 interface ChatButtonProps {
   userId?: number;
@@ -21,20 +22,23 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
   showUnreadBadge = false,
   tooltip = 'Open chat'
 }) => {
+  const { user } = useAuth();
   const [chatOpen, setChatOpen] = useState(false);
   const [unreadCount, setUnreadCount] = React.useState(0);
 
-  // Load unread count if showing badge
+  // Load unread count if showing badge and user is authenticated
   React.useEffect(() => {
-    if (showUnreadBadge) {
+    if (showUnreadBadge && user) {
       loadUnreadCount();
       // Set up interval to periodically check for new messages
       const interval = setInterval(loadUnreadCount, 30000); // Check every 30 seconds
       return () => clearInterval(interval);
     }
-  }, [showUnreadBadge]);
+  }, [showUnreadBadge, user]);
 
   const loadUnreadCount = async () => {
+    if (!user) return; // Additional safety check
+    
     try {
       const count = await chatService.getUnreadCount();
       setUnreadCount(count);
@@ -44,6 +48,8 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
   };
 
   const handleChatOpen = () => {
+    if (!user) return; // Safety check
+    
     setChatOpen(true);
     // Reset unread count when opening chat
     if (showUnreadBadge) {
@@ -54,6 +60,12 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
   const handleChatClose = () => {
     setChatOpen(false);
   };
+
+  // Don't render chat button for unauthenticated users
+  // Important: This check comes AFTER all hooks to avoid Rules of Hooks violation
+  if (!user) {
+    return null;
+  }
 
   const ChatIcon = variant === 'fab' ? ChatBubble : Chat;
 

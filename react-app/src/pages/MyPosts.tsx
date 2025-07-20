@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -14,12 +14,15 @@ import { PostsGrid } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
 import type { Post, PostStatus } from '../models/post.types';
+import { PostStatusUtils } from '../models/post.types';
 
 const MyPosts: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { posts, loading, error, fetchPosts, clearError } = usePost();
+  const { posts, loading, error, fetchPosts, clearError, deletePost } = usePost();
   const [selectedTab, setSelectedTab] = useState(0);
+  const [successMessage, setSuccessMessage] = useState<string>('');
+  const [deleteError, setDeleteError] = useState<string>('');
 
   useEffect(() => {
     if (user) {
@@ -29,51 +32,75 @@ const MyPosts: React.FC = () => {
 
   const filterPostsByStatus = (status?: PostStatus): Post[] => {
     if (status === undefined) return posts;
-    return posts.filter(post => post.status === status);
+    return posts.filter(post => {
+      if (status === 0) return PostStatusUtils.isActive(post.status);
+      if (status === 1) return PostStatusUtils.isSold(post.status);
+      if (status === 2) return PostStatusUtils.isExpired(post.status);
+      if (status === 3) return PostStatusUtils.isInactive(post.status);
+      if (status === 4) return PostStatusUtils.isCancelled(post.status);
+      if (status === 5) return PostStatusUtils.isPending(post.status);
+      return false;
+    });
   };
 
-  const getTabCounts = () => {
+  // **PERFORMANCE OPTIMIZATION: Memoize tab counts to prevent recalculation on every render**
+  const counts = useMemo(() => {
     return {
       all: posts.length,
-      active: posts.filter(p => p.status === 0).length, // PostStatus.Active
-      inactive: posts.filter(p => p.status === 3).length, // PostStatus.Inactive
-      sold: posts.filter(p => p.status === 1).length, // PostStatus.Sold
-      expired: posts.filter(p => p.status === 2).length, // PostStatus.Expired
-      cancelled: posts.filter(p => p.status === 4).length, // PostStatus.Cancelled
-      pending: posts.filter(p => p.status === 5).length, // PostStatus.Pending
+      active: posts.filter(p => PostStatusUtils.isActive(p.status)).length,
+      inactive: posts.filter(p => PostStatusUtils.isInactive(p.status)).length,
+      sold: posts.filter(p => PostStatusUtils.isSold(p.status)).length,
+      expired: posts.filter(p => PostStatusUtils.isExpired(p.status)).length,
+      cancelled: posts.filter(p => PostStatusUtils.isCancelled(p.status)).length,
+      pending: posts.filter(p => PostStatusUtils.isPending(p.status)).length,
     };
-  };
+  }, [posts]);
 
   const tabs = [
     { label: 'All', status: undefined },
-    { label: 'Active', status: 0 as PostStatus }, // PostStatus.Active
-    { label: 'Inactive', status: 3 as PostStatus }, // PostStatus.Inactive
-    { label: 'Sold', status: 1 as PostStatus }, // PostStatus.Sold
-    { label: 'Expired', status: 2 as PostStatus }, // PostStatus.Expired
-    { label: 'Cancelled', status: 4 as PostStatus }, // PostStatus.Cancelled
-    { label: 'Pending', status: 5 as PostStatus }, // PostStatus.Pending
+    { label: 'Active', status: 0 as PostStatus }, // Using numeric values for consistency with existing code
+    { label: 'Inactive', status: 3 as PostStatus },
+    { label: 'Sold', status: 1 as PostStatus },
+    { label: 'Expired', status: 2 as PostStatus },
+    { label: 'Cancelled', status: 4 as PostStatus },
+    { label: 'Pending', status: 5 as PostStatus },
   ];
 
-  const counts = getTabCounts();
-  const currentPosts = filterPostsByStatus(tabs[selectedTab].status);
+  // **PERFORMANCE OPTIMIZATION: Memoize current posts filtering**
+  const currentPosts = useMemo(() => {
+    return filterPostsByStatus(tabs[selectedTab].status);
+  }, [posts, selectedTab]); // Only recalculate when posts or selected tab changes
 
   const handleCreatePost = () => {
     navigate('/create-post');
   };
 
   const handleEditPost = (post: Post) => {
-    // Navigate to edit page (to be implemented later)
-    console.log('Edit post:', post.postId);
+    // Navigate to edit page
+    navigate(`/edit-post/${post.postId}`);
   };
 
   const handleDeletePost = async (post: Post) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        // The actual delete logic will be handled by PostContext
-        console.log('Delete post:', post.postId);
-      } catch (error) {
-        console.error('Failed to delete post:', error);
-      }
+    // Clear any existing messages
+    setSuccessMessage('');
+    setDeleteError('');
+    
+    try {
+      // Use PostContext's deletePost method to actually delete the post
+      await deletePost(post.postId);
+      
+      // Show success message
+      setSuccessMessage(`Post "${post.title}" has been deleted successfully.`);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => setSuccessMessage(''), 5000);
+      
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      setDeleteError('Failed to delete post. Please try again.');
+      
+      // Clear error message after 8 seconds
+      setTimeout(() => setDeleteError(''), 8000);
     }
   };
 
@@ -125,6 +152,28 @@ const MyPosts: React.FC = () => {
           onClose={clearError}
         >
           {error}
+        </Alert>
+      )}
+
+      {/* Success Message */}
+      {successMessage && (
+        <Alert 
+          severity="success" 
+          sx={{ mb: 2 }}
+          onClose={() => setSuccessMessage('')}
+        >
+          {successMessage}
+        </Alert>
+      )}
+
+      {/* Delete Error Message */}
+      {deleteError && (
+        <Alert 
+          severity="error" 
+          sx={{ mb: 2 }}
+          onClose={() => setDeleteError('')}
+        >
+          {deleteError}
         </Alert>
       )}
 

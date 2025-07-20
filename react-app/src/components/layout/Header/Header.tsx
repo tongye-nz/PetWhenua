@@ -26,6 +26,8 @@ import { Avatar } from '@mui/material';
 import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NotificationCenter } from '../../features/notifications';
+import { isAdmin, isMeetupAdmin } from '../../../utils/userRoles';
+import { getProfilePictureUrl } from '../../../utils/imageUrlUtils';
 
 interface HeaderProps {
   onSignInClick?: () => void;
@@ -87,8 +89,17 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'connections':
         navigate('/pet-connection-requests');
         break;
+      case 'weddingRequests':
+        navigate('/wedding-requests');
+        break;
       case 'messages':
         navigate('/messages');
+        break;
+      case 'admin':
+        navigate('/admin');
+        break;
+      case 'meetupAdmin':
+        navigate('/admin/meetups');
         break;
       case 'signout':
         logout();
@@ -114,7 +125,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { key: 'pets', label: 'My Pets', icon: '🐾' },
     { key: 'posts', label: 'My Posts', icon: '📝' },
     { key: 'connections', label: 'Connection Requests', icon: '🤝' },
+    { key: 'weddingRequests', label: 'Wedding Requests', icon: '💒' },
     { key: 'messages', label: 'Messages', icon: '💬' },
+    ...(isAdmin(user?.role || '') ? [{ key: 'admin', label: 'Admin Panel', icon: '⚙️' }] : []),
+    ...(isMeetupAdmin(user?.role || '') ? [{ key: 'meetupAdmin', label: 'Meetup Management', icon: '📅' }] : []),
     { key: 'signout', label: 'Sign Out', icon: '🚪' }
   ];
 
@@ -203,7 +217,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                     }}
                   >
                     <Avatar
-                      src={user?.profilePicture}
+                      src={getProfilePictureUrl(user?.profilePicture)}
                       sx={{ 
                         width: 40,
                         height: 40,
@@ -242,6 +256,14 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                             color: 'error.main',
                             borderTop: '1px solid',
                             borderColor: 'divider'
+                          }),
+                          ...(item.key === 'admin' && {
+                            color: 'warning.main',
+                            fontWeight: 600
+                          }),
+                          ...(item.key === 'meetupAdmin' && {
+                            color: 'info.main',
+                            fontWeight: 600
                           })
                         }}
                       >
@@ -343,7 +365,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                 borderRadius: 1
               }}>
                 <Avatar 
-                  src={user?.profilePicture}
+                  src={getProfilePictureUrl(user?.profilePicture)}
                   sx={{ 
                     width: 36, 
                     height: 36, 
@@ -374,6 +396,14 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                         borderTop: '1px solid',
                         borderColor: 'divider',
                         mt: 1
+                      }),
+                      ...(item.key === 'admin' && {
+                        color: 'warning.main',
+                        fontWeight: 600
+                      }),
+                      ...(item.key === 'meetupAdmin' && {
+                        color: 'info.main',
+                        fontWeight: 600
                       })
                     }}
                   >

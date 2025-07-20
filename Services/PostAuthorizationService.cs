@@ -7,10 +7,10 @@ namespace PetWhenua.Services
             // For Meetup posts, apply special role-based logic
             if (postType == PostType.Meetup)
             {
-                // Members create inactive meetup posts that need admin approval
+                // Members create pending meetup posts that need admin approval
                 if (userRole == UserRoles.Member)
                 {
-                    return PostStatus.Inactive;
+                    return PostStatus.Pending;
                 }
                 
                 // Meetup Admins, Site Admins, and Vets can create active meetup posts immediately
@@ -134,10 +134,10 @@ namespace PetWhenua.Services
                 return false;
             }
 
-            // Users can edit their own posts only if status is Active, Inactive, or Pending
-            // Cannot edit if status is Sold, Expired, or Cancelled
+            // Users can edit their own posts only if status is Active or Pending
+            // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
+            // Inactive posts can only be deleted, not edited
             return post.Status == PostStatus.Active || 
-                   post.Status == PostStatus.Inactive || 
                    post.Status == PostStatus.Pending;
         }
 
@@ -207,10 +207,11 @@ namespace PetWhenua.Services
                            newStatus == PostStatus.Expired;
 
                 case PostType.Meetup:
-                    // Meetup posts: can transition between Active/Inactive/Cancelled
+                    // Meetup posts: can transition between Active/Inactive/Cancelled/Pending
                     return newStatus == PostStatus.Active || 
                            newStatus == PostStatus.Inactive || 
-                           newStatus == PostStatus.Cancelled;
+                           newStatus == PostStatus.Cancelled ||
+                           newStatus == PostStatus.Pending;
 
                 case PostType.Moment:
                     // Moment posts: no status transitions allowed per requirements
@@ -317,7 +318,7 @@ namespace PetWhenua.Services
                     return new List<PostStatus> { PostStatus.Inactive, PostStatus.Expired };
 
                 case PostType.Meetup:
-                    return new List<PostStatus> { PostStatus.Active, PostStatus.Inactive, PostStatus.Cancelled };
+                    return new List<PostStatus> { PostStatus.Active, PostStatus.Inactive, PostStatus.Cancelled, PostStatus.Pending };
 
                 case PostType.Moment:
                     return new List<PostStatus>(); // No status transitions allowed

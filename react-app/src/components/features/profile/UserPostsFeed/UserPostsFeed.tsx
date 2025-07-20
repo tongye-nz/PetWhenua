@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Box, 
   Typography, 
@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Article, PhotoCamera } from '@mui/icons-material';
 import { postService } from '../../../../api/post.api';
-import { PostType, type Post } from '../../../../models/post.types';
+import { PostTypeUtils, type Post } from '../../../../models/post.types';
 import { PostCard } from '../../../features/posts';
 import { LoadingSpinner } from '../../../ui';
 import { useNavigate } from 'react-router-dom';
@@ -27,11 +27,8 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  useEffect(() => {
-    loadUserPosts();
-  }, [userId]);
-
-  const loadUserPosts = async () => {
+  // Memoize the loadUserPosts function to prevent recreation on every render
+  const loadUserPosts = useCallback(async () => {
     if (!userId) return;
 
     setIsLoading(true);
@@ -40,15 +37,7 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
     try {
       // Load user's posts - filter for 'moment' type posts
       const userPosts = await postService.getUserPosts(userId);
-      const momentPosts = userPosts.filter((post: Post) => post.postType === PostType.Moment);
-      
-      // Debug logging to see what's in the posts
-      console.log('Raw user posts:', userPosts);
-      console.log('Moment posts:', momentPosts);
-      if (momentPosts.length > 0) {
-        console.log('First post images:', momentPosts[0].images);
-        console.log('First post structure:', Object.keys(momentPosts[0]));
-      }
+      const momentPosts = userPosts.filter((post: Post) => PostTypeUtils.isMoment(post.postType));
       
       // Sort by creation date (newest first) and limit results
       const sortedPosts = momentPosts
@@ -62,7 +51,12 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, maxPosts]); // Include all dependencies that the function uses
+
+  // Use the memoized function in useEffect
+  useEffect(() => {
+    loadUserPosts();
+  }, [loadUserPosts]); // Now we can safely include the memoized function
 
   const handleViewPost = (post: Post) => {
     navigate(`/post/${post.postId}`);

@@ -12,10 +12,12 @@ import {
   Button,
   Chip
 } from '@mui/material';
-import { MoreVert, Edit, Delete, Save, Cancel } from '@mui/icons-material';
+import { MoreVert, Edit, Delete, Save, Cancel, Person } from '@mui/icons-material';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { commentService } from '../../../../api/comment.api';
 import type { Comment } from '../../../../models/comment.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
+import { formatTimeAgo } from '../../../../utils/dateUtils';
 
 export interface CommentCardProps {
   comment: Comment;
@@ -111,20 +113,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 1) return 'just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    
-    return date.toLocaleDateString('en-NZ', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
+    return formatTimeAgo(dateString);
   };
 
   const getDisplayName = () => {
@@ -142,10 +131,16 @@ const CommentCard: React.FC<CommentCardProps> = ({
         <Box display="flex" gap={2}>
           {/* User Avatar */}
           <Avatar
-            src={comment.user.profilePicture}
-            sx={{ width: 32, height: 32 }}
+            src={getProfilePictureUrl(comment.user.profilePicture)}
+            sx={{
+              width: 36,
+              height: 36,
+              bgcolor: 'primary.main',
+              fontSize: '1rem',
+              mr: 1.5
+            }}
           >
-            {getDisplayName().charAt(0).toUpperCase()}
+            {!comment.user.profilePicture && (comment.user.username ? comment.user.username.charAt(0).toUpperCase() : <Person />)}
           </Avatar>
 
           {/* Comment Content */}

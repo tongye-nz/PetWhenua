@@ -30,6 +30,7 @@ import { useAuth } from '../../../../contexts/AuthContext';
 import { chatService } from '../../../../api/chat.api';
 import type { ChatMessage, ChatRoom, MessageStatus } from '../../../../models/chat.types';
 import type { User } from '../../../../models/auth.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
 interface ChatWindowProps {
   open: boolean;
@@ -276,7 +277,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
                             ) : null
                           }
                         >
-                          <Avatar src={partner.profilePicture || undefined}>
+                          <Avatar src={getProfilePictureUrl(partner.profilePicture)}>
                             {partner.firstName?.charAt(0)}
                           </Avatar>
                         </Badge>
@@ -311,7 +312,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
                           ) : null
                         }
                       >
-                        <Avatar src={getChatPartner(selectedRoom).profilePicture || undefined}>
+                        <Avatar src={getProfilePictureUrl(getChatPartner(selectedRoom).profilePicture)}>
                           {getChatPartner(selectedRoom).firstName?.charAt(0)}
                         </Avatar>
                       </Badge>
@@ -452,9 +453,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
                         ) : null
                       }
                     >
-                      <Avatar src={user.profilePicture || undefined}>
-                        {user.firstName?.charAt(0)}
-                      </Avatar>
+                      <Avatar src={getProfilePictureUrl(user.profilePicture)}></Avatar>
                     </Badge>
                   </ListItemAvatar>
                   <ListItemText
