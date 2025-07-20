@@ -121,16 +121,55 @@ public class PostsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize]
     public async Task<IActionResult> DeletePost(int id)
     {
-        var deleted = await _postService.DeletePostAsync(id);
-        
-        if (!deleted)
+        try
         {
-            return NotFound($"Post with ID {id} not found.");
-        }
+            // Get current user info
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
 
-        return NoContent();
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            if (string.IsNullOrEmpty(userRoleClaim))
+            {
+                return Unauthorized("User role not found.");
+            }
+
+            // Get the post to check ownership
+            var post = await _postService.GetPostByIdAsync(id);
+            if (post == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            // Check if user can delete this post (owner or admin)
+            bool canDelete = post.UserId == userId || UserRoles.IsAdmin(userRoleClaim);
+            
+            if (!canDelete)
+            {
+                return Forbid("You can only delete your own posts.");
+            }
+
+            var deleted = await _postService.DeletePostAsync(id);
+            
+            if (!deleted)
+            {
+                return StatusCode(500, "Failed to delete post. Please try again.");
+            }
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't expose internal details
+            Console.WriteLine($"Error deleting post {id}: {ex.Message}");
+            return StatusCode(500, "An error occurred while deleting the post.");
+        }
     }
 
     [HttpGet("user/{userId}")]
