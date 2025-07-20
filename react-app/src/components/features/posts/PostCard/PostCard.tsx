@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardActions, Box, Avatar, IconButton } from '@mui/material';
-import { MoreVert, Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
+import { Card, CardContent, Box, Avatar, IconButton } from '@mui/material';
+import { Edit, Delete, Person, ChatBubbleOutline, LocationOn, Event } from '@mui/icons-material';
 import { Text, StatusChip, FollowButton, LikeButton } from '../../../ui';
 import { commentService } from '../../../../api';
 import { userFollowService } from '../../../../api/userFollow.api';
@@ -32,7 +32,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
 }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+
   const [commentCount, setCommentCount] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStatusLoaded, setFollowStatusLoaded] = useState(false);
@@ -92,14 +92,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
     setIsFollowing(newFollowStatus);
   };
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
-  };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleCardClick = () => {
     if (onView) {
@@ -108,7 +101,6 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
   };
 
   const handleEdit = () => {
-    handleMenuClose();
     if (onEdit) {
       onEdit(post);
     }
@@ -119,7 +111,6 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
     if (event) {
       event.stopPropagation();
     }
-    handleMenuClose();
     
     // Show confirmation dialog
     const confirmed = window.confirm('Are you sure you want to delete this post? This action cannot be undone.');
@@ -259,14 +250,48 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
           )}
         </Box>
 
+        {/* Action buttons - show edit/delete directly */}
         {hasActions && (
-          <IconButton
-            size="small"
-            onClick={handleMenuClick}
-            sx={{ color: 'text.secondary' }}
-          >
-            <MoreVert />
-          </IconButton>
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {canEdit && (
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleEdit();
+                }}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    color: 'primary.main',
+                    bgcolor: 'primary.light',
+                  }
+                }}
+                title="Edit post"
+              >
+                <Edit fontSize="small" />
+              </IconButton>
+            )}
+            {canDelete && (
+              <IconButton
+                size="small"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  handleDelete(event);
+                }}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { 
+                    color: 'error.main',
+                    bgcolor: 'error.light',
+                  }
+                }}
+                title="Delete post"
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
         )}
       </Box>
 
@@ -446,52 +471,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
         )}
       </Box>
 
-      {/* Action menu */}
-      {hasActions && (
-        <CardActions
-          sx={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            display: anchorEl ? 'flex' : 'none',
-            gap: 1
-          }}
-        >
-          {canEdit && (
-            <IconButton
-              size="small"
-              onClick={(event) => {
-                event.stopPropagation();
-                handleEdit();
-              }}
-              sx={{ 
-                bgcolor: 'background.paper',
-                boxShadow: 1,
-                '&:hover': { bgcolor: 'action.hover' }
-              }}
-            >
-              <Edit fontSize="small" />
-            </IconButton>
-          )}
-          {canDelete && (
-            <IconButton
-              size="small"
-              onClick={(event) => {
-                event.stopPropagation();
-                handleDelete(event);
-              }}
-              sx={{ 
-                bgcolor: 'background.paper',
-                boxShadow: 1,
-                color: 'error.main',
-                '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
-              }}
-            >
-              <Delete fontSize="small" />
-            </IconButton>
-          )}
-        </CardActions>
-      )}
+
     </Card>
   );
 });

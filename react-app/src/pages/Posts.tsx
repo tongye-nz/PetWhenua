@@ -151,8 +151,8 @@ const Posts: React.FC = () => {
   };
 
   const handleEditPost = (post: Post) => {
-    // Navigate to edit page (to be implemented later)
-    console.log('Edit post:', post.postId);
+    // Navigate to edit page
+    navigate(`/edit-post/${post.postId}`);
   };
 
   const handleDeletePost = async (post: Post) => {
