@@ -14,7 +14,8 @@ import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import ImageUpload from '../../ImageUpload';
 import type { UploadedImage } from '../../ImageUpload';
 import { imageApi } from '../../../api/imageApi';
-import type { CreatePostRequest, UpdatePostRequest, PostType, Post, PostStatus, PostTypeString, PostStatusString } from '../../../models/post.types';
+import type { CreatePostRequest, UpdatePostRequest, Post, PostStatus, PostTypeString, PostStatusString } from '../../../models/post.types';
+import { PostType, PostTypeUtils } from '../../../models/post.types';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -107,7 +108,9 @@ const PostForm: React.FC<PostFormProps> = ({
     price: initialData?.price,
     eventDate: formatDateTimeForInput(initialData?.eventDate),
     category: initialData?.category || '',
-    postType: initialData?.postType ?? (postTypeOptions[0]?.value as PostType || 5 as PostType), // Default to first available post type (Moment = 5)
+    postType: initialData?.postType 
+      ? PostTypeUtils.toNumeric(initialData.postType) 
+      : (postTypeOptions[0]?.value as PostType || PostType.Moment), // Convert string enum to numeric or use default
     selectedPetIds: initialData?.selectedPetIds || [],
     status: initialData?.status,
     createdAt: initialData?.createdAt,
@@ -125,7 +128,7 @@ const PostForm: React.FC<PostFormProps> = ({
 
   // Load selectable pets when Pet Wedding is selected
   useEffect(() => {
-    if (formData.postType === 1) { // Pet Wedding
+    if (PostTypeUtils.isPetWedding(formData.postType)) {
       loadSelectablePets();
     }
   }, [formData.postType]);
@@ -200,7 +203,7 @@ const PostForm: React.FC<PostFormProps> = ({
     }
 
     // PostType specific validations
-    if (formData.postType === 2) { // Buy/Sell
+    if (PostTypeUtils.isBuySell(formData.postType)) {
       if (!formData.price || formData.price <= 0) {
         newErrors.price = 'Price is required for Buy/Sell posts';
       }
@@ -210,7 +213,7 @@ const PostForm: React.FC<PostFormProps> = ({
       }
     }
 
-    if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
+    if (PostTypeUtils.isMeetup(formData.postType) || PostTypeUtils.isPetWedding(formData.postType)) { // Meetup or Pet Wedding
       if (!formData.eventDate) {
         newErrors.eventDate = 'Event date and time are required for this post type';
       } else {
@@ -234,19 +237,20 @@ const PostForm: React.FC<PostFormProps> = ({
       }
       // Location is required for Meetup and Pet Wedding
       if (!formData.location?.trim()) {
-        newErrors.location = `Location is required for ${formData.postType === 0 ? 'Meetup' : 'Pet Wedding'} posts`;
+        const postTypeName = PostTypeUtils.isMeetup(formData.postType) ? 'Meetup' : 'Pet Wedding';
+        newErrors.location = `Location is required for ${postTypeName} posts`;
       }
       
       // Additional validation for Meetup and Pet Wedding
-      if (formData.postType === 0 || formData.postType === 1) { // Meetup or Pet Wedding
+      if (PostTypeUtils.isMeetup(formData.postType) || PostTypeUtils.isPetWedding(formData.postType)) {
         if (!formData.address?.trim() || formData.address.length < 5) {
-          const postTypeName = formData.postType === 0 ? 'Meetup' : 'Pet Wedding';
+          const postTypeName = PostTypeUtils.isMeetup(formData.postType) ? 'Meetup' : 'Pet Wedding';
           newErrors.address = `Address is required and must be at least 5 characters long for ${postTypeName} posts`;
         }
       }
       
       // Additional validation specifically for Pet Wedding
-      if (formData.postType === 1) { // Pet Wedding
+      if (PostTypeUtils.isPetWedding(formData.postType)) {
         if (!formData.selectedPetIds || formData.selectedPetIds.length !== 2) {
           newErrors.selectedPetIds = 'You must select exactly 2 pets for a Pet Wedding';
         }
@@ -378,7 +382,7 @@ const PostForm: React.FC<PostFormProps> = ({
         let createdPost: Post;
         
         // Handle Pet Wedding posts with special service
-        if (formData.postType === 1 && formData.selectedPetIds && formData.selectedPetIds.length === 2) {
+        if (PostTypeUtils.isPetWedding(formData.postType) && formData.selectedPetIds && formData.selectedPetIds.length === 2) {
           // Pet Wedding
           const petWeddingRequest: CreatePetWeddingRequest = {
             title: formData.title,
@@ -511,10 +515,10 @@ const PostForm: React.FC<PostFormProps> = ({
     }
   };
 
-  const requiresPrice = formData.postType === 2; // Buy/Sell
-  const requiresEventDate = formData.postType === 0 || formData.postType === 1; // Meetup or Pet Wedding
-  const requiresLocation = formData.postType === 2 || formData.postType === 0 || formData.postType === 1; // Buy/Sell, Meetup, Pet Wedding
-  const showCategory = formData.postType === 2; // Buy/Sell only
+  const requiresPrice = PostTypeUtils.isBuySell(formData.postType);
+  const requiresEventDate = PostTypeUtils.isMeetup(formData.postType) || PostTypeUtils.isPetWedding(formData.postType);
+  const requiresLocation = PostTypeUtils.isBuySell(formData.postType) || PostTypeUtils.isMeetup(formData.postType) || PostTypeUtils.isPetWedding(formData.postType);
+  const showCategory = PostTypeUtils.isBuySell(formData.postType);
 
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -699,7 +703,7 @@ const PostForm: React.FC<PostFormProps> = ({
         />
 
         {/* Address Field - for Meetup and Pet Wedding */}
-        {(formData.postType === 0 || formData.postType === 1) && ( // Meetup or Pet Wedding
+        {(PostTypeUtils.isMeetup(formData.postType) || PostTypeUtils.isPetWedding(formData.postType)) && (
           <Input
             label="Address"
             value={formData.address || ''}
@@ -709,7 +713,7 @@ const PostForm: React.FC<PostFormProps> = ({
             required
             disabled={loading}
             placeholder={
-              formData.postType === 0 
+              PostTypeUtils.isMeetup(formData.postType)
                 ? "Enter the venue address for the Meetup" 
                 : "Enter the venue address for the Pet Wedding"
             }
@@ -717,7 +721,7 @@ const PostForm: React.FC<PostFormProps> = ({
         )}
 
         {/* Pet Selection - only for Pet Wedding */}
-        {formData.postType === 1 && ( // Pet Wedding
+        {PostTypeUtils.isPetWedding(formData.postType) && (
           <PetWeddingSelection
             selectedPetIds={formData.selectedPetIds || []}
             onSelectedPetsChange={(petIds) => {

@@ -64,6 +64,37 @@ export const PostTypeUtils = {
   },
   isMoment: (type: PostType | PostTypeString): boolean => {
     return type === PostType.Moment || type === 'Moment';
+  },
+  
+  // Conversion functions
+  toNumeric: (type: PostType | PostTypeString): PostType => {
+    if (typeof type === 'number') return type;
+    
+    const stringToNumeric: { [key: string]: PostType } = {
+      'Meetup': PostType.Meetup,
+      'PetWedding': PostType.PetWedding,
+      'BuySell': PostType.BuySell,
+      'Library': PostType.Library,
+      'Announcement': PostType.Announcement,
+      'Moment': PostType.Moment
+    };
+    
+    return stringToNumeric[type] ?? PostType.Moment;
+  },
+  
+  toString: (type: PostType | PostTypeString): PostTypeString => {
+    if (typeof type === 'string') return type;
+    
+    const numericToString: { [key: number]: PostTypeString } = {
+      [PostType.Meetup]: 'Meetup',
+      [PostType.PetWedding]: 'PetWedding',
+      [PostType.BuySell]: 'BuySell',
+      [PostType.Library]: 'Library',
+      [PostType.Announcement]: 'Announcement',
+      [PostType.Moment]: 'Moment'
+    };
+    
+    return numericToString[type] ?? 'Moment';
   }
 };
 
