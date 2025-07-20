@@ -85,6 +85,8 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
     loadFollowStatus();
   }, [post.user?.userId, user?.userId, isOwner]);
 
+
+
   // Handle follow status change
   const handleFollowChange = (newFollowStatus: boolean) => {
     setIsFollowing(newFollowStatus);
@@ -361,8 +363,8 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
         )}
 
         {/* Location and Address info for Meetup and Wedding posts */}
-                    {(PostTypeUtils.isMeetup(post.postType) || PostTypeUtils.isPetWedding(post.postType)) && (
-          <Box sx={{ mb: 2 }}>
+        {(PostTypeUtils.isMeetup(post.postType) || PostTypeUtils.isPetWedding(post.postType)) && (
+          <Box sx={{ mb: 2 }}>            
             {post.location && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
                 <LocationOn sx={{ fontSize: 16, color: 'text.secondary' }} />

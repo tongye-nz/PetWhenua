@@ -48,22 +48,41 @@ export const PostStatusUtils = {
 
 export const PostTypeUtils = {
   isMeetup: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.Meetup || type === 'Meetup';
+    if (typeof type === 'number') {
+      return type === PostType.Meetup;
+    }
+    // Handle both 'Meetup' and 'meetup' for robustness
+    return type === 'Meetup' || type.toLowerCase() === 'meetup';
   },
   isPetWedding: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.PetWedding || type === 'PetWedding';
+    if (typeof type === 'number') {
+      return type === PostType.PetWedding;
+    }
+    return type === 'PetWedding' || type.toLowerCase() === 'petwedding';
   },
   isBuySell: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.BuySell || type === 'BuySell';
+    if (typeof type === 'number') {
+      return type === PostType.BuySell;
+    }
+    return type === 'BuySell' || type.toLowerCase() === 'buysell';
   },
   isLibrary: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.Library || type === 'Library';
+    if (typeof type === 'number') {
+      return type === PostType.Library;
+    }
+    return type === 'Library' || type.toLowerCase() === 'library';
   },
   isAnnouncement: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.Announcement || type === 'Announcement';
+    if (typeof type === 'number') {
+      return type === PostType.Announcement;
+    }
+    return type === 'Announcement' || type.toLowerCase() === 'announcement';
   },
   isMoment: (type: PostType | PostTypeString): boolean => {
-    return type === PostType.Moment || type === 'Moment';
+    if (typeof type === 'number') {
+      return type === PostType.Moment;
+    }
+    return type === 'Moment' || type.toLowerCase() === 'moment';
   },
   
   // Conversion functions
@@ -72,14 +91,20 @@ export const PostTypeUtils = {
     
     const stringToNumeric: { [key: string]: PostType } = {
       'Meetup': PostType.Meetup,
+      'meetup': PostType.Meetup,
       'PetWedding': PostType.PetWedding,
+      'petwedding': PostType.PetWedding,
       'BuySell': PostType.BuySell,
+      'buysell': PostType.BuySell,
       'Library': PostType.Library,
+      'library': PostType.Library,
       'Announcement': PostType.Announcement,
-      'Moment': PostType.Moment
+      'announcement': PostType.Announcement,
+      'Moment': PostType.Moment,
+      'moment': PostType.Moment
     };
     
-    return stringToNumeric[type] ?? PostType.Moment;
+    return stringToNumeric[type] ?? stringToNumeric[type.toLowerCase()] ?? PostType.Moment;
   },
   
   toString: (type: PostType | PostTypeString): PostTypeString => {
