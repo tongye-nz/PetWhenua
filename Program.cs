@@ -107,7 +107,8 @@ builder.Services.AddCors(options =>
         var allowedOrigins = new List<string>
         {
             "http://localhost:5173", 
-            "https://localhost:5173"
+            "https://localhost:5173",
+            "https://orange-plant-0ccfa0d00.1.azurestaticapps.net" // Azure Static Web App
         };
 
         // Add Azure frontend URL if configured
