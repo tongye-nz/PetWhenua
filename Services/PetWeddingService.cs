@@ -104,12 +104,16 @@ namespace PetWhenua.Services
         public async Task<IEnumerable<Post>> GetPendingWeddingApprovalsForUserAsync(int userId)
         {
             return await _context.PetWeddingParticipants
-                .Where(pwp => pwp.OwnerId == userId && !pwp.HasApproved)
+                .Where(pwp => pwp.OwnerId == userId && !pwp.HasApproved && pwp.Post.UserId != userId)
                 .Include(pwp => pwp.Post)
-                .ThenInclude(p => p.User)
+                    .ThenInclude(p => p.User)
                 .Include(pwp => pwp.Post)
-                .ThenInclude(p => p.PetWeddingParticipants)
-                .ThenInclude(pwp2 => pwp2.Pet)
+                    .ThenInclude(p => p.PetWeddingParticipants)
+                        .ThenInclude(pwp2 => pwp2.Pet)
+                            .ThenInclude(pet => pet.User)
+                .Include(pwp => pwp.Post)
+                    .ThenInclude(p => p.PetWeddingParticipants)
+                        .ThenInclude(pwp2 => pwp2.Owner)
                 .Select(pwp => pwp.Post)
                 .Distinct()
                 .ToListAsync();

@@ -231,7 +231,7 @@ const PetDetail: React.FC = () => {
   if (loading) {
     return (
       <Container>
-        <LoadingSpinner />
+          <LoadingSpinner />
       </Container>
     );
   }
@@ -239,15 +239,15 @@ const PetDetail: React.FC = () => {
   if (error) {
     return (
       <Container>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-        <Button 
-          startIcon={<ArrowBack />}
-          onClick={handleBack}
-        >
-          Go Back
-        </Button>
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+          <Button 
+            startIcon={<ArrowBack />}
+            onClick={handleBack}
+          >
+            Go Back
+          </Button>
       </Container>
     );
   }
@@ -255,15 +255,15 @@ const PetDetail: React.FC = () => {
   if (!pet) {
     return (
       <Container>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Pet not found
-        </Alert>
-        <Button 
-          startIcon={<ArrowBack />}
-          onClick={handleBack}
-        >
-          Go Back
-        </Button>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Pet not found
+          </Alert>
+          <Button 
+            startIcon={<ArrowBack />}
+            onClick={handleBack}
+          >
+            Go Back
+          </Button>
       </Container>
     );
   }
@@ -289,7 +289,7 @@ const PetDetail: React.FC = () => {
       />
 
       {/* Conditional Layout based on ownership */}
-      {isOwnPet ? (
+          {isOwnPet ? (
         <PetProfileOwnerView pet={pet} />
       ) : (
         <PetProfilePublicView

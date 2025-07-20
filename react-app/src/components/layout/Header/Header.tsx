@@ -122,6 +122,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { key: 'pets', label: 'My Pets', icon: '🐾' },
     { key: 'posts', label: 'My Posts', icon: '📝' },
     { key: 'connections', label: 'Connection Requests', icon: '🤝' },
+    { key: 'weddingRequests', label: 'Wedding Requests', icon: '💒' },
     { key: 'messages', label: 'Messages', icon: '💬' },
     ...(isAdmin(user?.role || '') ? [{ key: 'admin', label: 'Admin Panel', icon: '⚙️' }] : []),
     ...(isMeetupAdmin(user?.role || '') ? [{ key: 'meetupAdmin', label: 'Meetup Management', icon: '📅' }] : []),
