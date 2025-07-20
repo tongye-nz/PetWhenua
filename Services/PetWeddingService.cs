@@ -9,12 +9,16 @@ namespace PetWhenua.Services
         private readonly AppDbContext _context;
         private readonly IPetConnectionService _petConnectionService;
         private readonly IPostService _postService;
+        private readonly INotificationService _notificationService;
+        private readonly IUserService _userService;
 
-        public PetWeddingService(AppDbContext context, IPetConnectionService petConnectionService, IPostService postService)
+        public PetWeddingService(AppDbContext context, IPetConnectionService petConnectionService, IPostService postService, INotificationService notificationService, IUserService userService)
         {
             _context = context;
             _petConnectionService = petConnectionService;
             _postService = postService;
+            _notificationService = notificationService;
+            _userService = userService;
         }
 
         public async Task<Post> CreatePetWeddingAsync(int userId, string title, string content, List<int> petIds, 
@@ -76,6 +80,32 @@ namespace PetWhenua.Services
             }
 
             await _context.SaveChangesAsync();
+
+            // Send notifications to invited pet owners (those who didn't create the wedding)
+            try
+            {
+                var creator = await _userService.GetUserByIdAsync(userId);
+                var creatorName = creator?.FirstName ?? creator?.Username ?? "Someone";
+
+                foreach (var participant in participants)
+                {
+                    // Only notify pet owners who didn't create the wedding
+                    if (participant.OwnerId != userId)
+                    {
+                        await _notificationService.CreatePetWeddingRequestNotificationAsync(
+                            participant.OwnerId,
+                            post.PostId,
+                            title,
+                            creatorName
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail wedding creation if notification fails
+                Console.WriteLine($"Failed to send pet wedding approval notifications: {ex.Message}");
+            }
 
             // Check if all participants have approved and update status if needed
             await UpdateWeddingStatusBasedOnApprovalsAsync(post.PostId);

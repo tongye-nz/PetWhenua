@@ -28,8 +28,7 @@ import {
   useMediaQuery,
   useTheme,
   Stack,
-  Divider,
-  Grid
+  Divider
 } from '@mui/material';
 import {
   Search,
@@ -57,7 +56,6 @@ const MeetupManagement: React.FC = () => {
   const { user: currentUser } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   
   const [meetups, setMeetups] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);

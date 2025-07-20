@@ -29,6 +29,7 @@ namespace PetWhenua.Services
         Task CreatePetConnectionRequestNotificationAsync(int targetUserId, int requesterUserId, int connectionId, string requesterPetName, string targetPetName);
         Task CreatePetConnectionResponseNotificationAsync(int targetUserId, int responderUserId, int connectionId, bool isApproved, string requesterPetName, string responderPetName);
         Task CreatePetWeddingApprovalNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName);
+        Task CreatePetWeddingRequestNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName);
         Task CreateMeetupActivationNotificationAsync(int targetUserId, int postId, string postTitle);
         Task CreateMeetupPendingNotificationAsync(int postId, string postTitle, string creatorName);
         Task CreateMeetupApprovedNotificationAsync(int targetUserId, int postId, string postTitle);

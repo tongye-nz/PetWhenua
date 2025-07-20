@@ -29,6 +29,7 @@ const UserProfile = lazy(() => import('./pages/UserProfile.tsx'));
 const OtherUserProfile = lazy(() => import('./pages/OtherUserProfile.tsx'));
 const AdminPanel = lazy(() => import('./pages/AdminPanel.tsx'));
 const MeetupManagement = lazy(() => import('./pages/MeetupManagement.tsx'));
+const WeddingRequests = lazy(() => import('./pages/WeddingRequests.tsx'));
 
 function App() {
   return (
@@ -112,6 +113,11 @@ function App() {
                   <MeetupAdminRoute>
                     <MeetupManagement />
                   </MeetupAdminRoute>
+                } />
+                <Route path="/wedding-requests" element={
+                  <ProtectedRoute>
+                    <WeddingRequests />
+                  </ProtectedRoute>
                 } />
                 <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
               </Routes>

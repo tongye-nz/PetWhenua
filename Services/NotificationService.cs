@@ -260,6 +260,20 @@ namespace PetWhenua.Services
             await CreateAndSendNotificationAsync(request);
         }
 
+        public async Task CreatePetWeddingRequestNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName)
+        {
+            var request = new CreateNotificationRequest
+            {
+                UserId = targetUserId,
+                Type = NotificationType.PetWeddingPendingApproval,
+                Title = "Pet Wedding Request",
+                Message = $"{requesterName} has invited your pet to participate in a wedding: {postTitle}. Please review and respond.",
+                RelatedPostId = postId
+            };
+
+            await CreateAndSendNotificationAsync(request);
+        }
+
         public async Task CreateMeetupActivationNotificationAsync(int targetUserId, int postId, string postTitle)
         {
             var request = new CreateNotificationRequest
