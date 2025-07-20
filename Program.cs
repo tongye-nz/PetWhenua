@@ -258,9 +258,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 else
 {
+    // Enable detailed errors in production for debugging
+    app.UseDeveloperExceptionPage();
+    
     // Enable Swagger in production for API testing
     app.UseSwagger();
     app.UseSwaggerUI(c =>
