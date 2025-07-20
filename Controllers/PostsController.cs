@@ -22,13 +22,38 @@ public class PostsController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> GetPosts(
-        [FromQuery] PostType? postType = null, 
+        [FromQuery] string? postType = null, 
         [FromQuery] int? userId = null, 
         [FromQuery] string? region = null, 
         [FromQuery] string? district = null)
     {
-        var posts = await _postService.GetPostsAsync(postType, userId, region, district);
-        return Ok(posts);
+        try
+        {
+            PostType? parsedPostType = null;
+            
+            // Parse postType if provided
+            if (!string.IsNullOrEmpty(postType))
+            {
+                if (Enum.TryParse<PostType>(postType, true, out var result))
+                {
+                    parsedPostType = result;
+                }
+                else
+                {
+                    return BadRequest($"Invalid postType: {postType}. Valid values are: {string.Join(", ", Enum.GetNames<PostType>())}");
+                }
+            }
+
+            var posts = await _postService.GetPostsAsync(parsedPostType, userId, region, district);
+            return Ok(posts);
+        }
+        catch (Exception ex)
+        {
+            // Log the error for debugging
+            Console.WriteLine($"Error in GetPosts: {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+        }
     }
 
     [HttpGet("{id}")]
