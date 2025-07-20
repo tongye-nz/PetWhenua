@@ -20,6 +20,36 @@ public class PostsController : ControllerBase
         _authorizationService = authorizationService;
     }
 
+    [HttpGet("health")]
+    public async Task<IActionResult> Health()
+    {
+        try
+        {
+            // Test basic database connectivity
+            var postExists = await _postService.PostExistsAsync(1);
+            var postCount = (await _postService.GetPostsAsync()).Count();
+            
+            return Ok(new 
+            { 
+                status = "healthy", 
+                timestamp = DateTime.UtcNow,
+                database = "connected",
+                postCount = postCount,
+                post1Exists = postExists
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new 
+            { 
+                status = "unhealthy", 
+                timestamp = DateTime.UtcNow,
+                error = ex.Message,
+                details = ex.StackTrace
+            });
+        }
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetPosts(
         [FromQuery] string? postType = null, 
@@ -59,14 +89,24 @@ public class PostsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPost(int id)
     {
-        var post = await _postService.GetPostByIdAsync(id);
-
-        if (post == null)
+        try
         {
-            return NotFound($"Post with ID {id} not found.");
-        }
+            var post = await _postService.GetPostByIdAsync(id);
 
-        return Ok(post);
+            if (post == null)
+            {
+                return NotFound($"Post with ID {id} not found.");
+            }
+
+            return Ok(post);
+        }
+        catch (Exception ex)
+        {
+            // Log the error for debugging
+            Console.WriteLine($"Error in GetPost(id={id}): {ex.Message}");
+            Console.WriteLine($"Stack trace: {ex.StackTrace}");
+            return StatusCode(500, new { message = "Internal server error", details = ex.Message, postId = id });
+        }
     }
 
     [HttpPost]
