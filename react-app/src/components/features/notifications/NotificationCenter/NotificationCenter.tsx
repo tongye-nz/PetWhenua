@@ -209,8 +209,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         }}
         PaperProps={{
           sx: {
-            width: 400,
-            maxHeight: 500,
+            width: 420,
+            maxHeight: 600,
             overflow: 'hidden',
           },
         }}
@@ -256,7 +256,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
         {/* Notifications List */}
         {!loading && (
-          <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+          <Box sx={{ maxHeight: 480, overflow: 'auto' }}>
             {displayNotifications.length === 0 ? (
               <Box sx={{ p: 3, textAlign: 'center' }}>
                 <NotificationsNone sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
@@ -271,7 +271,8 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     onClick={() => handleNotificationClick(notification)}
                     sx={{
                       alignItems: 'flex-start',
-                      p: 2,
+                      p: 2.5,
+                      minHeight: 'auto',
                       backgroundColor: notification.status === NotificationStatus.Unread ? 'action.hover' : 'transparent',
                       '&:hover': {
                         backgroundColor: 'action.selected',
@@ -287,7 +288,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                           <Typography
                             variant="body2"
                             fontWeight={notification.status === NotificationStatus.Unread ? 'bold' : 'normal'}
-                            sx={{ mb: 0.5 }}
+                            sx={{ mb: 1 }}
                           >
                             {notification.title}
                           </Typography>
@@ -295,16 +296,15 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             variant="body2"
                             color="text.secondary"
                             sx={{
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              display: '-webkit-box',
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: 'vertical',
+                              wordWrap: 'break-word',
+                              whiteSpace: 'normal',
+                              lineHeight: 1.4,
+                              mb: 1,
                             }}
                           >
                             {notification.message}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                          <Typography variant="caption" color="text.secondary">
                             {formatDate(notification.createdAt)}
                           </Typography>
                         </Box>
