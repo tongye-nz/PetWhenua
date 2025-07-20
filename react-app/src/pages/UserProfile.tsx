@@ -25,7 +25,7 @@ import { useUserProfileForm } from '../hooks/useUserProfileForm';
 import { userAPI, type UpdateUserProfileRequest } from '../api/user.api';
 import { userFollowService } from '../api/userFollow.api';
 import { postService } from '../api/post.api';
-import { PostType } from '../models/post.types';
+
 import { petService } from '../api/pet.api';
 import { combineLocation, parseLocation } from '../utils/locationUtils';
 import type { UserProfileData } from '../types/userProfile.types';
@@ -165,9 +165,9 @@ const UserProfile: React.FC = () => {
         // Load follow stats
         userFollowService.getUserFollowStats(apiUser.userId).catch(() => ({ followerCount: 0, followingCount: 0 })),
         
-        // Load posts count (filter for moments)
+        // Load posts count (all posts)
         postService.getUserPosts(apiUser.userId)
-          .then(posts => posts.filter(post => post.postType === PostType.Moment).length)
+          .then(posts => posts.length)
           .catch(() => 0),
         
         // Check follow status (only if not own profile and user is authenticated)

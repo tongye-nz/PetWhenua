@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Article, PhotoCamera } from '@mui/icons-material';
 import { postService } from '../../../../api/post.api';
-import { PostType, type Post } from '../../../../models/post.types';
+import { PostTypeUtils, type Post } from '../../../../models/post.types';
 import { PostCard } from '../../../features/posts';
 import { LoadingSpinner } from '../../../ui';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +37,7 @@ const UserPostsFeed: React.FC<UserPostsFeedProps> = ({
     try {
       // Load user's posts - filter for 'moment' type posts
       const userPosts = await postService.getUserPosts(userId);
-      const momentPosts = userPosts.filter((post: Post) => post.postType === PostType.Moment);
+      const momentPosts = userPosts.filter((post: Post) => PostTypeUtils.isMoment(post.postType));
       
       // Sort by creation date (newest first) and limit results
       const sortedPosts = momentPosts
