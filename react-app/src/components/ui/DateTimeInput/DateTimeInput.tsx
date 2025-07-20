@@ -1,7 +1,15 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import Input from '../Input';
-import { formatDateTimeForInput, getCurrentNzTimeForInput } from '../../../utils/dateUtils';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// Extend dayjs with timezone support
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export interface DateTimeInputProps {
   label?: string;
@@ -26,84 +34,87 @@ const DateTimeInput: React.FC<DateTimeInputProps> = ({
   min,
   max,
 }) => {
-  // Convert the backend UTC datetime to local input format for display
-  const getDisplayValue = () => {
-    if (!value) return '';
-    return formatDateTimeForInput(value);
+  const NZ_TIMEZONE = 'Pacific/Auckland';
+
+  // Convert UTC string to dayjs object in NZ timezone for display
+  const getDisplayValue = (): Dayjs | null => {
+    if (!value) return null;
+    
+    try {
+      // Parse the UTC value and convert to NZ timezone
+      return dayjs.utc(value).tz(NZ_TIMEZONE);
+    } catch (error) {
+      console.error('Error parsing date value:', error);
+      return null;
+    }
   };
 
-  // Handle input change and convert to UTC for backend
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = event.target.value;
-    if (!inputValue) {
+  // Convert dayjs object back to UTC string for backend
+  const handleDateTimeChange = (newValue: Dayjs | null) => {
+    if (!newValue) {
       onChange('');
       return;
     }
 
-    // Input value is in YYYY-MM-DDTHH:MM format representing New Zealand time
-    // Convert this to UTC for the backend
     try {
-      // Create a date object from the input (treating it as New Zealand time)
-      const nzDate = new Date(inputValue);
-      
-      // Get New Zealand timezone offset (accounting for DST)
-      const nzTimeZone = 'Pacific/Auckland';
-      const utcTime = new Date(nzDate.toLocaleString('en-US', { timeZone: 'UTC' }));
-      const nzTime = new Date(nzDate.toLocaleString('en-US', { timeZone: nzTimeZone }));
-      const offset = nzTime.getTime() - utcTime.getTime();
-      
-      // Adjust for timezone offset to get UTC
-      const utcDate = new Date(nzDate.getTime() - offset);
-      
-      // Return as ISO string for backend
-      onChange(utcDate.toISOString());
+      // Convert the NZ timezone value back to UTC for the backend
+      const utcValue = newValue.utc().toISOString();
+      onChange(utcValue);
     } catch (error) {
-      console.error('Error parsing datetime input:', error);
+      console.error('Error converting datetime to UTC:', error);
       onChange('');
     }
   };
 
-  // Get min/max in the correct format
-  const getMinValue = () => {
-    if (!min) return getCurrentNzTimeForInput();
-    return min;
+  // Convert min/max strings to dayjs objects
+  const getMinValue = (): Dayjs | undefined => {
+    if (!min) {
+      // Default to current NZ time
+      return dayjs().tz(NZ_TIMEZONE);
+    }
+    try {
+      return dayjs.utc(min).tz(NZ_TIMEZONE);
+    } catch {
+      return undefined;
+    }
   };
 
-  const getMaxValue = () => {
-    if (!max) return '';
-    return max;
+  const getMaxValue = (): Dayjs | undefined => {
+    if (!max) return undefined;
+    try {
+      return dayjs.utc(max).tz(NZ_TIMEZONE);
+    } catch {
+      return undefined;
+    }
   };
 
   return (
-    <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-        {label} {required && <span style={{ color: 'red' }}>*</span>}
-      </Typography>
-      
-      <Input
-        type="datetime-local"
-        value={getDisplayValue()}
-        onChange={handleInputChange}
-        error={error}
-        disabled={disabled}
-        required={required}
-        inputProps={{
-          min: getMinValue(),
-          max: getMaxValue(),
-        }}
-        placeholder="Select date and time"
-      />
-      
-      {helperText && (
-        <Typography 
-          variant="caption" 
-          color={error ? 'error' : 'text.secondary'}
-          sx={{ mt: 0.5, display: 'block' }}
-        >
-          {helperText}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          {label} {required && <span style={{ color: 'red' }}>*</span>}
         </Typography>
-      )}
-    </Box>
+        
+        <DateTimePicker
+          value={getDisplayValue()}
+          onChange={handleDateTimeChange}
+          disabled={disabled}
+          minDateTime={getMinValue()}
+          maxDateTime={getMaxValue()}
+          format="DD/MM/YYYY hh:mm A"
+          timezone={NZ_TIMEZONE}
+          slotProps={{
+            textField: {
+              error,
+              required,
+              fullWidth: true,
+              size: 'small',
+              helperText: helperText || 'Select date and time (New Zealand time)',
+            },
+          }}
+        />
+      </Box>
+    </LocalizationProvider>
   );
 };
 
