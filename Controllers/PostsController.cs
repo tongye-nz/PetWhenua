@@ -200,6 +200,28 @@ public class PostsController : ControllerBase
         return Ok(posts);
     }
 
+    [HttpGet("meetups/pending")]
+    [Authorize]
+    public async Task<IActionResult> GetPendingMeetupPosts()
+    {
+        // Check if current user is a meetup admin or site admin
+        var userRoleClaim = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (string.IsNullOrEmpty(userRoleClaim) || !UserRoles.IsMeetupAdmin(userRoleClaim))
+        {
+            return Forbid("Only meetup administrators and site administrators can access pending meetup posts.");
+        }
+
+        try
+        {
+            var posts = await _postService.GetPendingMeetupPostsAsync();
+            return Ok(posts);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Failed to retrieve pending meetup posts", error = ex.Message });
+        }
+    }
+
     [HttpGet("{id}/can-change-status")]
     public async Task<IActionResult> CanUserChangePostStatus(int id, [FromQuery] int userId, [FromQuery] string userRole)
     {

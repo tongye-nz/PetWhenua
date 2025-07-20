@@ -26,7 +26,7 @@ import { Avatar } from '@mui/material';
 import { Button } from '../../ui';
 import { useAuth } from '../../../contexts/AuthContext';
 import { NotificationCenter } from '../../features/notifications';
-import { isAdmin } from '../../../utils/userRoles';
+import { isAdmin, isMeetupAdmin } from '../../../utils/userRoles';
 import { getProfilePictureUrl } from '../../../utils/imageUrlUtils';
 
 interface HeaderProps {
@@ -95,6 +95,9 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
       case 'admin':
         navigate('/admin');
         break;
+      case 'meetupAdmin':
+        navigate('/admin/meetups');
+        break;
       case 'signout':
         logout();
         navigate('/');
@@ -121,6 +124,7 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
     { key: 'connections', label: 'Connection Requests', icon: '🤝' },
     { key: 'messages', label: 'Messages', icon: '💬' },
     ...(isAdmin(user?.role || '') ? [{ key: 'admin', label: 'Admin Panel', icon: '⚙️' }] : []),
+    ...(isMeetupAdmin(user?.role || '') ? [{ key: 'meetupAdmin', label: 'Meetup Management', icon: '📅' }] : []),
     { key: 'signout', label: 'Sign Out', icon: '🚪' }
   ];
 
@@ -251,6 +255,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                           }),
                           ...(item.key === 'admin' && {
                             color: 'warning.main',
+                            fontWeight: 600
+                          }),
+                          ...(item.key === 'meetupAdmin' && {
+                            color: 'info.main',
                             fontWeight: 600
                           })
                         }}
@@ -387,6 +395,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                       }),
                       ...(item.key === 'admin' && {
                         color: 'warning.main',
+                        fontWeight: 600
+                      }),
+                      ...(item.key === 'meetupAdmin' && {
+                        color: 'info.main',
                         fontWeight: 600
                       })
                     }}

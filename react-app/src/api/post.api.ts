@@ -134,5 +134,21 @@ export const postService = {
       `/posts/${postId}/status-transitions?userId=${userId}&userRole=${userRole}`
     );
     return response.data;
+  },
+
+  // Get pending meetup posts (admin only)
+  async getPendingMeetupPosts(): Promise<Post[]> {
+    const response = await postApi.get('/posts/meetups/pending');
+    return response.data;
+  },
+
+  // Update post status (admin action)
+  async changePostStatus(postId: number, newStatus: number, requestingUserId: number, requestingUserRole: string): Promise<Post> {
+    const response = await postApi.patch(`/posts/${postId}/status`, {
+      newStatus,
+      requestingUserId,
+      requestingUserRole
+    });
+    return response.data;
   }
 };

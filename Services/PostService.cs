@@ -184,6 +184,12 @@ namespace PetWhenua.Services
             return await ApplyDynamicExpiryAsync(posts);
         }
 
+        public async Task<IEnumerable<Post>> GetPendingMeetupPostsAsync()
+        {
+            var posts = await _postRepository.GetPostsByTypeAndStatusAsync(PostType.Meetup, PostStatus.Pending);
+            return await ApplyDynamicExpiryAsync(posts);
+        }
+
         public async Task<bool> PostExistsAsync(int id)
         {
             return await _postRepository.PostExistsAsync(id);
