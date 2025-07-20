@@ -141,7 +141,8 @@ const PostDetail: React.FC = () => {
     try {
       setIsDeleting(true);
       await deletePost(currentPost.postId);
-      navigate('/posts', { replace: true });
+      // After deleting, go back to the previous page (could be /posts, /my-posts, etc.)
+      navigate(-1);
     } catch (error) {
       console.error('Failed to delete post:', error);
       setIsDeleting(false);
@@ -198,9 +199,9 @@ const PostDetail: React.FC = () => {
           </Alert>
           <Button 
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/posts')}
+            onClick={() => navigate(-1)}
           >
-            Back to Posts
+            Back
           </Button>
         </Box>
       </Container>
@@ -216,9 +217,9 @@ const PostDetail: React.FC = () => {
           </Alert>
           <Button 
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/posts')}
+            onClick={() => navigate(-1)}
           >
-            Back to Posts
+            Back
           </Button>
         </Box>
       </Container>
@@ -235,10 +236,10 @@ const PostDetail: React.FC = () => {
       <Box display="flex" alignItems="center" mb={3}>
         <Button 
           startIcon={<ArrowBack />}
-          onClick={() => navigate('/posts')}
+          onClick={() => navigate(-1)}
           sx={{ mr: 2 }}
         >
-          Back to Posts
+          Back
         </Button>
         
         {(canEdit || canDelete) && (
