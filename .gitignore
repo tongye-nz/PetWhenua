@@ -365,3 +365,5 @@ FodyWeavers.xsd
 
 # Uploaded images and files
 wwwroot/uploads/
+appsettings.Production.json
+appsettings.Production.json
