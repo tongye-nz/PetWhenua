@@ -2,7 +2,9 @@
  * Utility functions for constructing proper image URLs
  */
 
-const API_BASE_URL = 'http://localhost:5295';
+import { API_CONFIG } from '../api/config';
+
+const API_BASE_URL = API_CONFIG.BASE_URL.replace('/api', '');
 
 /**
  * Constructs a full URL for an image

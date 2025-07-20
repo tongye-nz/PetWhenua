@@ -1,8 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import type { User } from '../models/auth.types';
+import { API_CONFIG } from './config';
 
 // Create axios instance with base configuration
-const API_BASE_URL = 'http://localhost:5295/api';
+const API_BASE_URL = API_CONFIG.BASE_URL;
 
 const userApi = axios.create({
   baseURL: API_BASE_URL,
