@@ -62,7 +62,15 @@ builder.Services.AddCors(options =>
 
 // Add Entity Framework Core services
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), 
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(30),
+                errorNumbersToAdd: null);
+            sqlOptions.CommandTimeout(120);
+        }));
 
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -151,6 +159,25 @@ builder.Services.AddSignalR(options =>
 builder.Configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
 var app = builder.Build();
+
+// Automatically apply migrations in production
+if (app.Environment.IsProduction())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        try
+        {
+            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            context.Database.Migrate();
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't prevent app startup
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while migrating the database.");
+        }
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
