@@ -18,15 +18,21 @@ namespace PetWhenua.Controllers
         private readonly IPetWeddingService _petWeddingService;
         private readonly INotificationService _notificationService;
         private readonly IHubContext<NotificationHub> _hubContext;
+        private readonly IPostService _postService;
+        private readonly IUserService _userService;
 
         public PetWeddingController(
             IPetWeddingService petWeddingService,
             INotificationService notificationService,
-            IHubContext<NotificationHub> hubContext)
+            IHubContext<NotificationHub> hubContext,
+            IPostService postService,
+            IUserService userService)
         {
             _petWeddingService = petWeddingService;
             _notificationService = notificationService;
             _hubContext = hubContext;
+            _postService = postService;
+            _userService = userService;
         }
 
         [HttpPost("create")]
@@ -65,17 +71,27 @@ namespace PetWhenua.Controllers
                 if (!success)
                     return NotFound("No pending approval found for this user");
 
-                // Send notification about approval
+                // Send notification to wedding creator about approval
                 try
                 {
-                    await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                    // Get the wedding post to find the creator
+                    var post = await _postService.GetPostByIdAsync(postId);
+                    if (post != null && post.UserId != currentUserId)
                     {
-                        UserId = currentUserId, // For now, notify the approver
-                        Type = NotificationType.PetWeddingApproved,
-                        Title = "Pet Wedding Approved",
-                        Message = "Pet wedding participation has been approved",
-                        RelatedPostId = postId
-                    });
+                        // Get current user info to include in notification
+                        var approver = await _userService.GetUserByIdAsync(currentUserId);
+                        var approverName = approver?.FirstName ?? approver?.Username ?? "Someone";
+
+                        await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                        {
+                            UserId = post.UserId, // Notify the wedding creator
+                            Type = NotificationType.PetWeddingApproved,
+                            Title = "Pet Wedding Request Approved",
+                            Message = $"{approverName} has approved the pet wedding request: {post.Title}",
+                            RelatedPostId = postId,
+                            RelatedUserId = currentUserId
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -83,6 +99,52 @@ namespace PetWhenua.Controllers
                 }
 
                 return Ok(new { message = "Participation approved successfully" });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{postId}/reject")]
+        public async Task<IActionResult> RejectPetWeddingParticipation(int postId)
+        {
+            try
+            {
+                var currentUserId = GetCurrentUserId();
+                var success = await _petWeddingService.RejectPetWeddingParticipationAsync(postId, currentUserId);
+                
+                if (!success)
+                    return NotFound("No pending approval found for this user");
+
+                // Send notification to wedding creator about rejection
+                try
+                {
+                    // Get the wedding post to find the creator
+                    var post = await _postService.GetPostByIdAsync(postId);
+                    if (post != null && post.UserId != currentUserId)
+                    {
+                        // Get current user info to include in notification
+                        var rejecter = await _userService.GetUserByIdAsync(currentUserId);
+                        var rejecterName = rejecter?.FirstName ?? rejecter?.Username ?? "Someone";
+
+                        await _notificationService.CreateNotificationAsync(new CreateNotificationRequest
+                        {
+                            UserId = post.UserId, // Notify the wedding creator
+                            Type = NotificationType.PetWeddingRejected,
+                            Title = "Pet Wedding Request Declined",
+                            Message = $"{rejecterName} has declined the pet wedding request: {post.Title}",
+                            RelatedPostId = postId,
+                            RelatedUserId = currentUserId
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to send pet wedding rejection notification: {ex.Message}");
+                }
+
+                return Ok(new { message = "Participation declined successfully" });
             }
             catch (InvalidOperationException ex)
             {
