@@ -10,7 +10,7 @@ import { PostStatusUtils, PostTypeUtils } from '../../../../models/post.types';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { formatDate } from '../../../../utils/dateUtils';
-import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
+import { getProfilePictureUrl, getFullImageUrl } from '../../../../utils/imageUrlUtils';
 
 export interface PostCardProps {
   post: Post;
@@ -336,17 +336,7 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
                 }}>
                   {/* Pet Profile Picture */}
                   <Avatar
-                    src={(() => {
-                      const profilePic = participant.pet?.profilePicture;
-                      if (!profilePic) return undefined;
-                      
-                      // If it's already a full URL, use it directly
-                      if (profilePic.startsWith('http')) return profilePic;
-                      
-                      // If it's a file path, construct the full URL
-                      const fullUrl = `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                      return fullUrl;
-                    })()}
+                    src={getFullImageUrl(participant.pet?.profilePicture)}
                     sx={{
                       width: 60,
                       height: 60,

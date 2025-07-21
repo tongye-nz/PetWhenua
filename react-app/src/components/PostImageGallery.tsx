@@ -8,6 +8,7 @@ import {
   Typography
 } from '@mui/material';
 import { Close, ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
+import { getFullImageUrl } from '../utils/imageUrlUtils';
 
 export interface PostImageGalleryProps {
   images: string[];
@@ -46,10 +47,7 @@ const PostImageGallery: React.FC<PostImageGalleryProps> = ({
   };
 
   const getImageUrl = (imageUrl: string) => {
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    return `http://localhost:5295/${imageUrl}`;
+    return getFullImageUrl(imageUrl) || imageUrl;
   };
 
   const getGridCols = () => {

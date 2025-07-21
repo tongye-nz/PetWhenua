@@ -9,6 +9,7 @@ import { usePost } from '../contexts/PostContext';
 import type { CreatePostRequest, UpdatePostRequest, Post } from '../models/post.types';
 import type { PostFormData } from '../components/forms/PostForm/PostForm';
 import type { UploadedImage } from '../components/ImageUpload';
+import { getFullImageUrl } from '../utils/imageUrlUtils';
 
 const CreatePost: React.FC = () => {
   const navigate = useNavigate();
@@ -48,9 +49,7 @@ const CreatePost: React.FC = () => {
     if (isEditMode && currentPost && currentPost.postId === parseInt(id!)) {
       // Convert existing image URLs to UploadedImage objects
       const existingImages = (currentPost.images || []).map((imageUrl, index) => {
-        const fullImageUrl = imageUrl.startsWith('http') 
-          ? imageUrl 
-          : `http://localhost:5295${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+        const fullImageUrl = getFullImageUrl(imageUrl) || imageUrl;
         
         return {
           id: `existing_${index}_${Date.now()}`,

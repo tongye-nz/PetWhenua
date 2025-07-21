@@ -24,7 +24,7 @@ import type { PostType, PostTypeString, PostStatus, PostStatusString } from '../
 import { useAuth } from '../contexts/AuthContext';
 import { StatusChip } from '../components/ui';
 import { CommentSection } from '../components/features/comments';
-import { getProfilePictureUrl } from '../utils/imageUrlUtils';
+import { getProfilePictureUrl, getFullImageUrl } from '../utils/imageUrlUtils';
 import { LoadingSpinner, LikeButton, FollowButton } from '../components/ui';
 import { usePost } from '../contexts/PostContext';
 import { userFollowService } from '../api/userFollow.api';
@@ -366,16 +366,7 @@ const PostDetail: React.FC = () => {
                   }}>
                     {/* Pet Profile Picture */}
                     <Avatar
-                      src={(() => {
-                        const profilePic = participant.pet?.profilePicture;
-                        if (!profilePic) return undefined;
-                        
-                        // If it's already a full URL, use it directly
-                        if (profilePic.startsWith('http')) return profilePic;
-                        
-                        // If it's a file path, construct the full URL
-                        return `http://localhost:5295${profilePic.startsWith('/') ? '' : '/'}${profilePic}`;
-                      })()}
+                      src={getFullImageUrl(participant.pet?.profilePicture)}
                       sx={{
                         width: 80,
                         height: 80,
@@ -480,9 +471,7 @@ const PostDetail: React.FC = () => {
               <Box display="flex" gap={2} flexWrap="wrap">
                 {currentPost.images.map((image, index) => {
                   // Construct proper image URL
-                  const imageUrl = image.startsWith('http') 
-                    ? image 
-                    : `http://localhost:5295${image.startsWith('/') ? '' : '/'}${image}`;
+                  const imageUrl = getFullImageUrl(image) || '';
                   
                   return (
                     <Box
