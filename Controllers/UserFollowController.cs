@@ -77,7 +77,20 @@ namespace PetWhenua.Controllers
                     Console.WriteLine($"Failed to send follow notification: {ex.Message}");
                 }
 
-                return Ok(new { message = "User followed successfully", follow });
+                // Map to DTO to avoid circular reference issues
+                var followDto = new UserFollowDto
+                {
+                    UserFollowId = follow.UserFollowId,
+                    FollowerId = follow.FollowerId,
+                    FollowingId = follow.FollowingId,
+                    CreatedAt = follow.CreatedAt
+                };
+
+                return Ok(new FollowResponse 
+                { 
+                    Message = "User followed successfully", 
+                    Follow = followDto 
+                });
             }
             catch (InvalidOperationException ex)
             {
@@ -96,7 +109,7 @@ namespace PetWhenua.Controllers
                 if (!success)
                     return NotFound("Follow relationship not found");
 
-                return Ok(new { message = "User unfollowed successfully" });
+                return Ok(new UnfollowResponse { Message = "User unfollowed successfully" });
             }
             catch (InvalidOperationException ex)
             {
@@ -109,7 +122,7 @@ namespace PetWhenua.Controllers
         {
             var currentUserId = GetCurrentUserId();
             var isFollowing = await _userFollowService.IsFollowingAsync(currentUserId, userId);
-            return Ok(new { isFollowing });
+            return Ok(new IsFollowingResponse { IsFollowing = isFollowing });
         }
 
         [HttpGet("followers")]
@@ -149,7 +162,7 @@ namespace PetWhenua.Controllers
             var followerCount = await _userFollowService.GetFollowerCountAsync(currentUserId);
             var followingCount = await _userFollowService.GetFollowingCountAsync(currentUserId);
             
-            return Ok(new { followerCount, followingCount });
+            return Ok(new FollowStats { FollowerCount = followerCount, FollowingCount = followingCount });
         }
 
         [HttpGet("stats/{userId}")]
@@ -158,7 +171,7 @@ namespace PetWhenua.Controllers
             var followerCount = await _userFollowService.GetFollowerCountAsync(userId);
             var followingCount = await _userFollowService.GetFollowingCountAsync(userId);
             
-            return Ok(new { followerCount, followingCount });
+            return Ok(new FollowStats { FollowerCount = followerCount, FollowingCount = followingCount });
         }
 
         private int GetCurrentUserId()
