@@ -177,5 +177,19 @@ export const authService = {
     const token = this.getStoredToken();
     const user = this.getStoredUser();
     return !!(token && user);
+  },
+
+  // Change password
+  async changePassword(passwordData: {
+    currentPassword: string;
+    newPassword: string;
+    confirmNewPassword: string;
+  }): Promise<{ success: boolean; message: string; changedAt: string }> {
+    try {
+      const response = await authApi.post('/auth/change-password', passwordData);
+      return response.data;
+    } catch (error) {
+      throw handleApiError(error as AxiosError);
+    }
   }
 }; 

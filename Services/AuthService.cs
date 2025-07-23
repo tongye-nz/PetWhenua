@@ -18,6 +18,7 @@ namespace PetWhenua.Services
         Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request);
         Task<AuthResponseDto> LoginAsync(LoginRequestDto request);
         Task<User?> GetUserByTokenAsync(string userId);
+        Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword);
     }
 
     public class AuthService : IAuthService
@@ -205,6 +206,39 @@ namespace PetWhenua.Services
 
             var user = await _userService.GetUserByIdAsync(id);
             return user?.IsActive == true ? user : null;
+        }
+
+        public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            // Get the user
+            var user = await _userService.GetUserByIdAsync(userId);
+            if (user == null)
+            {
+                throw new InvalidOperationException("User not found.");
+            }
+
+            // Verify current password
+            if (!VerifyPassword(currentPassword, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Current password is incorrect.");
+            }
+
+            // Validate new password
+            ValidatePassword(newPassword);
+
+            // Ensure new password is different from current password
+            if (VerifyPassword(newPassword, user.PasswordHash))
+            {
+                throw new ArgumentException("New password must be different from your current password.");
+            }
+
+            // Hash new password and update user
+            var newPasswordHash = HashPassword(newPassword);
+            user.PasswordHash = newPasswordHash;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userService.UpdateUserAsync(user);
+            return true;
         }
     }
 } 

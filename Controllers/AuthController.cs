@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using PetWhenua.Models.Dtos;
 using PetWhenua.Services;
+using System.Security.Claims;
 
 namespace PetWhenua.Controllers
 {
@@ -55,10 +57,10 @@ namespace PetWhenua.Controllers
         }
 
         [HttpPost("verify-token")]
-        [Microsoft.AspNetCore.Authorization.Authorize]
+        [Authorize]
         public async Task<IActionResult> VerifyToken()
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
             if (string.IsNullOrEmpty(userIdClaim))
             {
@@ -73,6 +75,74 @@ namespace PetWhenua.Controllers
 
             var userDto = _authService.MapToUserDto(user);
             return Ok(userDto);
+        }
+
+        [HttpPost("change-password")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                // Get current user ID from token
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized("Invalid user token.");
+                }
+
+                // Change password
+                var success = await _authService.ChangePasswordAsync(userId, request.CurrentPassword, request.NewPassword);
+
+                if (success)
+                {
+                    var response = new ChangePasswordResponseDto
+                    {
+                        Success = true,
+                        Message = "Password changed successfully.",
+                        ChangedAt = DateTime.UtcNow
+                    };
+                    return Ok(response);
+                }
+
+                return BadRequest("Failed to change password.");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return BadRequest(new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = ex.Message
+                });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, new ChangePasswordResponseDto
+                {
+                    Success = false,
+                    Message = "An unexpected error occurred. Please try again."
+                });
+            }
         }
 
 

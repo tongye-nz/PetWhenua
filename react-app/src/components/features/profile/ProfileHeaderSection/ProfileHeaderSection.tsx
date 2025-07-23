@@ -12,6 +12,7 @@ export interface ProfileHeaderSectionProps {
   onStartEditing: () => void;
   onSaveForm: () => void;
   onCancelEditing: () => void;
+  onChangePassword?: () => void;
   styles?: Record<string, CSSProperties> & {
     header: CSSProperties;
     title: CSSProperties;
@@ -27,6 +28,7 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
   onStartEditing,
   onSaveForm,
   onCancelEditing,
+  onChangePassword,
 }) => {
   const getTitle = () => {
     if (isOwnProfile) {
@@ -54,12 +56,22 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
         {getTitle()}
       </Text>
       {!isEditing && isOwnProfile ? (
-        <Button
-          variant="outline"
-          onClick={onStartEditing}
-        >
-          Edit Profile
-        </Button>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button
+            variant="outline"
+            onClick={onStartEditing}
+          >
+            Edit Profile
+          </Button>
+          {onChangePassword && (
+            <Button
+              variant="outline"
+              onClick={onChangePassword}
+            >
+              Change Password
+            </Button>
+          )}
+        </Box>
       ) : isOwnProfile && isEditing ? (
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
@@ -77,6 +89,15 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
           >
             Cancel
           </Button>
+          {onChangePassword && (
+            <Button
+              variant="outline"
+              onClick={onChangePassword}
+              disabled={isLoading}
+            >
+              Change Password
+            </Button>
+          )}
         </Box>
       ) : null}
     </Box>

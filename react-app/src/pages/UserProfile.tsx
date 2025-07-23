@@ -16,7 +16,8 @@ import {
   ProfileSummary,
   FollowedUsersList,
   FollowersList,
-  UserPostsFeed
+  UserPostsFeed,
+  ChangePasswordModal
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
 import type { ProcessedImageResult } from '../utils/profileImageUtils';
@@ -77,6 +78,10 @@ const UserProfile: React.FC = () => {
   const [hasNetworkError, setHasNetworkError] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
   const maxRetries = 3;
+
+  // Change password modal state
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState<boolean>(false);
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string>('');
 
   // Save user profile to backend
   const saveUserProfile = async (data: UserProfileData): Promise<void> => {
@@ -353,6 +358,25 @@ const UserProfile: React.FC = () => {
     // You can add toast notifications or other error handling here
   };
 
+  // Change password modal handlers
+  const handleOpenChangePassword = () => {
+    setChangePasswordModalOpen(true);
+  };
+
+  const handleCloseChangePassword = () => {
+    setChangePasswordModalOpen(false);
+  };
+
+  const handlePasswordChangeSuccess = (message: string) => {
+    setPasswordChangeSuccess(message);
+    setChangePasswordModalOpen(false);
+    
+    // Clear success message after 5 seconds
+    setTimeout(() => {
+      setPasswordChangeSuccess('');
+    }, 5000);
+  };
+
   // Show loading spinner during initial load
   if (isLoading || (!profileData.id && form.loading)) {
     return (
@@ -569,6 +593,7 @@ const UserProfile: React.FC = () => {
             onStartEditing={handleStartEditing}
             onSaveForm={handleSaveForm}
             onCancelEditing={handleCancelEditing}
+            onChangePassword={isOwnProfile ? handleOpenChangePassword : undefined}
           />
 
           <Divider sx={{ mb: 4, bgcolor: 'divider' }} />
@@ -577,6 +602,11 @@ const UserProfile: React.FC = () => {
           {form.success && (
             <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
               {form.success}
+            </Alert>
+          )}
+          {passwordChangeSuccess && (
+            <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
+              {passwordChangeSuccess}
             </Alert>
           )}
           {form.error && (
@@ -706,6 +736,13 @@ const UserProfile: React.FC = () => {
             </Box>
           </Box>
         </Paper>
+
+        {/* Change Password Modal */}
+        <ChangePasswordModal
+          open={changePasswordModalOpen}
+          onClose={handleCloseChangePassword}
+          onSuccess={handlePasswordChangeSuccess}
+        />
       </Container>
     </Box>
   );
