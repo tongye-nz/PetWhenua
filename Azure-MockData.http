@@ -2,7 +2,7 @@
 ### Replace "your-app" with your actual Azure Web App name
 
 @azureBaseUrl = https://petwhenua-gpggdjawh0duc2du.australiaeast-01.azurewebsites.net
-@adminToken = YOUR_JWT_TOKEN_HERE
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIzIiwidW5pcXVlX25hbWUiOiJzaXRlYWRtaW4iLCJlbWFpbCI6ImFkbWluQHBldHdoZW51YS5jby5ueiIsInJvbGUiOiJzaXRlX2FkbWluIiwibmJmIjoxNzUzMjcwNTY3LCJleHAiOjE3NTMzNTY5NjcsImlhdCI6MTc1MzI3MDU2NywiaXNzIjoiUGV0V2hlbnVhQXBwIiwiYXVkIjoiUGV0V2hlbnVhVXNlcnMifQ.I1d0C4ArA7kB7G-G7Ddt_uxEWFR22LqtvJQLbxf2MLk
 
 ### Frontend URL: https://orange-plant-0ccfa0d00.1.azurestaticapps.net
 
