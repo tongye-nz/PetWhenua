@@ -50,6 +50,52 @@ namespace PetWhenua.Repositories.Concrete
             return await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
         }
 
+        public async Task<(IEnumerable<Post> posts, int totalCount)> GetAllPostsPagedAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null, int page = 1, int pageSize = 10)
+        {
+            var query = _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.PetWeddingParticipants)
+                .ThenInclude(pwp => pwp.Pet)
+                .AsNoTracking() // Prevent change tracking and reduce circular references
+                .AsQueryable();
+
+            // Only show active posts for public browsing (unless filtering by specific userId for user's own posts)
+            if (!userId.HasValue)
+            {
+                query = query.Where(p => p.Status == PostStatus.Active);
+            }
+
+            if (postType.HasValue)
+            {
+                query = query.Where(p => p.PostType == postType.Value);
+            }
+
+            if (userId.HasValue)
+            {
+                query = query.Where(p => p.UserId == userId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(region))
+            {
+                query = query.Where(p => p.Location != null && p.Location.Contains(region));
+            }
+
+            if (!string.IsNullOrEmpty(district))
+            {
+                query = query.Where(p => p.Location != null && p.Location.Contains(district));
+            }
+
+            var totalCount = await query.CountAsync();
+            
+            var posts = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (posts, totalCount);
+        }
+
         public async Task<Post?> GetPostByIdAsync(int id)
         {
             return await _context.Posts

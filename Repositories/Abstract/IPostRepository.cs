@@ -3,6 +3,7 @@ namespace PetWhenua.Repositories.Abstract
     public interface IPostRepository
     {
         Task<IEnumerable<Post>> GetAllPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null);
+        Task<(IEnumerable<Post> posts, int totalCount)> GetAllPostsPagedAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null, int page = 1, int pageSize = 10);
         Task<Post?> GetPostByIdAsync(int id);
         Task<Post> AddPostAsync(Post post);
         Task<Post> UpdatePostAsync(Post post);

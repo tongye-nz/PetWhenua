@@ -13,7 +13,7 @@ import {
   Alert
 } from '@mui/material';
 import { Add } from '@mui/icons-material';
-import { Button, Text, LoadingSpinner } from '../components/ui';
+import { Button, Text, LoadingSpinner, Pagination } from '../components/ui';
 import { PostsGrid } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
 import { usePost } from '../contexts/PostContext';
@@ -21,16 +21,49 @@ import { NZ_REGIONS, type District } from '../data/nzLocations';
 import { userFollowService } from '../api/userFollow.api';
 import { postService } from '../api/post.api';
 import type { Post, PostFilters, PostType } from '../models/post.types';
+import type { PaginationInfo } from '../models/pagination.types';
 
 const Posts: React.FC = () => {
   const { postType: postTypeParam } = useParams<{ postType?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { posts, loading, error, fetchPosts, setFilters, filters, clearError } = usePost();
+  const { clearError } = usePost();
+  
+  // Pagination state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    currentPage: 1,
+    pageSize: 10,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false
+  });
+  const [filters, setFilters] = useState<PostFilters>({});
+  
   const [availableDistricts, setAvailableDistricts] = useState<District[]>([]);
   const [showingFollowingPosts, setShowingFollowingPosts] = useState<boolean>(false);
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [followingLoading, setFollowingLoading] = useState<boolean>(false);
+
+  // Fetch posts with pagination
+  const fetchPosts = useCallback(async (newFilters: PostFilters = {}, page: number = 1, pageSize: number = 10) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await postService.getPostsPaginated(newFilters, { page, pageSize });
+      setPosts(response.posts);
+      setPagination(response.pagination);
+    } catch (error: any) {
+      console.error('fetchPosts error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch posts';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // Get districts for a selected region
   const getDistrictsForRegion = (regionName: string): District[] => {
@@ -58,14 +91,22 @@ const Posts: React.FC = () => {
     const postType = getPostTypeFromParam(postTypeParam);
     const initialFilters = postType !== undefined ? { postType } : {};
     setFilters(initialFilters);
-    fetchPosts(initialFilters);
-  }, [postTypeParam, fetchPosts, setFilters]);
+    fetchPosts(initialFilters, 1, pagination.pageSize);
+  }, [postTypeParam, fetchPosts]);
 
   const handleFilterChange = useCallback((newFilters: Partial<PostFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
-    fetchPosts(updatedFilters);
-  }, [filters, fetchPosts, setFilters]);
+    fetchPosts(updatedFilters, 1, pagination.pageSize); // Reset to page 1 when filters change
+  }, [filters, fetchPosts, pagination.pageSize]);
+
+  const handlePageChange = useCallback((page: number) => {
+    fetchPosts(filters, page, pagination.pageSize);
+  }, [filters, fetchPosts, pagination.pageSize]);
+
+  const handlePageSizeChange = useCallback((pageSize: number) => {
+    fetchPosts(filters, 1, pageSize); // Reset to page 1 when page size changes
+  }, [filters, fetchPosts]);
 
   // Update available districts when region changes
   useEffect(() => {
@@ -142,8 +183,11 @@ const Posts: React.FC = () => {
       };
       
       refetchFollowingPosts();
+    } else {
+      // Refetch regular posts when not showing following posts
+      fetchPosts(filters, 1, pagination.pageSize);
     }
-  }, [filters.postType, filters.region, filters.district, showingFollowingPosts]);
+  }, [filters.postType, filters.region, filters.district, showingFollowingPosts, fetchPosts, filters, pagination.pageSize]);
 
   const handleCreatePost = () => {
     // Navigate to create post page
@@ -183,7 +227,7 @@ const Posts: React.FC = () => {
       setShowingFollowingPosts(false);
       setFollowingPosts([]);
       // Refresh the main posts list
-      fetchPosts(filters);
+      fetchPosts(filters, 1, pagination.pageSize);
     } else {
       // Show posts from followed users
       try {
@@ -441,6 +485,15 @@ const Posts: React.FC = () => {
             : 'No posts found'
         }
       />
+
+      {/* Pagination Controls */}
+      {!showingFollowingPosts && posts.length > 0 && (
+        <Pagination
+          pagination={pagination}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
 
       {/* Floating Action Button for Mobile */}
       {user && (

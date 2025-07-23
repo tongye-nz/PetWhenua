@@ -3,6 +3,7 @@ namespace PetWhenua.Services
     public interface IPostService
     {
         Task<IEnumerable<Post>> GetPostsAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null);
+        Task<(IEnumerable<Post> posts, int totalCount)> GetPostsPagedAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null, int page = 1, int pageSize = 10);
         Task<Post?> GetPostByIdAsync(int id);
         Task<Post> CreatePostAsync(Post post);
         Task<Post> CreatePostAsync(int userId, PostType postType, string title, string content);

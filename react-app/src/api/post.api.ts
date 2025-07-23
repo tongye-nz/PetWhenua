@@ -6,6 +6,7 @@ import type {
   UpdatePostStatusRequest, 
   PostFilters
 } from '../models/post.types';
+import type { PaginatedResponse, PaginationParams } from '../models/pagination.types';
 
 const postApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -25,6 +26,26 @@ export const postService = {
     if (filters.status !== undefined) params.append('status', filters.status.toString());
     if (filters.region) params.append('region', filters.region);
     if (filters.district) params.append('district', filters.district);
+    
+    const response = await postApi.get(`/posts?${params.toString()}`);
+    
+    // Handle both old format (array) and new format (object with posts array)
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+    return response.data.posts || [];
+  },
+
+  // Get paginated posts with optional filters
+  async getPostsPaginated(filters: PostFilters = {}, pagination: PaginationParams = {}): Promise<PaginatedResponse<Post>> {
+    const params = new URLSearchParams();
+    if (filters.postType !== undefined) params.append('postType', filters.postType.toString());
+    if (filters.userId) params.append('userId', filters.userId.toString());
+    if (filters.status !== undefined) params.append('status', filters.status.toString());
+    if (filters.region) params.append('region', filters.region);
+    if (filters.district) params.append('district', filters.district);
+    if (pagination.page) params.append('page', pagination.page.toString());
+    if (pagination.pageSize) params.append('pageSize', pagination.pageSize.toString());
     
     const response = await postApi.get(`/posts?${params.toString()}`);
     return response.data;

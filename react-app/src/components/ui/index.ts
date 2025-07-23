@@ -11,6 +11,7 @@ export { LikeButton } from './LikeButton';
 export { default as PetConnectionButton } from './PetConnectionButton';
 export { ChatButton } from './ChatButton';
 export { ThemeToggle } from './ThemeToggle';
+export { Pagination } from './Pagination';
 
 export type { ButtonProps } from './Button';
 export type { InputProps } from './Input';
