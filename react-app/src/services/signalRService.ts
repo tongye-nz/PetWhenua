@@ -123,6 +123,13 @@ export class SignalRService {
       console.log('User left chat:', data);
     });
 
+    // Handle online users responses
+    this.connection.on('OnlineUsersResponse', (onlineUserIds: number[]) => {
+      onlineUserIds.forEach(userId => {
+        this.onUserOnlineStatus?.({ userId, isOnline: true });
+      });
+    });
+
     // Connection state events
     this.connection.onreconnecting((error) => {
       console.log('SignalR reconnecting...', error);

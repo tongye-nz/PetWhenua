@@ -33,7 +33,7 @@ namespace PetWhenua.Hubs
                 await Groups.AddToGroupAsync(Context.ConnectionId, $"user_{userId}");
                 
                 // Notify other users that this user is online
-                await Clients.All.SendAsync("UserOnlineStatus", new { UserId = userId, IsOnline = true });
+                await Clients.All.SendAsync("UserOnlineStatus", new { userId = userId, isOnline = true });
 
                 Console.WriteLine($"User {userId} connected with connection {Context.ConnectionId}");
             }
@@ -54,7 +54,7 @@ namespace PetWhenua.Hubs
                     {
                         UserConnections.TryRemove(userId, out _);
                         // User is completely offline
-                        await Clients.All.SendAsync("UserOnlineStatus", new { UserId = userId, IsOnline = false });
+                        await Clients.All.SendAsync("UserOnlineStatus", new { userId = userId, isOnline = false });
                     }
                 }
 
