@@ -196,8 +196,8 @@ namespace PetWhenua.Services.Factories
                     break;
 
                 case PostType.Library:
-                    if (string.IsNullOrEmpty(post.Category))
-                        throw new ArgumentException("Library posts must have a category.", nameof(post.Category));
+                    // No additional validation required for library posts
+                    // Category is now optional
                     break;
 
                 case PostType.Moment:
