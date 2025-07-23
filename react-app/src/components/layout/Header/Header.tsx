@@ -185,12 +185,12 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                 }}
                 sx={{
                   textDecoration: 'none',
-                  color: item.active ? 'text.primary' : 'text.secondary',
+                  color: item.active ? 'primary.main' : 'text.secondary',
                   fontWeight: item.active ? 600 : 500,
                   fontSize: '0.95rem',
                   cursor: 'pointer',
                   '&:hover': {
-                    color: 'text.primary'
+                    color: 'primary.main'
                   },
                   transition: 'color 0.2s ease'
                 }}
