@@ -12,8 +12,7 @@ import {
   useTheme,
   Divider,
   Avatar,
-  Chip,
-  Button
+  Chip
 } from '@mui/material';
 import {
   ArrowBack,
@@ -26,7 +25,7 @@ import {
   Pets
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { LoadingSpinner } from '../components/ui';
+import { LoadingSpinner, Button } from '../components/ui';
 import { petWeddingService } from '../api/petWedding.api';
 import { useAuth } from '../contexts/AuthContext';
 import { formatDateTime } from '../utils/dateUtils';
@@ -287,7 +286,7 @@ const WeddingRequests: React.FC = () => {
                 }}>
                   <Tooltip title="View full wedding details">
                     <Button
-                      variant="outlined"
+                      variant="outline"
                       size="small"
                       startIcon={<Visibility />}
                       onClick={() => handleViewDetails(wedding.postId!)}
@@ -298,27 +297,33 @@ const WeddingRequests: React.FC = () => {
                   </Tooltip>
                   
                   <Button
-                    variant="contained"
-                    color="success"
+                    variant="primary"
                     size="small"
                     startIcon={<CheckCircle />}
                     onClick={() => handleResponse(wedding.postId!, 'approve')}
-                    disabled={actionLoading[wedding.postId!]}
-                    sx={{ minWidth: '120px' }}
+                    isLoading={actionLoading[wedding.postId!]}
+                    loadingText="Approving..."
+                    sx={{ 
+                      minWidth: '120px',
+                      bgcolor: 'success.main',
+                      '&:hover': {
+                        bgcolor: 'success.dark'
+                      }
+                    }}
                   >
-                    {actionLoading[wedding.postId!] ? 'Approving...' : 'Approve'}
+                    Approve
                   </Button>
                   
                   <Button
-                    variant="contained"
-                    color="error"
+                    variant="error"
                     size="small"
                     startIcon={<Cancel />}
                     onClick={() => handleResponse(wedding.postId!, 'decline')}
-                    disabled={actionLoading[wedding.postId!]}
+                    isLoading={actionLoading[wedding.postId!]}
+                    loadingText="Declining..."
                     sx={{ minWidth: '120px' }}
                   >
-                    {actionLoading[wedding.postId!] ? 'Declining...' : 'Decline'}
+                    Decline
                   </Button>
                 </Box>
               </CardContent>
