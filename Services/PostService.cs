@@ -62,13 +62,13 @@ namespace PetWhenua.Services
             return await _postRepository.AddPostAsync(post);
         }
 
-        public async Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public async Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, string? address = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
         {
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category, address);
             return await _postRepository.AddPostAsync(post);
         }
 
-        public async Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
+        public async Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string content, List<string>? images = null, string? location = null, string? address = null, decimal? price = null, DateTime? eventDate = null, string? category = null)
         {
             // Check if user can create this post type
             if (!_authorizationService.CanCreatePost(userRole, postType))
@@ -81,7 +81,7 @@ namespace PetWhenua.Services
             var initialStatus = _authorizationService.GetInitialPostStatus(userRole, postType);
 
             // Create the post with proper status
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category, address);
             post.Status = initialStatus; // Override the default Active status with role-based status
             post.UpdatedAt = DateTime.UtcNow;
 

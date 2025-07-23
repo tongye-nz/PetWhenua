@@ -146,8 +146,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       dispatch({ type: 'FETCH_START' });
       await postService.updatePost(id, postData);
-      // Create updated post object for state update
-      const updatedPost = { ...postData, postId: id } as Post;
+      
+      // Refetch the post to get the latest data from server (including any backend status changes)
+      const updatedPost = await postService.getPost(id);
       dispatch({ type: 'UPDATE_POST_SUCCESS', payload: updatedPost });
     } catch (error: any) {
       dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Failed to update post' });

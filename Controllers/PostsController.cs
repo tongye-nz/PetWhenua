@@ -168,12 +168,33 @@ public class PostsController : ControllerBase
                 return Forbid("You do not have permission to edit this post. Posts can only be edited when they are Active or Pending. Inactive posts can only be deleted.");
             }
 
+            // Check if content has changed for active meetups (requires re-approval)
+            bool contentChanged = false;
+            bool requiresPendingStatus = false;
+            
+            if (existingPost.PostType == PostType.Meetup)
+            {
+                // Check if any meaningful content has been modified
+                contentChanged = existingPost.Title != updateDto.Title ||
+                               existingPost.Content != updateDto.Content ||
+                               existingPost.Location != updateDto.Location ||
+                               existingPost.Address != updateDto.Address ||
+                               existingPost.EventDate != updateDto.EventDate ||
+                               existingPost.Category != updateDto.Category ||
+                               !existingPost.Images.SequenceEqual(updateDto.Images ?? new List<string>());
+                
+                // Require pending status if:
+                // 1. This was an active meetup and content changed, OR
+                // 2. This is already pending (don't allow frontend to override back to active)
+                requiresPendingStatus = (existingPost.Status == PostStatus.Active && contentChanged) || 
+                                      existingPost.Status == PostStatus.Pending;
+            }
+
             // Update the existing tracked entity instead of creating a new one
             // This avoids EF tracking conflicts
             existingPost.PostType = updateDto.PostType;
             existingPost.Title = updateDto.Title;
             existingPost.Content = updateDto.Content;
-            existingPost.Status = updateDto.Status;
             existingPost.Images = updateDto.Images ?? new List<string>();
             existingPost.Location = updateDto.Location;
             existingPost.Address = updateDto.Address;
@@ -181,6 +202,18 @@ public class PostsController : ControllerBase
             existingPost.EventDate = updateDto.EventDate;
             existingPost.Category = updateDto.Category;
             existingPost.UpdatedAt = DateTime.UtcNow;
+            
+            // Set status: For meetups that require pending status, force to pending
+            // Otherwise, use the status from the frontend request
+            if (requiresPendingStatus)
+            {
+                existingPost.Status = PostStatus.Pending;
+            }
+            else
+            {
+                existingPost.Status = updateDto.Status;
+            }
+            
             // Note: Don't update CreatedAt or UserId for security
 
             await _postService.UpdatePostAsync(existingPost);
@@ -318,6 +351,7 @@ public class PostsController : ControllerBase
                 request.Content, 
                 request.Images, 
                 request.Location, 
+                request.Address, 
                 request.Price, 
                 request.EventDate, 
                 request.Category

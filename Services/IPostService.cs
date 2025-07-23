@@ -6,8 +6,8 @@ namespace PetWhenua.Services
         Task<Post?> GetPostByIdAsync(int id);
         Task<Post> CreatePostAsync(Post post);
         Task<Post> CreatePostAsync(int userId, PostType postType, string title, string content);
-        Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null);
-        Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string content, List<string>? images = null, string? location = null, decimal? price = null, DateTime? eventDate = null, string? category = null);
+        Task<Post> CreatePostWithDetailsAsync(int userId, PostType postType, string title, string content, List<string>? images = null, string? location = null, string? address = null, decimal? price = null, DateTime? eventDate = null, string? category = null);
+        Task<Post> CreatePostWithUserRoleAsync(int userId, string userRole, PostType postType, string title, string content, List<string>? images = null, string? location = null, string? address = null, decimal? price = null, DateTime? eventDate = null, string? category = null);
         Task<Post> UpdatePostAsync(Post post);
         Task<Post> MarkPostAsSoldAsync(int id);
         Task<Post> MarkPostAsExpiredAsync(int id);

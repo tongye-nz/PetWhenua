@@ -57,12 +57,13 @@ namespace PetWhenua.Services
             string content, 
             List<string>? images = null, 
             string? location = null, 
+            string? address = null, 
             decimal? price = null, 
             DateTime? eventDate = null, 
             string? category = null)
         {
             await ValidateUserExistsAsync(userId);
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category, address);
             return await _postRepository.AddPostAsync(post);
         }
 
@@ -77,6 +78,7 @@ namespace PetWhenua.Services
             string content, 
             List<string>? images = null, 
             string? location = null, 
+            string? address = null, 
             decimal? price = null, 
             DateTime? eventDate = null, 
             string? category = null)
@@ -90,7 +92,7 @@ namespace PetWhenua.Services
             }
 
             var initialStatus = _authorizationService.GetInitialPostStatus(userRole, postType);
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category, address);
             post.Status = initialStatus;
 
             var createdPost = await _postRepository.AddPostAsync(post);
@@ -165,6 +167,7 @@ namespace PetWhenua.Services
             string content, 
             List<string>? images = null, 
             string? location = null, 
+            string? address = null, 
             decimal? price = null, 
             DateTime? eventDate = null, 
             string? category = null)
@@ -177,7 +180,7 @@ namespace PetWhenua.Services
                 throw new InvalidOperationException(errorMessage);
             }
             
-            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category);
+            var post = _postFactory.CreatePostWithDetails(userId, postType, title, content, images, location, price, eventDate, category, address);
             return await _postRepository.AddPostAsync(post);
         }
     }
