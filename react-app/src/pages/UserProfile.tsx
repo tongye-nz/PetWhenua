@@ -15,6 +15,7 @@ import {
   ProfileHeaderSection,
   ProfileSummary,
   FollowedUsersList,
+  FollowersList,
   UserPostsFeed
 } from '../components/features/profile';
 import { LoadingSpinner } from '../components/ui';
@@ -622,6 +623,15 @@ const UserProfile: React.FC = () => {
                     }}
                   />
                   
+                  {/* Followers List */}
+                  {targetUserId && (
+                    <FollowersList
+                      userId={targetUserId}
+                      isOwnProfile={isOwnProfile}
+                      maxUsers={6}
+                    />
+                  )}
+
                   {/* Followed Users List */}
                   {targetUserId && (
                     <FollowedUsersList

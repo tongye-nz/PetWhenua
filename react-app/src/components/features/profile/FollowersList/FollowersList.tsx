@@ -1,0 +1,316 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Avatar,
+  Skeleton,
+  Button,
+  Alert
+} from '@mui/material';
+import { Group as GroupIcon, People } from '@mui/icons-material';
+import { Text, FollowButton } from '../../../ui';
+import { userFollowService } from '../../../../api/userFollow.api';
+import type { User } from '../../../../models/auth.types';
+import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
+
+export interface FollowersListProps {
+  userId: number;
+  isOwnProfile: boolean;
+  maxUsers?: number;
+}
+
+const FollowersList: React.FC<FollowersListProps> = ({
+  userId,
+  isOwnProfile,
+  maxUsers = 6
+}) => {
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+  const [followStatusMap, setFollowStatusMap] = useState<Record<number, boolean>>({});
+
+  // **PERFORMANCE OPTIMIZATION: Memoize the load function and use parallel API calls**
+  const loadFollowers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      let users: User[];
+      
+      if (isOwnProfile) {
+        // Load current user's followers
+        users = await userFollowService.getMyFollowers();
+      } else {
+        // Load specific user's followers
+        users = await userFollowService.getUserFollowers(userId);
+      }
+
+      // Limit the number of users displayed
+      const limitedUsers = users.slice(0, maxUsers);
+      setFollowers(limitedUsers);
+
+      // **PERFORMANCE OPTIMIZATION: Use Promise.allSettled for parallel follow status checks**
+      // Only check follow status for non-own profiles and when we have users to check
+      if (!isOwnProfile && limitedUsers.length > 0) {
+        const followStatusPromises = limitedUsers.map(async (user) => 
+          userFollowService.isFollowing(user.userId)
+            .then(status => ({ userId: user.userId, status }))
+            .catch(() => ({ userId: user.userId, status: false }))
+        );
+
+        const followStatusResults = await Promise.allSettled(followStatusPromises);
+        
+        const statusMap: Record<number, boolean> = {};
+        followStatusResults.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            statusMap[result.value.userId] = result.value.status;
+          }
+        });
+        
+        setFollowStatusMap(statusMap);
+      }
+    } catch (err) {
+      console.error('Failed to load followers:', err);
+      setError('Failed to load followers');
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, isOwnProfile, maxUsers]); // Memoize with all dependencies
+
+  useEffect(() => {
+    // Only load if userId is valid
+    if (userId && userId > 0) {
+      loadFollowers();
+    } else {
+      setError('Invalid user ID');
+      setLoading(false);
+    }
+  }, [loadFollowers]); // Use the memoized function
+
+  // Handle follow/unfollow changes
+  const handleFollowChange = (targetUserId: number, isFollowing: boolean) => {
+    // Update the follow status map
+    setFollowStatusMap(prev => ({
+      ...prev,
+      [targetUserId]: isFollowing
+    }));
+  };
+
+  if (loading) {
+    return (
+      <Card sx={{ 
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        mb: 2
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <People sx={{ color: 'primary.main' }} />
+            {isOwnProfile ? 'Followers' : 'Followers'}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {[...Array(3)].map((_, index) => (
+              <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Skeleton variant="circular" width={40} height={40} />
+                <Box sx={{ flex: 1 }}>
+                  <Skeleton variant="text" width="60%" />
+                  <Skeleton variant="text" width="40%" />
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card sx={{ 
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+        border: '1px solid rgba(0, 0, 0, 0.05)',
+        mb: 2
+      }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <People sx={{ color: 'primary.main' }} />
+            {isOwnProfile ? 'Followers' : 'Followers'}
+          </Typography>
+          <Alert severity="error" sx={{ borderRadius: '12px' }}>
+            {error}
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card sx={{ 
+      borderRadius: '16px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(0, 0, 0, 0.05)',
+      mb: 2,
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      '&:hover': {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 8px 30px rgba(0, 0, 0, 0.15)'
+      }
+    }}>
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          mb: 2
+        }}>
+          <Typography variant="h6" sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1,
+            fontWeight: 600,
+            fontSize: '1.1rem'
+          }}>
+            <People sx={{ color: 'primary.main' }} />
+            Followers {followers.length > 0 && `(${followers.length})`}
+          </Typography>
+          
+          {followers.length > maxUsers && (
+            <Button size="small" sx={{ 
+              bgcolor: 'rgba(102, 126, 234, 0.1)',
+              '&:hover': { bgcolor: 'rgba(102, 126, 234, 0.2)' }
+            }}>
+              <GroupIcon sx={{ color: 'primary.main' }} />
+            </Button>
+          )}
+        </Box>
+
+        {followers.length === 0 ? (
+          <Box sx={{ 
+            textAlign: 'center', 
+            py: 3,
+            color: 'text.secondary'
+          }}>
+            <People sx={{ fontSize: 48, opacity: 0.5, mb: 1, color: 'primary.main' }} />
+            <Text variant="body2">
+              {isOwnProfile ? "No followers yet" : "No followers yet"}
+            </Text>
+          </Box>
+        ) : (
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: 1,
+            maxHeight: '300px',
+            overflowY: 'auto',
+            overflowX: 'hidden' // Prevent horizontal scrollbar
+          }}>
+            {followers.map((user) => (
+              <Box 
+                key={user.userId}
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 2,
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: '1px solid rgba(0, 0, 0, 0.05)',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(102, 126, 234, 0.05)',
+                    borderColor: 'rgba(102, 126, 234, 0.2)',
+                    transform: 'scale(1.02)', // Use scale instead of translateX to avoid overflow
+                    boxShadow: '0 2px 8px rgba(102, 126, 234, 0.15)'
+                  }
+                }}
+              >
+                {/* User Avatar */}
+                <Avatar 
+                  src={getProfilePictureUrl(user.profilePicture)}
+                  sx={{ width: 40, height: 40 }}
+                >
+                  {user.firstName?.charAt(0) || user.username.charAt(0)}
+                </Avatar>
+
+                {/* User Info */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Text 
+                    variant="body2" 
+                    fontWeight="medium"
+                    sx={{ 
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {user.firstName && user.lastName 
+                      ? `${user.firstName} ${user.lastName}`
+                      : user.username
+                    }
+                  </Text>
+                  {user.firstName && user.lastName && (
+                    <Text 
+                      variant="caption" 
+                      color="text.secondary"
+                      sx={{ 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      @{user.username}
+                    </Text>
+                  )}
+                </Box>
+
+                {/* Follow Button - only show for other users when viewing others' profiles */}
+                {!isOwnProfile && (
+                  <FollowButton
+                    userId={user.userId}
+                    isFollowing={followStatusMap[user.userId] || false}
+                    onFollowChange={(isFollowing) => handleFollowChange(user.userId, isFollowing)}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+            ))}
+          </Box>
+        )}
+
+        {/* View All Link */}
+        {followers.length >= maxUsers && (
+          <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Text 
+              variant="body2" 
+              color="primary"
+              sx={{ 
+                cursor: 'pointer',
+                '&:hover': { textDecoration: 'underline' }
+              }}
+            >
+              View all
+            </Text>
+          </Box>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default FollowersList; 

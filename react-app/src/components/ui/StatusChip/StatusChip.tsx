@@ -51,7 +51,7 @@ const StatusChip: React.FC<StatusChipProps> = ({
       return { backgroundColor: indigo[500], color: '#ffffff' };
     }
     if (PostTypeUtils.isAnnouncement(type)) {
-      return { backgroundColor: orange[500], color: '#ffffff' };
+      return { backgroundColor: red[400], color: '#ffffff' };
     }
     if (PostTypeUtils.isMoment(type)) {
       return { backgroundColor: blueGrey[500], color: '#ffffff' };
@@ -66,10 +66,10 @@ const StatusChip: React.FC<StatusChipProps> = ({
       return { backgroundColor: red[600], color: '#ffffff' };
     }
     if (roleUpper === 'MEETUP_ADMIN') {
-      return { backgroundColor: purple[600], color: '#ffffff' };
+      return { backgroundColor: cyan[600], color: '#ffffff' };
     }
     if (roleUpper === 'VET') {
-      return { backgroundColor: amber[600], color: '#ffffff' };
+      return { backgroundColor: indigo[600], color: '#ffffff' };
     }
     if (roleUpper === 'MEMBER') {
       return { backgroundColor: blueGrey[400], color: '#ffffff' };
