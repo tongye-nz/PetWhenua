@@ -31,7 +31,7 @@ export const buttonStyles: Record<string, SxProps<Theme>> = {
     '&:hover': {
       backgroundColor: (theme: Theme) => 
         theme.palette.mode === 'light' ? 'primary.light' : 'primary.dark',
-      opacity: 0.1,
+      opacity: 0.6,
     },
     '&:disabled': {
       backgroundColor: 'transparent',
@@ -45,7 +45,7 @@ export const buttonStyles: Record<string, SxProps<Theme>> = {
     '&:hover': {
       backgroundColor: (theme: Theme) => 
         theme.palette.mode === 'light' ? 'primary.light' : 'primary.dark',
-      opacity: 0.1,
+      opacity: 0.9,
     },
     '&:disabled': {
       backgroundColor: 'transparent',
@@ -59,7 +59,7 @@ export const buttonStyles: Record<string, SxProps<Theme>> = {
     borderColor: 'error.main',
     '&:hover': {
       backgroundColor: 'error.light',
-      opacity: 0.1,
+      opacity: 0.6,
       borderColor: 'error.dark',
     },
     '&:disabled': {
