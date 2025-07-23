@@ -18,8 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
+        // Use IgnoreCycles to handle circular references without adding $id/$ref properties
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-        options.JsonSerializerOptions.MaxDepth = 5; // Increase depth slightly but still prevent infinite cycles
+        options.JsonSerializerOptions.MaxDepth = 32; // Reasonable depth limit
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         
