@@ -3,6 +3,8 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
+  Container,
+  Paper,
   Box,
   Typography,
   IconButton,
@@ -12,11 +14,10 @@ import {
   ListItemButton,
   ListItemAvatar,
   ListItemText,
-  Paper,
-  Chip,
   Tab,
   Tabs,
-  Badge
+  Badge,
+  Chip
 } from '@mui/material';
 import {
   Close,
@@ -32,10 +33,17 @@ import type { ChatMessage, ChatRoom, MessageStatus } from '../../../../models/ch
 import type { User } from '../../../../models/auth.types';
 import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
-interface ChatWindowProps {
-  open: boolean;
-  onClose: () => void;
+export interface UnifiedChatProps {
+  // Mode props
+  mode: 'dialog' | 'page';
+  
+  // Dialog mode props
+  open?: boolean;
+  onClose?: () => void;
   initialUserId?: number;
+  
+  // Page mode props
+  title?: string;
 }
 
 interface TabPanelProps {
@@ -64,8 +72,14 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUserId }) => {
-  const { onlineUsers, typingUsers } = useSignalR();
+export const UnifiedChat: React.FC<UnifiedChatProps> = ({ 
+  mode,
+  open = true,
+  onClose,
+  initialUserId,
+  title = "Messages"
+}) => {
+  const { onlineUsers, typingUsers, setChatMessageHandler } = useSignalR();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
@@ -89,13 +103,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
 
   // Load chat rooms
   useEffect(() => {
-    if (open) {
+    if ((mode === 'dialog' && open) || mode === 'page') {
       loadChatRooms();
       if (initialUserId) {
         handleStartChat(initialUserId);
       }
     }
-  }, [open, initialUserId]);
+  }, [mode, open, initialUserId]);
 
   // Load messages when room is selected
   useEffect(() => {
@@ -103,6 +117,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
       loadMessages(selectedRoom.chatRoomId);
     }
   }, [selectedRoom]);
+
+  // Set up SignalR message handler for page mode
+  useEffect(() => {
+    if (mode === 'page') {
+      const handleMessage = (_message: ChatMessage) => {
+        if (selectedRoom) {
+          loadMessages(selectedRoom.chatRoomId);
+        }
+      };
+      setChatMessageHandler(handleMessage);
+    }
+  }, [mode, selectedRoom, setChatMessageHandler]);
 
   const loadChatRooms = async () => {
     try {
@@ -158,8 +184,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
     if (!messageInput.trim() || !selectedRoom) return;
 
     try {
+      const receiverId = selectedRoom.user1Id === getCurrentUserId() ? selectedRoom.user2Id : selectedRoom.user1Id;
       const message = await chatService.sendMessage({
-        receiverId: selectedRoom.user1Id === getCurrentUserId() ? selectedRoom.user2Id : selectedRoom.user1Id,
+        receiverId,
         content: messageInput.trim(),
         chatRoomId: selectedRoom.chatRoomId
       });
@@ -177,18 +204,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
       setIsTyping(true);
     }
 
-    // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set new timeout to stop typing indicator
     typingTimeoutRef.current = window.setTimeout(() => {
       setIsTyping(false);
     }, 2000);
   };
 
-  // Get current user ID from auth context
   const getCurrentUserId = () => {
     return user?.userId || 0;
   };
@@ -203,17 +227,51 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
   };
 
   const formatMessageTime = (date: string) => {
-    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const messageDate = new Date(date);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const messageDay = new Date(messageDate.getFullYear(), messageDate.getMonth(), messageDate.getDate());
+    
+    // Check if message is from today
+    if (messageDay.getTime() === today.getTime()) {
+      // Today: show only time
+      return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } 
+    
+    // Check if message is from yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (messageDay.getTime() === yesterday.getTime()) {
+      // Yesterday: show "Yesterday" + time
+      const time = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `Yesterday ${time}`;
+    }
+    
+    // Check if message is from this week (within last 7 days)
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    if (messageDay >= weekAgo) {
+      // This week: show day name + time
+      const dayName = messageDate.toLocaleDateString([], { weekday: 'short' });
+      const time = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return `${dayName} ${time}`;
+    }
+    
+    // Older messages: show date + time
+    const dateStr = messageDate.toLocaleDateString([], { 
+      month: 'short', 
+      day: 'numeric',
+      year: messageDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+    const time = messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    return `${dateStr} ${time}`;
   };
 
   const getMessageStatusIcon = (status: MessageStatus) => {
     switch (status) {
-      case 1: // Delivered
-        return '✓';
-      case 2: // Read
-        return '✓✓';
-      default:
-        return '';
+      case 1: return '✓';
+      case 2: return '✓✓';
+      default: return '';
     }
   };
 
@@ -223,26 +281,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
     return typingUsers.has(partnerId);
   };
 
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
-      }}
-    >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <ChatIcon color="primary" />
-          <Typography variant="h6">Messages</Typography>
-        </Box>
-        <IconButton onClick={onClose} size="small">
-          <Close />
-        </IconButton>
-      </DialogTitle>
-
+  // Common chat content
+  const chatContent = (
+    <>
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)}>
           <Tab label="Messages" />
@@ -250,11 +291,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
         </Tabs>
       </Box>
 
-      <DialogContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 0 }}>
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <TabPanel value={activeTab} index={0}>
-          <Box sx={{ display: 'flex', height: '100%' }}>
+          <Box sx={{ display: 'flex', height: mode === 'dialog' ? '60vh' : '70vh' }}>
             {/* Chat Rooms List */}
-            <Box sx={{ width: 300, borderRight: 1, borderColor: 'divider', overflow: 'auto' }}>
+            <Box sx={{ width: mode === 'dialog' ? 300 : '33%', borderRight: 1, borderColor: 'divider', overflow: 'auto' }}>
               <List sx={{ p: 0 }}>
                 {chatRooms.map((room) => {
                   const partner = getChatPartner(room);
@@ -287,7 +328,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
                         secondary={room.lastMessage}
                         secondaryTypographyProps={{
                           noWrap: true,
-                          sx: { maxWidth: 150 }
+                          sx: { maxWidth: mode === 'dialog' ? 150 : 200 }
                         }}
                       />
                     </ListItemButton>
@@ -414,7 +455,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
                   justifyContent: 'center',
                   color: 'text.secondary'
                 }}>
-                  <Typography>Select a conversation to start messaging</Typography>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <ChatIcon sx={{ fontSize: 48, mb: 2 }} />
+                    <Typography variant="h6">Select a conversation</Typography>
+                    <Typography>Choose a chat to start messaging</Typography>
+                  </Box>
                 </Box>
               )}
             </Box>
@@ -422,7 +467,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
         </TabPanel>
 
         <TabPanel value={activeTab} index={1}>
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: 2, maxWidth: mode === 'dialog' ? '100%' : 600, mx: 'auto' }}>
             <TextField
               fullWidth
               placeholder="Search users to chat with..."
@@ -465,7 +510,49 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ open, onClose, initialUs
             </List>
           </Box>
         </TabPanel>
-      </DialogContent>
-    </Dialog>
+      </Box>
+    </>
+  );
+
+  // Render based on mode
+  if (mode === 'dialog') {
+    return (
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ChatIcon color="primary" />
+            <Typography variant="h6">{title}</Typography>
+          </Box>
+          <IconButton onClick={onClose} size="small">
+            <Close />
+          </IconButton>
+        </DialogTitle>
+
+        <DialogContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 0 }}>
+          {chatContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Page mode
+  return (
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        {title}
+      </Typography>
+      
+      <Paper sx={{ height: '80vh', display: 'flex', flexDirection: 'column' }}>
+        {chatContent}
+      </Paper>
+    </Container>
   );
 }; 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IconButton, Tooltip, Badge } from '@mui/material';
 import { Chat, ChatBubble } from '@mui/icons-material';
-import { ChatWindow } from '../../features/chat/ChatWindow';
+import { ChatDialog } from '../../features/chat';
 import { chatService } from '../../../api/chat.api';
 import { useAuth } from '../../../contexts/AuthContext';
 
@@ -102,7 +102,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({
         </IconButton>
       </Tooltip>
 
-      <ChatWindow
+      <ChatDialog
         open={chatOpen}
         onClose={handleChatClose}
         initialUserId={userId}
