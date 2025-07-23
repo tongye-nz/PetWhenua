@@ -61,7 +61,7 @@ export const formatDateTime = (dateString: string): string => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false // Use 24-hour format for consistency
+    hour12: true // Use 12-hour format with AM/PM for better user experience
   });
 };
 
@@ -74,7 +74,7 @@ export const formatTime = (dateString: string): string => {
     timeZone: NZ_TIMEZONE,
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false
+    hour12: true
   });
 };
 

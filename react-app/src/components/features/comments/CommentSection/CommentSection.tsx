@@ -25,7 +25,7 @@ export interface CommentSectionProps {
 const CommentSection: React.FC<CommentSectionProps> = ({
   postId,
   initialCommentCount = 0,
-  showFormByDefault = false,
+  showFormByDefault = true,
   maxHeight = 600
 }) => {
   const [comments, setComments] = useState<Comment[]>([]);
