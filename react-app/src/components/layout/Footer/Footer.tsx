@@ -6,6 +6,7 @@ import {
   Link,
   Stack
 } from '@mui/material';
+import { GitHub, LinkedIn } from '@mui/icons-material';
 
 const Footer: React.FC = () => {
   return (
@@ -68,7 +69,7 @@ const Footer: React.FC = () => {
                   }
                 }}
               >
-                Privacy
+                Project Info
               </Link>
               <Link
                 href="#"
@@ -82,7 +83,7 @@ const Footer: React.FC = () => {
                   }
                 }}
               >
-                Terms
+                Meet the Developer
               </Link>
               <Link
                 href="#"
@@ -96,7 +97,7 @@ const Footer: React.FC = () => {
                   }
                 }}
               >
-                Contact
+                Contact Admin
               </Link>
             </Stack>
           </Box>
@@ -108,30 +109,36 @@ const Footer: React.FC = () => {
             alignItems="center"
           >
             <Link
-              href="#"
+              href="https://github.com/tongye-nz/PetWhenua"
+              target="_blank"
+              rel="noopener noreferrer"
               sx={{
-                fontSize: '1.5rem',
+                color: 'text.secondary',
                 textDecoration: 'none',
-                transition: 'transform 0.2s ease',
+                transition: 'all 0.2s ease',
                 '&:hover': {
+                  color: 'text.primary',
                   transform: 'scale(1.1)'
                 }
               }}
             >
-              📷
+              <GitHub sx={{ fontSize: '1.5rem' }} />
             </Link>
             <Link
-              href="#"
+              href="https://www.linkedin.com/in/tongyenz/"
+              target="_blank"
+              rel="noopener noreferrer"
               sx={{
-                fontSize: '1.5rem',
+                color: 'text.secondary',
                 textDecoration: 'none',
-                transition: 'transform 0.2s ease',
+                transition: 'all 0.2s ease',
                 '&:hover': {
+                  color: 'text.primary',
                   transform: 'scale(1.1)'
                 }
               }}
             >
-              ✉️
+              <LinkedIn sx={{ fontSize: '1.5rem' }} />
             </Link>
           </Stack>
         </Box>
