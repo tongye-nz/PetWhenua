@@ -124,7 +124,8 @@ const Messages: React.FC = () => {
     try {
       const message = await chatService.sendMessage({
         receiverId,
-        content: newMessage.trim()
+        content: newMessage.trim(),
+        chatRoomId: selectedRoom.chatRoomId
       });
       setMessages(prev => [...prev, message]);
       setNewMessage('');
