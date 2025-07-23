@@ -386,9 +386,10 @@ const Header: React.FC<HeaderProps> = ({ onSignInClick }) => {
                 >
                   {user?.firstName?.[0] || user?.username?.[0] || '?'}
                 </Avatar>
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant="subtitle1" fontWeight={600} sx={{ flex: 1 }}>
                   My Account
                 </Typography>
+                <NotificationCenter />
               </Box>
               <List>
                 {dropdownItems.map((item) => (
