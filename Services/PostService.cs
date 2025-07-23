@@ -39,6 +39,13 @@ namespace PetWhenua.Services
             return await ApplyDynamicExpiryAsync(posts);
         }
 
+        public async Task<(IEnumerable<Post> posts, int totalCount)> GetPostsPagedAsync(PostType? postType = null, int? userId = null, string? region = null, string? district = null, int page = 1, int pageSize = 10)
+        {
+            var (posts, totalCount) = await _postRepository.GetAllPostsPagedAsync(postType, userId, region, district, page, pageSize);
+            var processedPosts = await ApplyDynamicExpiryAsync(posts);
+            return (processedPosts, totalCount);
+        }
+
         public async Task<Post?> GetPostByIdAsync(int id)
         {
             var post = await _postRepository.GetPostByIdAsync(id);

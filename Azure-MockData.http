@@ -1,0 +1,77 @@
+### Azure Mock Data Testing Endpoints
+### Replace "your-app" with your actual Azure Web App name
+
+@azureBaseUrl = https://petwhenua-gpggdjawh0duc2du.australiaeast-01.azurewebsites.net
+@adminToken = YOUR_JWT_TOKEN_HERE
+
+### Frontend URL: https://orange-plant-0ccfa0d00.1.azurestaticapps.net
+
+### 1. Test app is running
+GET {{azureBaseUrl}}/api/posts/health
+
+### 2. Test sample image accessibility
+GET {{azureBaseUrl}}/uploads/samples/pets/cat-01.jpg
+
+### 3. Create site admin account (do this first)
+POST {{azureBaseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "siteadmin",
+  "email": "admin@yourcompany.com",
+  "password": "YourStrongPassword123!",
+  "firstName": "Site",
+  "lastName": "Admin"
+}
+
+### 4. Login as site admin (after updating role to site_admin)
+POST {{azureBaseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "admin@yourcompany.com",
+  "password": "YourStrongPassword123!"
+}
+
+### 5. Check database status
+GET {{azureBaseUrl}}/api/admin/database-status
+Authorization: Bearer {{adminToken}}
+
+### 6. Seed mock data (first time)
+POST {{azureBaseUrl}}/api/admin/seed-mock-data?forceRecreate=false
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+### 7. Get mock data summary
+GET {{azureBaseUrl}}/api/admin/mock-data-summary
+Authorization: Bearer {{adminToken}}
+
+### 8. Test paginated posts
+GET {{azureBaseUrl}}/api/posts?page=1&pageSize=10
+
+### 9. Test with mock user login
+POST {{azureBaseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "member01@petwhenua.co.nz",
+  "password": "TestPass123!"
+}
+
+### 10. Re-seed data (force recreate)
+POST {{azureBaseUrl}}/api/admin/seed-mock-data?forceRecreate=true
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+### 11. Clear all mock data (if needed)
+DELETE {{azureBaseUrl}}/api/admin/clear-mock-data
+Authorization: Bearer {{adminToken}}
+
+### 12. Test different page sizes
+GET {{azureBaseUrl}}/api/posts?page=1&pageSize=20
+
+### 13. Test filtered posts
+GET {{azureBaseUrl}}/api/posts?postType=moment&page=1&pageSize=10
+
+### 14. Test users endpoint
+GET {{azureBaseUrl}}/api/users 

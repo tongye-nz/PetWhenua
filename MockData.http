@@ -1,0 +1,43 @@
+### Test Mock Data Endpoints
+
+### Check database status (no auth required for testing)
+GET http://localhost:5295/api/admin/database-status
+
+### Register site admin to get token for testing
+POST http://localhost:5295/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "testadmin",
+  "email": "testadmin@test.com",
+  "password": "TestPass123!",
+  "firstName": "Test",
+  "lastName": "Admin"
+}
+
+### Login as site admin
+POST http://localhost:5295/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "siteadmin@petwhenua.co.nz",
+  "password": "TestPass123!"
+}
+
+### Seed mock data (requires site admin token)
+POST http://localhost:5295/api/admin/seed-mock-data?forceRecreate=false
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+### Get mock data summary
+GET http://localhost:5295/api/admin/mock-data-summary
+Authorization: Bearer YOUR_TOKEN_HERE
+
+### Force recreate mock data
+POST http://localhost:5295/api/admin/seed-mock-data?forceRecreate=true
+Authorization: Bearer YOUR_TOKEN_HERE
+Content-Type: application/json
+
+### Clear mock data
+DELETE http://localhost:5295/api/admin/clear-mock-data
+Authorization: Bearer YOUR_TOKEN_HERE 

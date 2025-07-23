@@ -62,10 +62,16 @@ public class PostsController : ControllerBase
         [FromQuery] string? postType = null, 
         [FromQuery] int? userId = null, 
         [FromQuery] string? region = null, 
-        [FromQuery] string? district = null)
+        [FromQuery] string? district = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
         try
         {
+            // Validate pagination parameters
+            if (page < 1) page = 1;
+            if (pageSize < 1 || pageSize > 100) pageSize = 10; // Limit max page size
+
             PostType? parsedPostType = null;
             
             // Parse postType if provided
@@ -81,8 +87,23 @@ public class PostsController : ControllerBase
                 }
             }
 
-            var posts = await _postService.GetPostsAsync(parsedPostType, userId, region, district);
-            return Ok(posts);
+            var (posts, totalCount) = await _postService.GetPostsPagedAsync(parsedPostType, userId, region, district, page, pageSize);
+            
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            
+            return Ok(new
+            {
+                posts = posts,
+                pagination = new
+                {
+                    currentPage = page,
+                    pageSize = pageSize,
+                    totalCount = totalCount,
+                    totalPages = totalPages,
+                    hasNextPage = page < totalPages,
+                    hasPreviousPage = page > 1
+                }
+            });
         }
         catch (Exception ex)
         {

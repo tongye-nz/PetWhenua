@@ -176,6 +176,7 @@ builder.Services.AddScoped<IUserFollowService, UserFollowService>();
 builder.Services.AddScoped<IImageService, ImageService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IChatService, ChatService>();
+builder.Services.AddScoped<IMockDataService, MockDataService>();
 
 // Configure Image Upload Settings
 builder.Services.Configure<ImageUploadSettings>(
