@@ -1,0 +1,46 @@
+### Verify Mock Data in Azure
+### To get adminToken: Login with siteadmin@petwhenua.co.nz / TestPass123! and copy the token
+
+@azureBaseUrl = https://petwhenua-gpggdjawh0duc2du.australiaeast-01.azurewebsites.net
+@adminToken = {{$processEnv ADMIN_TOKEN}}
+
+### Check Mock Data Summary
+GET {{azureBaseUrl}}/api/admin/mock-data-summary
+Authorization: Bearer {{adminToken}}
+
+### Get Database Status
+GET {{azureBaseUrl}}/api/admin/database-status
+Authorization: Bearer {{adminToken}}
+
+### Get All Posts (should show variety)
+GET {{azureBaseUrl}}/api/posts?page=1&pageSize=20
+
+### Get All Users (should show multiple users)  
+GET {{azureBaseUrl}}/api/users?page=1&pageSize=20
+
+### Test Login with Mock User
+POST {{azureBaseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "member01@petwhenua.co.nz",
+  "password": "TestPass123!"
+}
+
+### Test Login with Another Mock User
+POST {{azureBaseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "meetupadmin01@petwhenua.co.nz", 
+  "password": "TestPass123!"
+}
+
+### Check Sample Image Access
+GET {{azureBaseUrl}}/uploads/samples/pets/cat-01.jpg
+
+### Get Posts with Pagination Test
+GET {{azureBaseUrl}}/api/posts?page=1&pageSize=5
+
+### Get Users by Location
+GET {{azureBaseUrl}}/api/users?location=Auckland&page=1&pageSize=10 

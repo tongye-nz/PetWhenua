@@ -1,8 +1,9 @@
 ### Azure Mock Data Testing Endpoints
-### Replace "your-app" with your actual Azure Web App name
+### To get adminToken: Login with siteadmin@petwhenua.co.nz / TestPass123! and copy the token
+### Or set ADMIN_TOKEN environment variable
 
 @azureBaseUrl = https://petwhenua-gpggdjawh0duc2du.australiaeast-01.azurewebsites.net
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1laWQiOiIzIiwidW5pcXVlX25hbWUiOiJzaXRlYWRtaW4iLCJlbWFpbCI6ImFkbWluQHBldHdoZW51YS5jby5ueiIsInJvbGUiOiJzaXRlX2FkbWluIiwibmJmIjoxNzUzMjcwNTY3LCJleHAiOjE3NTMzNTY5NjcsImlhdCI6MTc1MzI3MDU2NywiaXNzIjoiUGV0V2hlbnVhQXBwIiwiYXVkIjoiUGV0V2hlbnVhVXNlcnMifQ.I1d0C4ArA7kB7G-G7Ddt_uxEWFR22LqtvJQLbxf2MLk
+@adminToken = {{$processEnv ADMIN_TOKEN}}
 
 ### Frontend URL: https://orange-plant-0ccfa0d00.1.azurestaticapps.net
 
@@ -19,7 +20,7 @@ Content-Type: application/json
 {
   "username": "siteadmin",
   "email": "admin@yourcompany.com",
-  "password": "YourStrongPassword123!",
+  "password": "TestPass123!",
   "firstName": "Site",
   "lastName": "Admin"
 }
@@ -29,8 +30,8 @@ POST {{azureBaseUrl}}/api/auth/login
 Content-Type: application/json
 
 {
-  "usernameOrEmail": "admin@yourcompany.com",
-  "password": "YourStrongPassword123!"
+  "usernameOrEmail": "siteadmin",
+  "password": "TestPass123!"
 }
 
 ### 5. Check database status
