@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chip } from '@mui/material';
 import type { ChipProps } from '@mui/material';
-import { cyan, pink, lightGreen, indigo, orange, blueGrey, purple, amber, red } from '@mui/material/colors';
+import { cyan, pink, lightGreen, indigo, blueGrey, red } from '@mui/material/colors';
 import { 
   PostStatus, 
   PostType,
