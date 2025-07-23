@@ -47,6 +47,13 @@ const CreatePost: React.FC = () => {
   // Set initial form data when post is loaded
   useEffect(() => {
     if (isEditMode && currentPost && currentPost.postId === parseInt(id!)) {
+      // Prevent editing pet wedding posts due to complex approval logic
+      if (currentPost.postType === 1) { // PostType.PetWedding
+        alert('Pet wedding posts cannot be edited. Redirecting to post view.');
+        navigate(`/post/${id}`);
+        return;
+      }
+      
       // Convert existing image URLs to UploadedImage objects
       const existingImages = (currentPost.images || []).map((imageUrl, index) => {
         const fullImageUrl = getFullImageUrl(imageUrl) || imageUrl;

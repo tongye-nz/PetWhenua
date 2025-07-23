@@ -18,6 +18,7 @@ export class SignalRService {
   private onUserOnlineStatus?: (data: { userId: number; isOnline: boolean }) => void;
   private onConnectionStateChanged?: (isConnected: boolean) => void;
   private onMessagesMarkedAsRead?: (data: { chatRoomId: number; messageIds: number[]; readBy: number; readAt: string }) => void;
+  private onPetWeddingDeleted?: (postId: number) => void;
 
   async connect(token: string): Promise<void> {
     if (this.connection && this.connection.state === 'Connected') {
@@ -123,6 +124,11 @@ export class SignalRService {
       console.log('User left chat:', data);
     });
 
+    // Handle pet wedding deletion notifications
+    this.connection.on('PetWeddingPostDeleted', (data: { postId: number }) => {
+      this.onPetWeddingDeleted?.(data.postId);
+    });
+
     // Handle online users responses
     this.connection.on('OnlineUsersResponse', (onlineUserIds: number[]) => {
       onlineUserIds.forEach(userId => {
@@ -197,6 +203,10 @@ export class SignalRService {
 
   onMessageRead(handler: (data: { chatRoomId: number; messageIds: number[]; readBy: number; readAt: string }) => void): void {
     this.onMessagesMarkedAsRead = handler;
+  }
+
+  onPetWeddingPostDeleted(handler: (postId: number) => void): void {
+    this.onPetWeddingDeleted = handler;
   }
 
   // Hub method calls

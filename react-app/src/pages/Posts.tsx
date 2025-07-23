@@ -151,6 +151,12 @@ const Posts: React.FC = () => {
   };
 
   const handleEditPost = (post: Post) => {
+    // Pet wedding posts cannot be edited due to complex approval logic
+    if (post.postType === 1) { // PostType.PetWedding
+      alert('Pet wedding posts cannot be edited. Please delete and create a new one if changes are needed.');
+      return;
+    }
+    
     // Navigate to edit page
     navigate(`/edit-post/${post.postId}`);
   };

@@ -33,6 +33,8 @@ interface SignalRContextType {
   onChatMessageReceived?: (message: ChatMessage) => void;
   setNotificationHandler: (handler: (notification: Notification) => void) => void;
   setChatMessageHandler: (handler: (message: ChatMessage) => void) => void;
+  onPetWeddingPostDeleted?: (postId: number) => void;
+  setPetWeddingDeletionHandler: (handler: (postId: number) => void) => void;
 }
 
 const SignalRContext = createContext<SignalRContextType | undefined>(undefined);
@@ -50,6 +52,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Custom event handlers
   const [notificationHandler, setNotificationHandler] = useState<((notification: Notification) => void) | undefined>();
   const [chatMessageHandler, setChatMessageHandler] = useState<((message: ChatMessage) => void) | undefined>();
+  const [petWeddingDeletionHandler, setPetWeddingDeletionHandler] = useState<((postId: number) => void) | undefined>();
 
   // Initialize SignalR connection when user is authenticated
   useEffect(() => {
@@ -140,6 +143,10 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
         );
       });
 
+      signalRService.onPetWeddingPostDeleted((postId) => {
+        petWeddingDeletionHandler?.(postId);
+      });
+
       // Connect to SignalR hub
       console.log('Attempting to connect to SignalR hub with token...');
       await signalRService.connect(token);
@@ -170,7 +177,7 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setConnectionState('Failed');
       // Don't throw error, let the automatic reconnection handle it
     }
-  }, [notificationHandler, chatMessageHandler]);
+  }, [notificationHandler, chatMessageHandler, petWeddingDeletionHandler]);
 
   const disconnectFromHub = useCallback(async () => {
     try {
@@ -274,6 +281,10 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setChatMessageHandler(() => handler);
   }, []);
 
+  const setPetWeddingDeletionHandlerWrapper = useCallback((handler: (postId: number) => void) => {
+    setPetWeddingDeletionHandler(() => handler);
+  }, []);
+
   const value: SignalRContextType = {
     isConnected,
     connectionState,
@@ -295,6 +306,8 @@ export const SignalRProvider: React.FC<{ children: React.ReactNode }> = ({ child
     onChatMessageReceived: chatMessageHandler,
     setNotificationHandler: setNotificationHandlerWrapper,
     setChatMessageHandler: setChatMessageHandlerWrapper,
+    onPetWeddingPostDeleted: petWeddingDeletionHandler,
+    setPetWeddingDeletionHandler: setPetWeddingDeletionHandlerWrapper,
   };
 
   return (

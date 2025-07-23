@@ -172,10 +172,11 @@ const PostDetail: React.FC = () => {
   // Users can edit their own posts only if status is Active or Pending
   // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
   // Inactive posts can only be deleted, not edited
+  // Pet wedding posts cannot be edited due to complex approval logic
   const canEdit = isOwner && (
     PostStatusUtils.isActive(currentPost.status) || 
     PostStatusUtils.isPending(currentPost.status)
-  );
+  ) && !PostTypeUtils.isPetWedding(currentPost.postType); // No editing for pet wedding posts
   
   // Users can always delete their own posts regardless of status
   const canDelete = isOwner;

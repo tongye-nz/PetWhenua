@@ -163,6 +163,15 @@ namespace PetWhenua.Hubs
             await Task.WhenAll(tasks);
         }
 
+        // Send pet wedding deletion notification to participants
+        public async Task NotifyPetWeddingDeletion(int postId, List<int> participantUserIds)
+        {
+            var tasks = participantUserIds.Select(userId => 
+                Clients.Group($"user_{userId}").SendAsync("PetWeddingPostDeleted", new { PostId = postId }));
+            
+            await Task.WhenAll(tasks);
+        }
+
         // Get online status of users
         public async Task RequestOnlineUsers(List<int> userIds)
         {

@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using PetWhenua.Services;
 using PetWhenua.Models.Dtos;
 using PetWhenua.Repositories.Abstract;
+using PetWhenua.Hubs;
 using System.Security.Claims;
 
 [ApiController]
@@ -12,12 +15,16 @@ public class PostsController : ControllerBase
     private readonly IPostService _postService;
     private readonly IImageService _imageService;
     private readonly IPostAuthorizationService _authorizationService;
+    private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly AppDbContext _context;
 
-    public PostsController(IPostService postService, IImageService imageService, IPostAuthorizationService authorizationService)
+    public PostsController(IPostService postService, IImageService imageService, IPostAuthorizationService authorizationService, IHubContext<NotificationHub> hubContext, AppDbContext context)
     {
         _postService = postService;
         _imageService = imageService;
         _authorizationService = authorizationService;
+        _hubContext = hubContext;
+        _context = context;
     }
 
     [HttpGet("health")]
@@ -218,6 +225,38 @@ public class PostsController : ControllerBase
             if (!canDelete)
             {
                 return Forbid("You can only delete your own posts.");
+            }
+
+            // Handle pet wedding deletion notifications before deleting
+            if (post.PostType == PostType.PetWedding)
+            {
+                try
+                {
+                    // Get participants before deleting the post
+                    var participants = await _context.PetWeddingParticipants
+                        .Where(pwp => pwp.PostId == id)
+                        .ToListAsync();
+
+                    // Get unique owner IDs (excluding the post creator)
+                    var participantOwnerIds = participants
+                        .Where(p => p.OwnerId != userId) // Exclude post creator
+                        .Select(p => p.OwnerId)
+                        .Distinct()
+                        .ToList();
+
+                    // Notify participants about the deletion via SignalR
+                    if (participantOwnerIds.Any())
+                    {
+                        await _hubContext.Clients.Groups(
+                            participantOwnerIds.Select(ownerId => $"user_{ownerId}")
+                        ).SendAsync("PetWeddingPostDeleted", new { postId = id });
+                    }
+                }
+                catch (Exception notificationEx)
+                {
+                    // Log notification error but don't fail the deletion
+                    Console.WriteLine($"Failed to send pet wedding deletion notifications for post {id}: {notificationEx.Message}");
+                }
             }
 
             var deleted = await _postService.DeletePostAsync(id);

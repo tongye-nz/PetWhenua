@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useReducer, useCallback } from 'react';
+import React, { createContext, useContext, useReducer, useCallback, useEffect } from 'react';
 import { postService } from '../api/post.api';
+import { useSignalR } from './SignalRContext';
 import type { Post, PostFilters, CreatePostRequest, PostStatus } from '../models/post.types';
 
 interface PostState {
@@ -88,6 +89,22 @@ const postReducer = (state: PostState, action: PostAction): PostState => {
 
 export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(postReducer, initialState);
+  const { setPetWeddingDeletionHandler } = useSignalR();
+
+  // Handle pet wedding deletion notifications
+  useEffect(() => {
+    const handlePetWeddingDeletion = (postId: number) => {
+      // Remove the deleted post from the posts list
+      dispatch({ type: 'DELETE_POST_SUCCESS', payload: postId });
+    };
+
+    setPetWeddingDeletionHandler(handlePetWeddingDeletion);
+
+    // Cleanup
+    return () => {
+      setPetWeddingDeletionHandler(() => {});
+    };
+  }, [setPetWeddingDeletionHandler]);
 
   const fetchPosts = useCallback(async (filters: PostFilters = {}) => {
     try {

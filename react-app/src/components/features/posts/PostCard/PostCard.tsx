@@ -41,10 +41,11 @@ const PostCard: React.FC<PostCardProps> = React.memo(({
   // Users can edit their own posts only if status is Active or Pending
   // Cannot edit if status is Inactive, Sold, Expired, or Cancelled
   // Inactive posts can only be deleted, not edited
+  // Pet wedding posts cannot be edited due to complex approval logic
   const canEdit = isOwner && (
     PostStatusUtils.isActive(post.status) || 
     PostStatusUtils.isPending(post.status)
-  );
+  ) && !PostTypeUtils.isPetWedding(post.postType); // No editing for pet wedding posts
   // Only post authors can delete their own posts
   const canDelete = isOwner;
   const hasActions = showActions && (canEdit || canDelete);
