@@ -1,8 +1,9 @@
 import React from 'react';
 import { Box, Avatar, Card, CardContent, Chip } from '@mui/material';
 import { Person, Pets, Article, Group } from '@mui/icons-material';
-import { Button, Text } from '../../../ui';
+import { Button, Text, StatusChip } from '../../../ui';
 import { FollowButton } from '../../../ui';
+import { useAuth } from '../../../../contexts/AuthContext';
 import type { UserProfileData } from '../../../../types/userProfile.types';
 import { getProfilePictureUrl } from '../../../../utils/imageUrlUtils';
 
@@ -25,6 +26,7 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({
   followerCount = 0,
   postsCount = 0
 }) => {
+  const { user: currentUser } = useAuth();
   const fullName = profileData.firstName && profileData.lastName 
     ? `${profileData.firstName} ${profileData.lastName}`
     : null;
@@ -78,6 +80,16 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({
             }}>
               @{profileData.username}
             </Text>
+          )}
+
+          {/* Role Chip */}
+          {isOwnProfile && currentUser?.role && (
+            <Box sx={{ mb: 1.5 }}>
+              <StatusChip
+                userRole={currentUser.role}
+                statusVariant="role"
+              />
+            </Box>
           )}
           
           {profileData.region && profileData.district && (

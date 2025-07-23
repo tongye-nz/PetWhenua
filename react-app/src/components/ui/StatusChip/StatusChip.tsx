@@ -1,7 +1,7 @@
 import React from 'react';
 import { Chip } from '@mui/material';
 import type { ChipProps } from '@mui/material';
-import { cyan, pink, lightGreen, indigo, orange, blueGrey } from '@mui/material/colors';
+import { cyan, pink, lightGreen, indigo, orange, blueGrey, purple, amber, red } from '@mui/material/colors';
 import { 
   PostStatus, 
   PostType,
@@ -16,12 +16,14 @@ import type {
 export interface StatusChipProps extends Omit<ChipProps, 'color'> {
   status?: PostStatus | PostStatusString;
   postType?: PostType | PostTypeString;
-  statusVariant?: 'status' | 'type';
+  userRole?: string;
+  statusVariant?: 'status' | 'type' | 'role';
 }
 
 const StatusChip: React.FC<StatusChipProps> = ({
   status,
   postType,
+  userRole,
   statusVariant = 'status',
   ...props
 }) => {
@@ -57,6 +59,37 @@ const StatusChip: React.FC<StatusChipProps> = ({
     return {};
   };
 
+  const getUserRoleStyles = (role: string) => {
+    const roleUpper = role.toUpperCase();
+    
+    if (roleUpper === 'SITE_ADMIN' || roleUpper === 'ADMIN') {
+      return { backgroundColor: red[600], color: '#ffffff' };
+    }
+    if (roleUpper === 'MEETUP_ADMIN') {
+      return { backgroundColor: purple[600], color: '#ffffff' };
+    }
+    if (roleUpper === 'VET') {
+      return { backgroundColor: amber[600], color: '#ffffff' };
+    }
+    if (roleUpper === 'MEMBER') {
+      return { backgroundColor: blueGrey[400], color: '#ffffff' };
+    }
+    // Default for any other role
+    return { backgroundColor: blueGrey[300], color: '#000000' };
+  };
+
+  const formatUserRole = (role: string) => {
+    const roleUpper = role.toUpperCase();
+    
+    if (roleUpper === 'SITE_ADMIN') return 'Site Admin';
+    if (roleUpper === 'MEETUP_ADMIN') return 'Meetup Admin';
+    if (roleUpper === 'VET') return 'Vet';
+    if (roleUpper === 'MEMBER') return 'Member';
+    
+    // Fallback: capitalize first letter
+    return role.charAt(0).toUpperCase() + role.slice(1).toLowerCase();
+  };
+
   if (statusVariant === 'type' && postType !== undefined) {
     // Use custom colors for post types
     const customStyles = getCustomPostTypeStyles(postType);
@@ -74,6 +107,27 @@ const StatusChip: React.FC<StatusChipProps> = ({
       <Chip
         color={color as any}
         size="small"
+        {...props}
+      />
+    );
+  } else if (statusVariant === 'role' && userRole !== undefined) {
+    // Use custom colors for user roles
+    const customStyles = getUserRoleStyles(userRole);
+    const formattedRole = formatUserRole(userRole);
+    return (
+      <Chip
+        label={formattedRole}
+        size="small"
+        sx={{
+          ...customStyles,
+          fontWeight: 600,
+          fontSize: '0.7rem',
+          height: '20px',
+          '& .MuiChip-label': {
+            paddingX: 1,
+            paddingY: 0
+          }
+        }}
         {...props}
       />
     );

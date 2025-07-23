@@ -12,7 +12,7 @@ import {
   CardContent
 } from '@mui/material';
 import { ArrowBack, Person, LocationOn } from '@mui/icons-material';
-import { LoadingSpinner, FollowButton } from '../components/ui';
+import { LoadingSpinner, FollowButton, StatusChip } from '../components/ui';
 import { PetConnectionButton } from '../components/ui';
 import { PostCard } from '../components/features/posts';
 import { useAuth } from '../contexts/AuthContext';
@@ -225,6 +225,16 @@ const OtherUserProfile: React.FC = () => {
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 @{profileUser.username}
               </Typography>
+            )}
+
+            {/* Role Chip */}
+            {profileUser.role && (
+              <Box sx={{ mb: 2 }}>
+                <StatusChip
+                  userRole={profileUser.role}
+                  statusVariant="role"
+                />
+              </Box>
             )}
 
             {profileUser.location && (
