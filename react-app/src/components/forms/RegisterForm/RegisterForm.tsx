@@ -37,14 +37,21 @@ const PasswordStrengthIndicator: React.FC<{ password: string }> = ({ password })
       hasUpperCase: /[A-Z]/.test(password),
       hasLowerCase: /[a-z]/.test(password),
       hasNumbers: /\d/.test(password),
-      hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+      hasAllowedSpecialChar: /[!@#$%*\-_+=]/.test(password),
+      hasOnlyAllowedChars: /^[a-zA-Z0-9!@#$%*\-_+=]*$/.test(password),
     };
 
-    if (checks.length) score += 20;
-    if (checks.hasUpperCase) score += 20;
-    if (checks.hasLowerCase) score += 20;
-    if (checks.hasNumbers) score += 20;
-    if (checks.hasSpecialChar) score += 20;
+    // Required criteria (80 points total)
+    if (checks.length) score += 25;
+    if (checks.hasUpperCase) score += 25;
+    if (checks.hasLowerCase) score += 25;
+    if (checks.hasNumbers) score += 25;
+    
+    // Bonus for allowed special chars (20 points)
+    if (checks.hasAllowedSpecialChar && checks.hasOnlyAllowedChars) score += 20;
+    
+    // Penalty for invalid characters
+    if (!checks.hasOnlyAllowedChars) score = Math.max(0, score - 40);
 
     return { score, checks };
   };
@@ -60,6 +67,13 @@ const PasswordStrengthIndicator: React.FC<{ password: string }> = ({ password })
   };
 
   const { label, color } = getStrengthLabel();
+  
+  // Normalize progress bar value so "Strong" always shows 100%
+  const getProgressValue = () => {
+    if (label === 'Strong') return 100;
+    if (label === 'Fair') return Math.min(score * 1.25, 99); // Scale 40-79 to roughly 50-99
+    return Math.min(score * 2, 39); // Scale 0-39 to 0-39
+  };
 
   return (
     <Box sx={{ mt: 1 }}>
@@ -73,14 +87,24 @@ const PasswordStrengthIndicator: React.FC<{ password: string }> = ({ password })
       </Box>
       <LinearProgress 
         variant="determinate" 
-        value={score} 
+        value={getProgressValue()} 
         color={color}
         sx={{ height: 4, borderRadius: 2 }}
       />
       <Box sx={{ mt: 0.5 }}>
         <Typography variant="caption" color="text.secondary">
-          Requirements: {checks.length ? '✓' : '✗'} 8+ chars, {checks.hasUpperCase ? '✓' : '✗'} uppercase, {checks.hasLowerCase ? '✓' : '✗'} lowercase, {checks.hasNumbers ? '✓' : '✗'} number
+          Required: {checks.length ? '✓' : '✗'} 8+ chars, {checks.hasUpperCase ? '✓' : '✗'} uppercase, {checks.hasLowerCase ? '✓' : '✗'} lowercase, {checks.hasNumbers ? '✓' : '✗'} number
         </Typography>
+        {password && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+            Optional: {checks.hasAllowedSpecialChar ? '✓' : '○'} special chars (!@#$%*-_+=)
+            {!checks.hasOnlyAllowedChars && (
+              <Typography component="span" color="error.main" sx={{ ml: 1, fontWeight: 'bold' }}>
+                ⚠ Invalid characters detected
+              </Typography>
+            )}
+          </Typography>
+        )}
       </Box>
     </Box>
   );
@@ -131,17 +155,20 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
     // Enhanced password validation
     if (!formData.password) {
       newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (formData.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     } else if (formData.password.length > 100) {
       newErrors.password = 'Password must be less than 100 characters';
     } else {
       const hasUpperCase = /[A-Z]/.test(formData.password);
       const hasLowerCase = /[a-z]/.test(formData.password);
       const hasNumbers = /\d/.test(formData.password);
+      const allowedSpecialChars = /^[a-zA-Z0-9!@#$%*\-_+=]*$/;
       
       if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
         newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+      } else if (!allowedSpecialChars.test(formData.password)) {
+        newErrors.password = 'Password can only contain letters, numbers, and these special characters: !@#$%*-_+=';
       }
     }
 
