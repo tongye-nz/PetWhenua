@@ -129,22 +129,30 @@ builder.Services.AddCors(options =>
 // Add Entity Framework Core services
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Fallback to Azure SQL if no connection string found
-if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("localdb"))
+// Ensure we have a connection string
+if (string.IsNullOrEmpty(connectionString))
 {
-    connectionString = "Server=tcp:tongymsa.database.windows.net,1433;Initial Catalog=PetWhenuaDb;Persist Security Info=False;User ID=cloudadmin;Password=punYgiT2809;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;";
+    throw new InvalidOperationException("No database connection string found. Please configure 'DefaultConnection' in appsettings.json");
 }
 
+// Configure Entity Framework with environment-specific settings
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(connectionString, 
-        sqlOptions =>
+{
+    var sqlOptions = options.UseSqlServer(connectionString);
+    
+    // Only add retry logic for Azure SQL (production), not for LocalDB (development)
+    if (!connectionString.Contains("localdb", StringComparison.OrdinalIgnoreCase))
+    {
+        sqlOptions.UseSqlServer(connectionString, sqlServerOptions =>
         {
-            sqlOptions.EnableRetryOnFailure(
+            sqlServerOptions.EnableRetryOnFailure(
                 maxRetryCount: 5,
                 maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
-            sqlOptions.CommandTimeout(120);
-        }));
+            sqlServerOptions.CommandTimeout(120);
+        });
+    }
+});
 
 // Register repositories
 builder.Services.AddScoped<IUserRepository, UserRepository>();
