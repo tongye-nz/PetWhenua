@@ -27,12 +27,6 @@
     <Folder Include="react-app\src\utils\" />
   </ItemGroup>
 
-  <!-- Include sample images in deployment -->
-  <ItemGroup>
-    <Content Include="wwwroot\uploads\samples\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </Content>
-  </ItemGroup>
+
 
 </Project>
