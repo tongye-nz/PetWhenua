@@ -6,6 +6,9 @@ export * from './petConstants';
 // User utilities exports
 export * from './userRoles';
 
+// Category utilities exports
+export * from './categoryUtils';
+
 // Image processing utilities
 export * from './imageUtils';
 export * from './profileImageUtils';

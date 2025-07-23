@@ -16,6 +16,8 @@ import type { UploadedImage } from '../../ImageUpload';
 import { imageApi } from '../../../api/imageApi';
 import type { CreatePostRequest, UpdatePostRequest, Post, PostStatus, PostTypeString, PostStatusString } from '../../../models/post.types';
 import { PostType, PostTypeUtils } from '../../../models/post.types';
+import { BUY_SELL_CATEGORIES } from '../../../data';
+import { shouldUsePredefinedCategories } from '../../../utils';
 import type { CreatePetWeddingRequest, SelectablePet } from '../../../models/petWedding.types';
 import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
@@ -46,6 +48,7 @@ export interface PostFormErrors {
   eventDate?: string;
   location?: string;
   address?: string;
+  category?: string;
   selectedPetIds?: string;
   general?: string;
 }
@@ -210,6 +213,10 @@ const PostForm: React.FC<PostFormProps> = ({
       // Location is required for Buy/Sell
       if (!formData.location?.trim()) {
         newErrors.location = 'Location is required for Buy/Sell posts';
+      }
+      // Category is required for Buy/Sell posts
+      if (!formData.category?.trim()) {
+        newErrors.category = 'Category is required for Buy/Sell posts';
       }
     }
 
@@ -737,15 +744,42 @@ const PostForm: React.FC<PostFormProps> = ({
           />
         )}
 
-        {/* Category Field - only for Moment and Buy/Sell */}
+        {/* Category Field - only for Buy/Sell with predefined options */}
         {showCategory && (
-          <Input
-            label="Category"
-            value={formData.category || ''}
-            onChange={handleInputChange('category')}
-            disabled={loading}
-            placeholder="Add category tags (optional)"
-          />
+          shouldUsePredefinedCategories(formData.postType) ? (
+            <FormControl fullWidth required error={!!errors.category}>
+              <InputLabel>Category *</InputLabel>
+              <Select
+                value={formData.category || ''}
+                onChange={handleSelectChange('category')}
+                label="Category *"
+                disabled={loading}
+                error={!!errors.category}
+              >
+                <MenuItem value="">
+                  <em>Select a category</em>
+                </MenuItem>
+                {BUY_SELL_CATEGORIES.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category}
+                  </MenuItem>
+                ))}
+              </Select>
+              {errors.category && (
+                <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>
+                  {errors.category}
+                </Typography>
+              )}
+            </FormControl>
+          ) : (
+            <Input
+              label="Category"
+              value={formData.category || ''}
+              onChange={handleInputChange('category')}
+              disabled={loading}
+              placeholder="Add category tags (optional)"
+            />
+          )
         )}
 
         {/* Action Buttons */}
