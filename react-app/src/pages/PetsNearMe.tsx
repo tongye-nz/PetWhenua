@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Box, Paper, Typography, Alert } from '@mui/material';
-import { Pets as PetsIcon, LocationOn } from '@mui/icons-material';
+import { Container, Box, Paper, Typography, Alert, Button } from '@mui/material';
+import { Pets as PetsIcon, LocationOn, Settings } from '@mui/icons-material';
 import { Text, LoadingSpinner } from '../components/ui';
 import { PetCard } from '../components/features/pets';
 import { petService } from '../api/pet.api';
@@ -21,11 +21,25 @@ const PetsNearMe: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Check if user has complete location (region and district)
+  const hasCompleteLocation = (userLocation: string | null | undefined): boolean => {
+    if (!userLocation) return false;
+    const locationParts = userLocation.split(',').map(part => part.trim()).filter(part => part.length > 0);
+    return locationParts.length >= 2; // Need at least region and district
+  };
+
   // Load pets and filter by owner's location
   const loadPetsNearMe = async () => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Check if current user has complete location
+      if (!hasCompleteLocation(currentUser?.location)) {
+        setPets([]);
+        setLoading(false);
+        return;
+      }
       
       // Get all pets and all users to match locations
       const [allPets, allUsers] = await Promise.all([
@@ -41,7 +55,7 @@ const PetsNearMe: React.FC = () => {
         }
       });
       
-      // Filter pets by owner's location if current user has location
+      // Filter pets by owner's location
       let filteredPets = allPets
         .filter(pet => pet.user && pet.user.userId !== currentUser?.userId)
         .map(pet => ({
@@ -49,23 +63,21 @@ const PetsNearMe: React.FC = () => {
           ownerLocation: userLocationMap.get(pet.userId)
         }));
       
-      if (currentUser?.location) {
-        // Extract region and district from current user's location
-        const locationParts = currentUser.location.split(',').map((part: string) => part.trim());
-        const currentRegion = locationParts[0]?.toLowerCase();
-        const currentDistrict = locationParts[1]?.toLowerCase();
+      // Extract region and district from current user's location
+      const locationParts = currentUser!.location!.split(',').map((part: string) => part.trim());
+      const currentRegion = locationParts[0]?.toLowerCase();
+      const currentDistrict = locationParts[1]?.toLowerCase();
+      
+      filteredPets = filteredPets.filter(pet => {
+        if (!hasCompleteLocation(pet.ownerLocation)) return false;
         
-        filteredPets = filteredPets.filter(pet => {
-          if (!pet.ownerLocation) return false;
-          
-          const petOwnerLocationParts = pet.ownerLocation.split(',').map((part: string) => part.trim());
-          const petOwnerRegion = petOwnerLocationParts[0]?.toLowerCase();
-          const petOwnerDistrict = petOwnerLocationParts[1]?.toLowerCase();
-          
-          // Match both region and district for more precise location matching
-          return petOwnerRegion === currentRegion && petOwnerDistrict === currentDistrict;
-        });
-      }
+        const petOwnerLocationParts = pet.ownerLocation!.split(',').map((part: string) => part.trim());
+        const petOwnerRegion = petOwnerLocationParts[0]?.toLowerCase();
+        const petOwnerDistrict = petOwnerLocationParts[1]?.toLowerCase();
+        
+        // Match both region and district for precise location matching
+        return petOwnerRegion === currentRegion && petOwnerDistrict === currentDistrict;
+      });
       
       setPets(filteredPets);
     } catch (err) {
@@ -133,33 +145,45 @@ const PetsNearMe: React.FC = () => {
         </Box>
       )}
 
-      {/* No location warning */}
-      {!loading && !currentUser.location && (
-        <Paper sx={{ p: 3, mb: 4, bgcolor: 'warning.50' }}>
-          <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
-            Add Your Location
+      {/* Location Required Card */}
+      {!loading && !hasCompleteLocation(currentUser?.location) && (
+        <Paper sx={{ 
+          p: 4, 
+          mb: 4, 
+          bgcolor: 'primary.50',
+          border: '2px solid',
+          borderColor: 'primary.200',
+          textAlign: 'center'
+        }}>
+          <LocationOn sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h5" color="primary.main" sx={{ mb: 2, fontWeight: 600 }}>
+            Set Your Location to Find Pets Near You
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            To find pets near you, please add your location in your profile settings.
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}>
+            To discover adorable pets in your area, please add your region and district in your profile settings. 
+            This helps us show you pets from your local community.
           </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<Settings />}
+            onClick={() => navigate('/profile?edit=true')}
+            sx={{ mt: 1 }}
+          >
+            Update Profile
+          </Button>
         </Paper>
       )}
 
       {/* Empty State */}
-      {!loading && pets.length === 0 && !error && (
+      {!loading && pets.length === 0 && !error && hasCompleteLocation(currentUser?.location) && (
         <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
           <PetsIcon sx={{ fontSize: 80, color: 'grey.300', mb: 2 }} />
           <Text variant="h5" color="text.secondary" sx={{ mb: 2 }}>
-            {currentUser.location 
-              ? 'No pets found in your area' 
-              : 'No pets found'
-            }
+            No pets found in your area
           </Text>
           <Text variant="body1" color="text.secondary">
-            {currentUser.location 
-              ? 'Check back later for new pet profiles in your area.'
-              : 'Set your location to find pets near you.'
-            }
+            Check back later for new pet profiles in your area, or try exploring pets from nearby regions.
           </Text>
         </Box>
       )}

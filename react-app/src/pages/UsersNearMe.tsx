@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Box, Paper, Typography, Alert } from '@mui/material';
-import { People as PeopleIcon, LocationOn } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { Container, Box, Paper, Typography, Alert, Button } from '@mui/material';
+import { People as PeopleIcon, LocationOn, Settings } from '@mui/icons-material';
 import { Text, LoadingSpinner } from '../components/ui';
 import { UserCard } from '../components/features/users';
 import { userAPI } from '../api/user.api';
@@ -8,10 +9,18 @@ import { useAuth } from '../contexts/AuthContext';
 import type { User } from '../models/auth.types';
 
 const UsersNearMe: React.FC = () => {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Check if user has complete location (region and district)
+  const hasCompleteLocation = (userLocation: string | null | undefined): boolean => {
+    if (!userLocation) return false;
+    const locationParts = userLocation.split(',').map(part => part.trim()).filter(part => part.length > 0);
+    return locationParts.length >= 2; // Need at least region and district
+  };
 
   // Load users and filter by location
   const loadUsersNearMe = async () => {
@@ -19,18 +28,33 @@ const UsersNearMe: React.FC = () => {
       setLoading(true);
       setError(null);
       
+      // Check if current user has complete location
+      if (!hasCompleteLocation(currentUser?.location)) {
+        setUsers([]);
+        setLoading(false);
+        return;
+      }
+      
       const allUsers = await userAPI.getAllUsers();
       
-      // Filter users by location if current user has location
+      // Filter users by location
       let filteredUsers = allUsers.filter(user => user.userId !== currentUser?.userId);
       
-      if (currentUser?.location) {
-        // Simple location matching - you can make this more sophisticated
-        const currentLocation = currentUser.location.toLowerCase();
-        filteredUsers = filteredUsers.filter(user => 
-          user.location && user.location.toLowerCase().includes(currentLocation.split(',')[0])
-        );
-      }
+      // Extract region and district from current user's location
+      const locationParts = currentUser!.location!.split(',').map(part => part.trim());
+      const currentRegion = locationParts[0]?.toLowerCase();
+      const currentDistrict = locationParts[1]?.toLowerCase();
+      
+      filteredUsers = filteredUsers.filter(user => {
+        if (!hasCompleteLocation(user.location)) return false;
+        
+        const userLocationParts = user.location!.split(',').map(part => part.trim());
+        const userRegion = userLocationParts[0]?.toLowerCase();
+        const userDistrict = userLocationParts[1]?.toLowerCase();
+        
+        // Match both region and district for precise location matching
+        return userRegion === currentRegion && userDistrict === currentDistrict;
+      });
       
       setUsers(filteredUsers);
     } catch (err) {
@@ -92,33 +116,45 @@ const UsersNearMe: React.FC = () => {
         </Box>
       )}
 
-      {/* No location warning */}
-      {!loading && !currentUser.location && (
-        <Paper sx={{ p: 3, mb: 4, bgcolor: 'warning.50' }}>
-          <Typography variant="h6" color="warning.main" sx={{ mb: 1 }}>
-            Add Your Location
+      {/* Location Required Card */}
+      {!loading && !hasCompleteLocation(currentUser?.location) && (
+        <Paper sx={{ 
+          p: 4, 
+          mb: 4, 
+          bgcolor: 'primary.50',
+          border: '2px solid',
+          borderColor: 'primary.200',
+          textAlign: 'center'
+        }}>
+          <LocationOn sx={{ fontSize: 64, color: 'primary.main', mb: 2 }} />
+          <Typography variant="h5" color="primary.main" sx={{ mb: 2, fontWeight: 600 }}>
+            Set Your Location to Find Pet Owners Near You
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            To find pet owners near you, please add your location in your profile settings.
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3, maxWidth: 600, mx: 'auto' }}>
+            To discover pet owners in your area, please add your region and district in your profile settings. 
+            This helps us connect you with the right community of pet lovers nearby.
           </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<Settings />}
+            onClick={() => navigate('/profile?edit=true')}
+            sx={{ mt: 1 }}
+          >
+            Update Profile
+          </Button>
         </Paper>
       )}
 
       {/* Empty State */}
-      {!loading && users.length === 0 && !error && (
+      {!loading && users.length === 0 && !error && hasCompleteLocation(currentUser?.location) && (
         <Box sx={{ textAlign: 'center', py: 8, px: 2 }}>
           <PeopleIcon sx={{ fontSize: 80, color: 'grey.300', mb: 2 }} />
           <Text variant="h5" color="text.secondary" sx={{ mb: 2 }}>
-            {currentUser.location 
-              ? 'No pet owners found in your area' 
-              : 'No pet owners found'
-            }
+            No pet owners found in your area
           </Text>
           <Text variant="body1" color="text.secondary">
-            {currentUser.location 
-              ? 'Try expanding your search or check back later for new members in your area.'
-              : 'Set your location to find pet owners near you.'
-            }
+            Check back later for new members in your area, or try connecting with pet owners from nearby regions.
           </Text>
         </Box>
       )}
