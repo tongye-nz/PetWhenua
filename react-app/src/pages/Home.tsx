@@ -1,14 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Card, 
-  CardContent, 
+import {
+  Box,
+  Container,
+  Typography,
+  Card,
+  CardContent,
   Button,
   useTheme,
-  useMediaQuery 
+  useMediaQuery
 } from '@mui/material';
 
 const Home: React.FC = () => {
@@ -43,7 +43,7 @@ const Home: React.FC = () => {
       gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a6f)'
     },
     {
-      icon: '📍', 
+      icon: '📍',
       title: 'Find a pet owner near you',
       description: 'Find pet owners near you and build relationships for your pets',
       gradient: 'linear-gradient(135deg, #4ecdc4, #44a08d)'
@@ -56,7 +56,7 @@ const Home: React.FC = () => {
     },
     {
       icon: '📅',
-      title: 'Join Meetups & Events', 
+      title: 'Join Meetups & Events',
       description: 'Attend local playdates and build lasting friendships',
       gradient: 'linear-gradient(135deg, #ffa726, #fb8c00)'
     }
@@ -123,90 +123,94 @@ const Home: React.FC = () => {
           </Typography>
           <Typography
             variant="body1"
+            component="div"
+            sx={{ whiteSpace: 'pre-line', mb: 2 }}
+          >
+            🐾 Welcome to PetWhenua – New Zealand's Pet Networking Community!
+
+            PetWhenua is where pet lovers connect, share, and grow together. Whether you have a playful pup, a curious cat, or any other beloved companion, this platform helps you build real connections with fellow pet owners across Aotearoa. Let’s create a space where our pets can thrive — together.
+
+            🎯 Why join PetWhenua?
+
+            - 🤝 Meet pet owners near you and build genuine friendships
+            - 🐶 Discover pets in your area and share your journey as a pet parent
+            - 📅 Join local meetups and events to socialise and have fun
+            - 📸 Create your pet’s profile and celebrate their unique personality
+
+            Start your journey with PetWhenua — where every paw has a story!
+          </Typography>
+
+          <Box
             sx={{
-              textAlign: 'center',
-              color: 'text.secondary',
-              fontSize: '1.1rem',
-              mb: 6,
-              lineHeight: 1.6,
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
+                lg: 'repeat(4, 1fr)'
+              },
+              gap: 4,
+              maxWidth: '1000px',
+              mx: 'auto'
             }}
           >
-            content1
-            <br />
-            content2
-          </Typography>
-          
-                     <Box 
-             sx={{
-               display: 'grid',
-               gridTemplateColumns: {
-                 xs: '1fr',
-                 sm: 'repeat(2, 1fr)',
-                 lg: 'repeat(4, 1fr)'
-               },
-               gap: 4,
-               maxWidth: '1000px',
-               mx: 'auto'
-             }}
-           >
-             {steps.map((step, index) => (
-               <Card 
-                 key={index}
-                 sx={{
-                   height: '100%',
-                   textAlign: 'center',
-                   cursor: 'pointer',
-                   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-                   '&:hover': {
-                     transform: 'translateY(-5px)',
-                     boxShadow: theme.shadows[8],
-                   },
-                   bgcolor: 'background.paper',
-                 }}
-                 onClick={() => handleCardClick(index)}
-               >
-                 <CardContent sx={{ p: 3 }}>
-                   <Box sx={{ mb: 3 }}>
-                     <Box
-                       sx={{
-                         width: 80,
-                         height: 80,
-                         borderRadius: '50%',
-                         background: step.gradient,
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                         mx: 'auto',
-                         fontSize: '2rem',
-                         color: 'white',
-                       }}
-                     >
-                       {step.icon}
-                     </Box>
-                   </Box>
-                   <Typography
-                     variant="h6"
-                     sx={{
-                       fontWeight: 'bold',
-                       color: 'text.primary',
-                       mb: 2
-                     }}
-                   >
-                     {step.title}
-                   </Typography>
-                   <Typography
-                     variant="body2"
-                     sx={{
-                       color: 'text.secondary',
-                       lineHeight: 1.6,
-                     }}
-                   >
-                     {step.description}
-                   </Typography>
-                 </CardContent>
-               </Card>
-             ))}
-           </Box>
+            {steps.map((step, index) => (
+              <Card
+                key={index}
+                sx={{
+                  height: '100%',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                  '&:hover': {
+                    transform: 'translateY(-5px)',
+                    boxShadow: theme.shadows[8],
+                  },
+                  bgcolor: 'background.paper',
+                }}
+                onClick={() => handleCardClick(index)}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Box sx={{ mb: 3 }}>
+                    <Box
+                      sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: '50%',
+                        background: step.gradient,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        mx: 'auto',
+                        fontSize: '2rem',
+                        color: 'white',
+                      }}
+                    >
+                      {step.icon}
+                    </Box>
+                  </Box>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 'bold',
+                      color: 'text.primary',
+                      mb: 2
+                    }}
+                  >
+                    {step.title}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {step.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
         </Container>
       </Box>
 
@@ -229,7 +233,7 @@ const Home: React.FC = () => {
             }}
           >
             <CardContent sx={{ p: 4 }}>
-              <Box 
+              <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
@@ -288,7 +292,7 @@ const Home: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
-              <Box 
+              <Box
                 sx={{
                   display: 'flex',
                   justifyContent: 'center',
