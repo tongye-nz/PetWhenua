@@ -6,10 +6,8 @@ import {
   Avatar,
   Typography,
   IconButton,
-  Menu,
-  MenuItem,
 } from '@mui/material';
-import { MoreVert, Delete, Person } from '@mui/icons-material';
+import { Delete, Person } from '@mui/icons-material';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { commentService } from '../../../../api/comment.api';
 import type { Comment } from '../../../../models/comment.types';
@@ -26,19 +24,10 @@ const CommentCard: React.FC<CommentCardProps> = ({
   onCommentDeleted
 }) => {
   const { user } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [loading, setLoading] = useState(false);
 
   const isOwner = user?.userId === comment.userId;
   const canDelete = isOwner;
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
 
   const handleDelete = async () => {
     if (!user) return;
@@ -58,8 +47,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
     } finally {
       setLoading(false);
     }
-    
-    handleMenuClose();
   };
 
   const formatDate = (dateString: string) => {
@@ -102,26 +89,24 @@ const CommentCard: React.FC<CommentCardProps> = ({
                 {formatDate(comment.createdAt)}
               </Typography>
               
-              {/* Actions Menu */}
+              {/* Delete Button */}
               {canDelete && (
                 <Box ml="auto">
                   <IconButton
                     size="small"
-                    onClick={handleMenuOpen}
+                    onClick={handleDelete}
                     disabled={loading}
+                    sx={{ 
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: 'error.main',
+                        backgroundColor: 'error.light',
+                        opacity: 0.1
+                      }
+                    }}
                   >
-                    <MoreVert fontSize="small" />
+                    <Delete fontSize="small" />
                   </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                  >
-                    <MenuItem onClick={handleDelete}>
-                      <Delete fontSize="small" sx={{ mr: 1 }} />
-                      Delete
-                    </MenuItem>
-                  </Menu>
                 </Box>
               )}
             </Box>
