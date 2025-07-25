@@ -70,15 +70,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     setCommentCount(prev => prev + 1);
   };
 
-  const handleCommentUpdated = (updatedComment: Comment) => {
-    setComments(prev => 
-      prev.map(comment => 
-        comment.commentId === updatedComment.commentId 
-          ? updatedComment 
-          : comment
-      )
-    );
-  };
+
 
   const handleCommentDeleted = (commentId: number) => {
     setComments(prev => prev.filter(comment => comment.commentId !== commentId));
@@ -189,7 +181,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 <CommentCard
                   key={comment.commentId}
                   comment={comment}
-                  onCommentUpdated={handleCommentUpdated}
                   onCommentDeleted={handleCommentDeleted}
                 />
               ))}
