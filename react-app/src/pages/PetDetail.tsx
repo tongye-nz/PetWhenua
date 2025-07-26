@@ -370,6 +370,7 @@ const PetDetail: React.FC = () => {
         pet={pet}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
+        isLoading={deletingPet}
       />
     </Container>
   );
