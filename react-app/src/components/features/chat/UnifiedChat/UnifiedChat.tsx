@@ -339,9 +339,9 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
               selected={isSelected}
               onClick={() => setSelectedRoom(room)}
               sx={{ 
-                py: 2,
+                py: { xs: 1.5, md: 2 },
                 px: { xs: 2, md: 1 },
-                minHeight: 72 // Ensure consistent height for touch targets
+                minHeight: { xs: 64, md: 72 } // Smaller height for mobile
               }}
             >
               <ListItemAvatar>
@@ -393,12 +393,12 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
         <>
           {/* Chat Header */}
           <Box sx={{ 
-            p: 2, 
+            p: { xs: 1, md: 2 }, 
             borderBottom: 1, 
             borderColor: 'divider',
             display: 'flex',
             alignItems: 'center',
-            minHeight: 80
+            minHeight: { xs: 60, md: 80 }
           }}>
             {/* Back button for mobile */}
             {isMobile && (
@@ -459,8 +459,10 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
                     sx={{
                       p: 1.5,
                       maxWidth: { xs: '85%', sm: '70%' },
-                      bgcolor: isOwnMessage ? 'primary.main' : 'grey.100',
-                      color: isOwnMessage ? 'white' : 'text.primary'
+                      bgcolor: isOwnMessage ? 'primary.main' : 'background.paper',
+                      color: isOwnMessage ? 'white' : 'text.primary',
+                      border: isOwnMessage ? 'none' : 1,
+                      borderColor: isOwnMessage ? 'transparent' : 'divider'
                     }}
                   >
                     <Typography variant="body2">{message.content}</Typography>
@@ -491,10 +493,10 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
 
           {/* Message Input */}
           <Box sx={{ 
-            p: 2, 
+            p: { xs: 1, md: 2 }, 
             borderTop: 1, 
             borderColor: 'divider',
-            minHeight: 80
+            minHeight: { xs: 60, md: 80 }
           }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <TextField
@@ -635,8 +637,8 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
                   key={user.userId}
                   onClick={() => handleStartChat(user.userId)}
                   sx={{ 
-                    py: 2,
-                    minHeight: 72
+                    py: { xs: 1.5, md: 2 },
+                    minHeight: { xs: 64, md: 72 }
                   }}
                 >
                   <ListItemAvatar>
@@ -687,7 +689,8 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
-          pb: 1,
+          py: { xs: 1, md: 2 },
+          px: { xs: 2, md: 3 },
           position: 'sticky',
           top: 0,
           bgcolor: 'background.paper',

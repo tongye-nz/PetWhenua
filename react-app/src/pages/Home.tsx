@@ -80,7 +80,7 @@ const Home: React.FC = () => {
           <Typography
             variant="h1"
             sx={{
-              fontSize: isMobile ? '2.5rem' : '3.5rem',
+              fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.8rem', lg: '3.2rem' },
               fontWeight: 'bold',
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
               mb: 2
@@ -91,7 +91,7 @@ const Home: React.FC = () => {
           <Typography
             variant="h2"
             sx={{
-              fontSize: isMobile ? '1.5rem' : '2rem',
+              fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem', lg: '1.8rem' },
               fontWeight: 'normal',
               opacity: 0.9,
             }}
@@ -113,7 +113,7 @@ const Home: React.FC = () => {
             variant="h2"
             sx={{
               textAlign: 'center',
-              fontSize: '2.5rem',
+              fontSize: { xs: '1.8rem', sm: '2rem', md: '2.2rem', lg: '2.5rem' },
               fontWeight: 'bold',
               color: 'text.primary',
               mb: 2
@@ -129,7 +129,7 @@ const Home: React.FC = () => {
                 sx={{
                   color: 'text.secondary',
                   lineHeight: 1.7,
-                  fontSize: '1.5rem'
+                  fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem', lg: '1.3rem' }
                 }}
               >
                 New Zealand's Pet Networking Community! PetWhenua is where pet lovers connect, share, and grow together. Whether you have a playful pup, a curious cat, or any other beloved companion, this platform helps you build real connections with fellow pet owners across Aotearoa.
@@ -147,7 +147,7 @@ const Home: React.FC = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '2rem',
+                  fontSize: { xs: '1.3rem', sm: '1.5rem', md: '1.7rem', lg: '1.9rem' },
                   gap: 1
                 }}
               >
@@ -156,36 +156,36 @@ const Home: React.FC = () => {
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
-                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>🤝</Typography>
+                  <Typography sx={{ fontSize: { xs: '1.2rem', sm: '1.3rem', md: '1.4rem' }, mt: 0.5 }}>🤝</Typography>
                   <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 0.5 }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' }, fontWeight: 'bold', mb: 0.5 }}>
                       Meet pet owners near you
                     </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }, color: 'text.secondary' }}>
                       Build genuine friendships with fellow pet lovers in your community
                     </Typography>
                   </Box>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
-                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>🐶</Typography>
+                  <Typography sx={{ fontSize: { xs: '1.2rem', sm: '1.3rem', md: '1.4rem' }, mt: 0.5 }}>🐶</Typography>
                   <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 0.5 }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' }, fontWeight: 'bold', mb: 0.5 }}>
                       Discover pets in your area
                     </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }, color: 'text.secondary' }}>
                       Share your journey as a pet parent and connect with other pets
                     </Typography>
                   </Box>
                 </Box>
 
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
-                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>📅</Typography>
+                  <Typography sx={{ fontSize: { xs: '1.2rem', sm: '1.3rem', md: '1.4rem' }, mt: 0.5 }}>📅</Typography>
                   <Box sx={{ textAlign: 'left' }}>
-                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem',fontWeight: 'bold', mb: 0.5 }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: { xs: '1.1rem', sm: '1.2rem', md: '1.3rem' }, fontWeight: 'bold', mb: 0.5 }}>
                       Join local meetups and events
                     </Typography>
-                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.9rem', sm: '1rem', md: '1.1rem' }, color: 'text.secondary' }}>
                       Socialise and have fun with organized pet-friendly activities
                     </Typography>
                   </Box>
@@ -201,7 +201,8 @@ const Home: React.FC = () => {
                   fontWeight: 'bold',
                   color: 'text.primary',
                   mb: 2,
-                  fontStyle: 'italic'
+                  fontStyle: 'italic',
+                  fontSize: { xs: '1rem', sm: '1.1rem', md: '1.2rem' }
                 }}
               >
                 Start your journey with PetWhenua — where every paw has a story!
