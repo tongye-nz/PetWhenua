@@ -19,10 +19,7 @@ import {
   Badge,
   Chip,
   useMediaQuery,
-  useTheme,
-  Drawer,
-  AppBar,
-  Toolbar
+  useTheme
 } from '@mui/material';
 import {
   Close,
@@ -87,7 +84,6 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const { onlineUsers, typingUsers, setChatMessageHandler } = useSignalR();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
