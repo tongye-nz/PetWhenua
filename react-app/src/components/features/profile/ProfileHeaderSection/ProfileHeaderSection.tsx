@@ -89,15 +89,7 @@ const ProfileHeaderSection: React.FC<ProfileHeaderSectionProps> = ({
           >
             Cancel
           </Button>
-          {onChangePassword && (
-            <Button
-              variant="outline"
-              onClick={onChangePassword}
-              disabled={isLoading}
-            >
-              Change Password
-            </Button>
-          )}
+          {/* Removed Change Password button from editing mode */}
         </Box>
       ) : null}
     </Box>
