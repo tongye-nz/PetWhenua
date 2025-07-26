@@ -61,13 +61,13 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   // Auto-refresh notifications periodically
   useEffect(() => {
     if (autoRefresh) {
-      intervalRef.current = setInterval(() => {
+      intervalRef.current = window.setInterval(() => {
         loadNotifications(true);
       }, 30000); // Refresh every 30 seconds
 
       return () => {
         if (intervalRef.current) {
-          clearInterval(intervalRef.current);
+          window.clearInterval(intervalRef.current);
         }
       };
     }

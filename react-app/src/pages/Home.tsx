@@ -6,14 +6,12 @@ import {
   Typography,
   Card,
   CardContent,
-  useTheme,
-  useMediaQuery
+  useTheme
 } from '@mui/material';
 import { HomeCarousel } from '../components/features/home/HomeCarousel';
 
 const Home: React.FC = () => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
 
   const handleCardClick = (cardIndex: number) => {
