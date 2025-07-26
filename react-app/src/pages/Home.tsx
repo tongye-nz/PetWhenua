@@ -121,24 +121,93 @@ const Home: React.FC = () => {
           >
             How It Works
           </Typography>
-          <Typography
-            variant="body1"
-            component="div"
-            sx={{ whiteSpace: 'pre-line', mb: 2 }}
-          >
-            🐾 Welcome to PetWhenua – New Zealand's Pet Networking Community!
+          <Box sx={{ maxWidth: '1200px', mx: 'auto' }}>
+            {/* Welcome Section */}
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="body1"
+                sx={{
+                  color: 'text.secondary',
+                  lineHeight: 1.7,
+                  fontSize: '1.5rem'
+                }}
+              >
+                New Zealand's Pet Networking Community! PetWhenua is where pet lovers connect, share, and grow together. Whether you have a playful pup, a curious cat, or any other beloved companion, this platform helps you build real connections with fellow pet owners across Aotearoa.
+              </Typography>
+            </Box>
 
-            PetWhenua is where pet lovers connect, share, and grow together. Whether you have a playful pup, a curious cat, or any other beloved companion, this platform helps you build real connections with fellow pet owners across Aotearoa. Let’s create a space where our pets can thrive — together.
+            {/* Why Join Section */}
+            <Box sx={{ mb: 4, textAlign: 'center' }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'text.primary',
+                  mb: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  gap: 1
+                }}
+              >
+                🎯 Why join PetWhenua?
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
+                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>🤝</Typography>
+                  <Box sx={{ textAlign: 'left' }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 0.5 }}>
+                      Meet pet owners near you
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                      Build genuine friendships with fellow pet lovers in your community
+                    </Typography>
+                  </Box>
+                </Box>
 
-            🎯 Why join PetWhenua?
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
+                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>🐶</Typography>
+                  <Box sx={{ textAlign: 'left' }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem', fontWeight: 'bold', mb: 0.5 }}>
+                      Discover pets in your area
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                      Share your journey as a pet parent and connect with other pets
+                    </Typography>
+                  </Box>
+                </Box>
 
-            - 🤝 Meet pet owners near you and build genuine friendships
-            - 🐶 Discover pets in your area and share your journey as a pet parent
-            - 📅 Join local meetups and events to socialise and have fun
-            - 📸 Create your pet’s profile and celebrate their unique personality
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, maxWidth: '700px', width: '100%' }}>
+                  <Typography sx={{ fontSize: '1.5rem', mt: 0.5 }}>📅</Typography>
+                  <Box sx={{ textAlign: 'left' }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: '1.5rem',fontWeight: 'bold', mb: 0.5 }}>
+                      Join local meetups and events
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '1.2rem', color: 'text.secondary' }}>
+                      Socialise and have fun with organized pet-friendly activities
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
 
-            Start your journey with PetWhenua — where every paw has a story!
-          </Typography>
+            {/* Call to Action */}
+            <Box sx={{ textAlign: 'center', mt: 6 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 'bold',
+                  color: 'text.primary',
+                  mb: 2,
+                  fontStyle: 'italic'
+                }}
+              >
+                Start your journey with PetWhenua — where every paw has a story!
+              </Typography>
+            </Box>
+          </Box>
 
           <Box
             sx={{
