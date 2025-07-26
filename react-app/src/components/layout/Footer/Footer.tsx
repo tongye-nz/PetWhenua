@@ -16,6 +16,10 @@ const Footer: React.FC = () => {
     navigate('/project-info');
   };
 
+  const handleMeetDeveloperClick = () => {
+    navigate('/meet-developer');
+  };
+
   return (
     <Box
       component="footer"
@@ -83,11 +87,15 @@ const Footer: React.FC = () => {
                 Project Info
               </Link>
               <Link
-                href="#"
+                component="button"
+                onClick={handleMeetDeveloperClick}
                 sx={{
                   color: 'text.secondary',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
                   '&:hover': {
                     color: 'text.primary',
                     textDecoration: 'underline'

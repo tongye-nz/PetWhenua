@@ -23,6 +23,7 @@ import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import Messages from './pages/Messages.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
 import ProjectInfo from './pages/ProjectInfo.tsx';
+import MeetDeveloper from './pages/MeetDeveloper.tsx';
 import { ProtectedRoute, AdminRoute, MeetupAdminRoute } from './components/common';
 import './App.css';
 
@@ -124,6 +125,7 @@ function App() {
                 } />
                 <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
                 <Route path="/project-info" element={<ProjectInfo />} />
+                <Route path="/meet-developer" element={<MeetDeveloper />} />
               </Routes>
             </Suspense>
           </Layout>
