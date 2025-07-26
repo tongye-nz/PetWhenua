@@ -321,7 +321,7 @@ export const HomeCarousel: React.FC = () => {
               }}
               onClick={() => handleSectionClick(section)}
             >
-              {section.id === 'meetup' ? 'Join Event' : 'Read More'}
+              {section.id === 'meetup' ? 'More Events' : 'Read More'}
             </Button>
           </Box>
         </Box>
