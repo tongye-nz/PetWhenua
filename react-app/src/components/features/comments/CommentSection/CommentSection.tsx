@@ -35,12 +35,39 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   const [isExpanded, setIsExpanded] = useState(showFormByDefault);
   const [hasLoadedComments, setHasLoadedComments] = useState(false);
 
-  // Load comments when section is expanded for the first time
+  // Load comments when section is expanded for the first time OR when postId changes
   useEffect(() => {
     if (isExpanded && !hasLoadedComments) {
       loadComments();
     }
-  }, [isExpanded, hasLoadedComments]);
+  }, [isExpanded, hasLoadedComments, postId]);
+
+  // Reset state and auto-load comments when postId changes
+  useEffect(() => {
+    setComments([]);
+    setHasLoadedComments(false);
+    setError('');
+    
+    if (showFormByDefault) {
+      // Directly load comments for new post
+      const loadCommentsForNewPost = async () => {
+        setLoading(true);
+        try {
+          const fetchedComments = await commentService.getPostComments(postId);
+          setComments(fetchedComments);
+          setCommentCount(fetchedComments.length);
+          setHasLoadedComments(true);
+        } catch (error: any) {
+          console.error('Failed to load comments:', error);
+          setError('Failed to load comments. Please try again.');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      loadCommentsForNewPost();
+    }
+  }, [postId, showFormByDefault]);
 
   const loadComments = async () => {
     setLoading(true);
