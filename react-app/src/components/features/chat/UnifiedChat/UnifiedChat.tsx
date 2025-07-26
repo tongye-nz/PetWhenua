@@ -17,14 +17,20 @@ import {
   Tab,
   Tabs,
   Badge,
-  Chip
+  Chip,
+  useMediaQuery,
+  useTheme,
+  Drawer,
+  AppBar,
+  Toolbar
 } from '@mui/material';
 import {
   Close,
   Send,
   Circle,
   Search,
-  Chat as ChatIcon
+  Chat as ChatIcon,
+  ArrowBack
 } from '@mui/icons-material';
 import { useSignalR } from '../../../../contexts/SignalRContext';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -79,6 +85,9 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
   initialUserId,
   title = "Messages"
 }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
   const { onlineUsers, typingUsers, setChatMessageHandler } = useSignalR();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
@@ -89,6 +98,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
   const [searchUsers, setSearchUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showChatList, setShowChatList] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<number | null>(null);
 
@@ -115,8 +125,12 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
   useEffect(() => {
     if (selectedRoom) {
       loadMessages(selectedRoom.chatRoomId);
+      // On mobile, hide chat list when a room is selected
+      if (isMobile) {
+        setShowChatList(false);
+      }
     }
-  }, [selectedRoom]);
+  }, [selectedRoom, isMobile]);
 
   // Set up SignalR message handler for page mode
   useEffect(() => {
@@ -129,6 +143,14 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
       setChatMessageHandler(handleMessage);
     }
   }, [mode, selectedRoom, setChatMessageHandler]);
+
+  // Reset mobile view when switching tabs
+  useEffect(() => {
+    if (isMobile && activeTab === 1) {
+      setShowChatList(true);
+      setSelectedRoom(null);
+    }
+  }, [activeTab, isMobile]);
 
   const loadChatRooms = async () => {
     try {
@@ -281,6 +303,251 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
     return typingUsers.has(partnerId);
   };
 
+  const handleBackToList = () => {
+    setShowChatList(true);
+    setSelectedRoom(null);
+  };
+
+  // Mobile Chat Rooms List Component
+  const chatRoomsList = (
+    <Box 
+      sx={{ 
+        width: {
+          xs: '100%',
+          md: mode === 'dialog' ? 320 : 350,
+          lg: mode === 'dialog' ? 350 : 400
+        },
+        borderRight: { xs: 0, md: 1 }, 
+        borderColor: 'divider',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column'
+      }}
+    >
+      <List sx={{ 
+        p: 0, 
+        flex: 1, 
+        overflow: 'auto',
+        // Ensure proper scrolling on mobile
+        height: '100%',
+        maxHeight: '100%',
+        '-webkit-overflow-scrolling': 'touch' // iOS smooth scrolling
+      }}>
+        {chatRooms.map((room) => {
+          const partner = getChatPartner(room);
+          const isSelected = selectedRoom?.chatRoomId === room.chatRoomId;
+          
+          return (
+            <ListItemButton
+              key={room.chatRoomId}
+              selected={isSelected}
+              onClick={() => setSelectedRoom(room)}
+              sx={{ 
+                py: 2,
+                px: { xs: 2, md: 1 },
+                minHeight: 72 // Ensure consistent height for touch targets
+              }}
+            >
+              <ListItemAvatar>
+                <Badge
+                  overlap="circular"
+                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                  badgeContent={
+                    isUserOnline(partner.userId) ? (
+                      <Circle sx={{ color: 'success.main', fontSize: 12 }} />
+                    ) : null
+                  }
+                >
+                  <Avatar src={getProfilePictureUrl(partner.profilePicture)}>
+                    {partner.firstName?.charAt(0)}
+                  </Avatar>
+                </Badge>
+              </ListItemAvatar>
+              <ListItemText
+                primary={`${partner.firstName} ${partner.lastName}`}
+                secondary={room.lastMessage}
+                secondaryTypographyProps={{
+                  noWrap: true,
+                  sx: { 
+                    maxWidth: {
+                      xs: 200,
+                      md: mode === 'dialog' ? 180 : 220,
+                      lg: mode === 'dialog' ? 200 : 250
+                    }
+                  }
+                }}
+              />
+            </ListItemButton>
+          );
+        })}
+      </List>
+    </Box>
+  );
+
+  // Messages Area Component
+  const messagesArea = (
+    <Box sx={{ 
+      flex: 1, 
+      display: 'flex', 
+      flexDirection: 'column',
+      height: '100%',
+      overflow: 'hidden'
+    }}>
+      {selectedRoom ? (
+        <>
+          {/* Chat Header */}
+          <Box sx={{ 
+            p: 2, 
+            borderBottom: 1, 
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            minHeight: 80
+          }}>
+            {/* Back button for mobile */}
+            {isMobile && (
+              <IconButton 
+                onClick={handleBackToList}
+                sx={{ mr: 1 }}
+                size="small"
+              >
+                <ArrowBack />
+              </IconButton>
+            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
+              <Badge
+                overlap="circular"
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                badgeContent={
+                  isUserOnline(getChatPartner(selectedRoom).userId) ? (
+                    <Circle sx={{ color: 'success.main', fontSize: 12 }} />
+                  ) : null
+                }
+              >
+                <Avatar src={getProfilePictureUrl(getChatPartner(selectedRoom).profilePicture)}>
+                  {getChatPartner(selectedRoom).firstName?.charAt(0)}
+                </Avatar>
+              </Badge>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={600}>
+                  {getChatPartner(selectedRoom).firstName} {getChatPartner(selectedRoom).lastName}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {isUserOnline(getChatPartner(selectedRoom).userId) ? 'Online' : 'Offline'}
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+
+          {/* Messages List */}
+          <Box sx={{ 
+            flex: 1, 
+            overflow: 'auto', 
+            p: 1,
+            height: '100%',
+            '-webkit-overflow-scrolling': 'touch' // iOS smooth scrolling
+          }}>
+            {messages.map((message) => {
+              const isOwnMessage = message.senderId === getCurrentUserId();
+              
+              return (
+                <Box
+                  key={message.messageId}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
+                    mb: 1
+                  }}
+                >
+                  <Paper
+                    sx={{
+                      p: 1.5,
+                      maxWidth: { xs: '85%', sm: '70%' },
+                      bgcolor: isOwnMessage ? 'primary.main' : 'grey.100',
+                      color: isOwnMessage ? 'white' : 'text.primary'
+                    }}
+                  >
+                    <Typography variant="body2">{message.content}</Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
+                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                        {formatMessageTime(message.sentAt)}
+                      </Typography>
+                      {isOwnMessage && (
+                        <Typography variant="caption" sx={{ ml: 1, opacity: 0.7 }}>
+                          {getMessageStatusIcon(message.status)}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                </Box>
+              );
+            })}
+            
+            {/* Typing Indicator */}
+            {selectedRoom && isTypingInRoom(selectedRoom.chatRoomId) && (
+              <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
+                <Chip label="Typing..." size="small" sx={{ opacity: 0.7 }} />
+              </Box>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </Box>
+
+          {/* Message Input */}
+          <Box sx={{ 
+            p: 2, 
+            borderTop: 1, 
+            borderColor: 'divider',
+            minHeight: 80
+          }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                fullWidth
+                placeholder="Type a message..."
+                value={messageInput}
+                onChange={(e) => {
+                  setMessageInput(e.target.value);
+                  handleTyping();
+                }}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                multiline
+                maxRows={3}
+                size="small"
+              />
+              <IconButton 
+                color="primary" 
+                onClick={handleSendMessage}
+                disabled={!messageInput.trim()}
+                sx={{ minWidth: 48 }}
+              >
+                <Send />
+              </IconButton>
+            </Box>
+          </Box>
+        </>
+      ) : (
+        <Box sx={{ 
+          flex: 1, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          color: 'text.secondary'
+        }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <ChatIcon sx={{ fontSize: 48, mb: 2 }} />
+            <Typography variant="h6">Select a conversation</Typography>
+            <Typography>Choose a chat to start messaging</Typography>
+          </Box>
+        </Box>
+      )}
+    </Box>
+  );
+
   // Common chat content
   const chatContent = (
     <>
@@ -291,183 +558,63 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
         </Tabs>
       </Box>
 
-      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <Box sx={{ 
+        flex: 1, 
+        display: 'flex', 
+        flexDirection: 'column', 
+        overflow: 'hidden',
+        height: mode === 'dialog' ? 'calc(60vh - 120px)' : 'calc(70vh - 120px)'
+      }}>
         <TabPanel value={activeTab} index={0}>
-          <Box sx={{ display: 'flex', height: mode === 'dialog' ? '60vh' : '70vh' }}>
-            {/* Chat Rooms List */}
-            <Box sx={{ width: mode === 'dialog' ? 300 : '33%', borderRight: 1, borderColor: 'divider', overflow: 'auto' }}>
-              <List sx={{ p: 0 }}>
-                {chatRooms.map((room) => {
-                  const partner = getChatPartner(room);
-                  const isSelected = selectedRoom?.chatRoomId === room.chatRoomId;
-                  
-                  return (
-                    <ListItemButton
-                      key={room.chatRoomId}
-                      selected={isSelected}
-                      onClick={() => setSelectedRoom(room)}
-                      sx={{ py: 2 }}
-                    >
-                      <ListItemAvatar>
-                        <Badge
-                          overlap="circular"
-                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                          badgeContent={
-                            isUserOnline(partner.userId) ? (
-                              <Circle sx={{ color: 'success.main', fontSize: 12 }} />
-                            ) : null
-                          }
-                        >
-                          <Avatar src={getProfilePictureUrl(partner.profilePicture)}>
-                            {partner.firstName?.charAt(0)}
-                          </Avatar>
-                        </Badge>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={`${partner.firstName} ${partner.lastName}`}
-                        secondary={room.lastMessage}
-                        secondaryTypographyProps={{
-                          noWrap: true,
-                          sx: { maxWidth: mode === 'dialog' ? 150 : 200 }
-                        }}
-                      />
-                    </ListItemButton>
-                  );
-                })}
-              </List>
-            </Box>
-
-            {/* Messages Area */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {selectedRoom ? (
-                <>
-                  {/* Chat Header */}
-                  <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Badge
-                        overlap="circular"
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                        badgeContent={
-                          isUserOnline(getChatPartner(selectedRoom).userId) ? (
-                            <Circle sx={{ color: 'success.main', fontSize: 12 }} />
-                          ) : null
-                        }
-                      >
-                        <Avatar src={getProfilePictureUrl(getChatPartner(selectedRoom).profilePicture)}>
-                          {getChatPartner(selectedRoom).firstName?.charAt(0)}
-                        </Avatar>
-                      </Badge>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight={600}>
-                          {getChatPartner(selectedRoom).firstName} {getChatPartner(selectedRoom).lastName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {isUserOnline(getChatPartner(selectedRoom).userId) ? 'Online' : 'Offline'}
-                        </Typography>
-                      </Box>
+          <Box sx={{ 
+            display: 'flex', 
+            height: '100%',
+            position: 'relative'
+          }}>
+            {/* Mobile: Show either chat list or messages */}
+            {isMobile ? (
+              <>
+                {/* Chat List - Mobile */}
+                {showChatList && chatRoomsList}
+                
+                {/* Messages Area - Mobile */}
+                {!showChatList && selectedRoom && messagesArea}
+                
+                {/* Empty state when no room selected on mobile */}
+                {!showChatList && !selectedRoom && (
+                  <Box sx={{ 
+                    flex: 1, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    color: 'text.secondary'
+                  }}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <ChatIcon sx={{ fontSize: 48, mb: 2 }} />
+                      <Typography variant="h6">Select a conversation</Typography>
+                      <Typography>Choose a chat to start messaging</Typography>
                     </Box>
                   </Box>
-
-                  {/* Messages List */}
-                  <Box sx={{ flex: 1, overflow: 'auto', p: 1 }}>
-                    {messages.map((message) => {
-                      const isOwnMessage = message.senderId === getCurrentUserId();
-                      
-                      return (
-                        <Box
-                          key={message.messageId}
-                          sx={{
-                            display: 'flex',
-                            justifyContent: isOwnMessage ? 'flex-end' : 'flex-start',
-                            mb: 1
-                          }}
-                        >
-                          <Paper
-                            sx={{
-                              p: 1.5,
-                              maxWidth: '70%',
-                              bgcolor: isOwnMessage ? 'primary.main' : 'grey.100',
-                              color: isOwnMessage ? 'white' : 'text.primary'
-                            }}
-                          >
-                            <Typography variant="body2">{message.content}</Typography>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 0.5 }}>
-                              <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                                {formatMessageTime(message.sentAt)}
-                              </Typography>
-                              {isOwnMessage && (
-                                <Typography variant="caption" sx={{ ml: 1, opacity: 0.7 }}>
-                                  {getMessageStatusIcon(message.status)}
-                                </Typography>
-                              )}
-                            </Box>
-                          </Paper>
-                        </Box>
-                      );
-                    })}
-                    
-                    {/* Typing Indicator */}
-                    {selectedRoom && isTypingInRoom(selectedRoom.chatRoomId) && (
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-start', mb: 1 }}>
-                        <Chip label="Typing..." size="small" sx={{ opacity: 0.7 }} />
-                      </Box>
-                    )}
-                    
-                    <div ref={messagesEndRef} />
-                  </Box>
-
-                  {/* Message Input */}
-                  <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                      <TextField
-                        fullWidth
-                        placeholder="Type a message..."
-                        value={messageInput}
-                        onChange={(e) => {
-                          setMessageInput(e.target.value);
-                          handleTyping();
-                        }}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        multiline
-                        maxRows={3}
-                        size="small"
-                      />
-                      <IconButton 
-                        color="primary" 
-                        onClick={handleSendMessage}
-                        disabled={!messageInput.trim()}
-                      >
-                        <Send />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </>
-              ) : (
-                <Box sx={{ 
-                  flex: 1, 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center',
-                  color: 'text.secondary'
-                }}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <ChatIcon sx={{ fontSize: 48, mb: 2 }} />
-                    <Typography variant="h6">Select a conversation</Typography>
-                    <Typography>Choose a chat to start messaging</Typography>
-                  </Box>
-                </Box>
-              )}
-            </Box>
+                )}
+              </>
+            ) : (
+              /* Desktop: Show both panels side by side */
+              <>
+                {chatRoomsList}
+                {messagesArea}
+              </>
+            )}
           </Box>
         </TabPanel>
 
         <TabPanel value={activeTab} index={1}>
-          <Box sx={{ p: 2, maxWidth: mode === 'dialog' ? '100%' : 600, mx: 'auto' }}>
+          <Box sx={{ 
+            p: 2, 
+            maxWidth: mode === 'dialog' ? '100%' : 600, 
+            mx: 'auto',
+            height: '100%',
+            overflow: 'auto'
+          }}>
             <TextField
               fullWidth
               placeholder="Search users to chat with..."
@@ -482,11 +629,19 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
               sx={{ mb: 2 }}
             />
             
-            <List>
+            <List sx={{ 
+              maxHeight: 'calc(100% - 80px)', 
+              overflow: 'auto',
+              '-webkit-overflow-scrolling': 'touch'
+            }}>
               {searchUsers.map((user) => (
                 <ListItemButton
                   key={user.userId}
                   onClick={() => handleStartChat(user.userId)}
+                  sx={{ 
+                    py: 2,
+                    minHeight: 72
+                  }}
                 >
                   <ListItemAvatar>
                     <Badge
@@ -502,7 +657,7 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
                     </Badge>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={`${user.firstName} ${user.lastName}`}
+                    primary={`${user.firstName} ${user.lastName} (@${user.username})`}
                     secondary={user.location}
                   />
                 </ListItemButton>
@@ -520,13 +675,28 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
       <Dialog
         open={open}
         onClose={onClose}
-        maxWidth="md"
+        maxWidth={isMobile ? 'sm' : 'md'}
         fullWidth
+        fullScreen={isMobile}
         PaperProps={{
-          sx: { height: '80vh', display: 'flex', flexDirection: 'column' }
+          sx: { 
+            height: isMobile ? '100vh' : '80vh', 
+            display: 'flex', 
+            flexDirection: 'column',
+            maxHeight: isMobile ? '100vh' : '80vh'
+          }
         }}
       >
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+        <DialogTitle sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          pb: 1,
+          position: 'sticky',
+          top: 0,
+          bgcolor: 'background.paper',
+          zIndex: 1
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <ChatIcon color="primary" />
             <Typography variant="h6">{title}</Typography>
@@ -536,7 +706,13 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 0 }}>
+        <DialogContent sx={{ 
+          flex: 1, 
+          display: 'flex', 
+          flexDirection: 'column', 
+          p: 0,
+          overflow: 'hidden'
+        }}>
           {chatContent}
         </DialogContent>
       </Dialog>
@@ -550,7 +726,12 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
         {title}
       </Typography>
       
-      <Paper sx={{ height: '80vh', display: 'flex', flexDirection: 'column' }}>
+      <Paper sx={{ 
+        height: { xs: 'calc(100vh - 200px)', md: '80vh' }, 
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'hidden'
+      }}>
         {chatContent}
       </Paper>
     </Container>
