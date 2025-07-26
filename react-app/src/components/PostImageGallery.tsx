@@ -7,7 +7,7 @@ import {
   IconButton,
   Typography
 } from '@mui/material';
-import { Close, ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
+import { Close, ArrowBackIosNew, ArrowForwardIos } from '@mui/icons-material';
 import { getFullImageUrl } from '../utils/imageUrlUtils';
 
 export interface PostImageGalleryProps {
@@ -210,7 +210,7 @@ const PostImageGallery: React.FC<PostImageGalleryProps> = ({
                   }
                 }}
               >
-                <ArrowBackIos />
+                <ArrowBackIosNew />
               </IconButton>
 
               <IconButton

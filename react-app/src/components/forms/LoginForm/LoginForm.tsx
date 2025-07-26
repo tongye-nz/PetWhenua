@@ -43,13 +43,35 @@ const LoginForm: React.FC<LoginFormProps> = ({
         if (value.length < 3) {
           return 'Must be at least 3 characters';
         }
+        // Check if it looks like an email for more specific validation
+        if (value.includes('@')) {
+          const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+          if (!emailRegex.test(value)) {
+            return 'Please enter a valid email address';
+          }
+          if (value.length > 100) {
+            return 'Email must be less than 100 characters';
+          }
+        } else {
+          // Username validation
+          if (value.length > 20) {
+            return 'Username must be less than 20 characters';
+          }
+          if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+            return 'Username can only contain letters, numbers, hyphens, and underscores';
+          }
+        }
         return undefined;
       case 'password':
         if (!value) {
           return 'Password is required';
         }
-        if (value.length < 6) {
-          return 'Password must be at least 6 characters';
+        // Match AuthService requirements: minimum 8 characters
+        if (value.length < 8) {
+          return 'Password must be at least 8 characters';
+        }
+        if (value.length > 100) {
+          return 'Password must be less than 100 characters';
         }
         return undefined;
       default:

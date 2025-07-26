@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, IconButton } from '@mui/material';
-import { ArrowBack, Edit, Pets } from '@mui/icons-material';
+import { ArrowBack, Edit, Pets, Delete } from '@mui/icons-material';
 import { Button, Text } from '../../../ui';
 import type { Pet } from '../../../../models/pet.types';
 import type { PetConnectionStatus } from '../../../../models/petConnection.types';
@@ -13,6 +13,7 @@ interface PetProfileHeaderProps {
   onBack: () => void;
   onEdit: () => void;
   onConnect: () => void;
+  onDelete?: () => void;
 }
 
 const PetProfileHeader: React.FC<PetProfileHeaderProps> = ({
@@ -22,7 +23,8 @@ const PetProfileHeader: React.FC<PetProfileHeaderProps> = ({
   loadingConnection,
   onBack,
   onEdit,
-  onConnect
+  onConnect,
+  onDelete
 }) => {
   return (
     <Box sx={{ mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -34,13 +36,24 @@ const PetProfileHeader: React.FC<PetProfileHeaderProps> = ({
       </Text>
       <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
         {isOwnPet ? (
-          <Button
-            variant="outline"
-            startIcon={<Edit />}
-            onClick={onEdit}
-          >
-            Edit Pet
-          </Button>
+          <>
+            <Button
+              variant="outline"
+              startIcon={<Edit />}
+              onClick={onEdit}
+            >
+              Edit Pet
+            </Button>
+            {onDelete && (
+              <Button
+                variant="error"
+                startIcon={<Delete />}
+                onClick={onDelete}
+              >
+                Delete
+              </Button>
+            )}
+          </>
         ) : (
           <Button
             variant="primary"

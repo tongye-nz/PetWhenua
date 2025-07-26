@@ -30,7 +30,8 @@ const PetCard: React.FC<PetCardProps> = ({
     hasActions
   } = usePetCard({ pet, onView, onEdit, onDelete });
 
-  const cardHeight = compact ? 280 : 350;
+  // Increased heights to provide more space for content
+  const cardHeight = compact ? 320 : 400;
   const imageHeight = compact ? 140 : 200;
 
   return (

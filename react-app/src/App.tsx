@@ -4,7 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PostProvider } from './contexts/PostContext';
 import { SignalRProvider } from './contexts/SignalRContext';
-import { Layout } from './components/common';
+import { Layout, ScrollToTop } from './components/common';
 import { NotificationToast } from './components/features/notifications';
 import { ChatButton } from './components/ui';
 import Home from './pages/Home.tsx';
@@ -22,6 +22,8 @@ import PetsNearMe from './pages/PetsNearMe.tsx';
 import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import Messages from './pages/Messages.tsx';
 import ImageUploadDemo from './components/ImageUploadDemo.tsx';
+import ProjectInfo from './pages/ProjectInfo.tsx';
+import MeetDeveloper from './pages/MeetDeveloper.tsx';
 import { ProtectedRoute, AdminRoute, MeetupAdminRoute } from './components/common';
 import './App.css';
 
@@ -39,6 +41,7 @@ function App() {
         <SignalRProvider>
           <PostProvider>
           <Router>
+            <ScrollToTop />
             <NotificationToast />
             <ChatButton variant="fab" showUnreadBadge={true} />
             <Layout>
@@ -122,6 +125,8 @@ function App() {
                   </ProtectedRoute>
                 } />
                 <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
+                <Route path="/project-info" element={<ProjectInfo />} />
+                <Route path="/meet-developer" element={<MeetDeveloper />} />
               </Routes>
             </Suspense>
           </Layout>

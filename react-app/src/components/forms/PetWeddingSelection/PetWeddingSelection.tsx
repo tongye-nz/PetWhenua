@@ -37,12 +37,44 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
   const ownedPets = selectablePets.filter(pet => pet.isOwned);
   const connectedPets = selectablePets.filter(pet => !pet.isOwned);
 
+  // Check if current selection is valid
+  const getSelectionValidation = () => {
+    if (selectedPetIds.length !== 2) {
+      return { isValid: false, message: 'You must select exactly 2 pets for the wedding' };
+    }
+    
+    const selectedPets = selectablePets.filter(pet => pet.petId && selectedPetIds.includes(pet.petId));
+    const hasOwnedPet = selectedPets.some(pet => pet.isOwned);
+    
+    if (!hasOwnedPet) {
+      return { 
+        isValid: false, 
+        message: 'At least one selected pet must belong to you. You cannot create a wedding with only connected pets.' 
+      };
+    }
+    
+    return { isValid: true, message: 'Great! You\'ve selected 2 pets for the wedding' };
+  };
+
+  const selectionValidation = getSelectionValidation();
+
   const handlePetSelection = (event: any) => {
     const value = event.target.value;
     const newSelectedIds = typeof value === 'string' ? value.split(',').map(Number) : value;
     
     // Limit to exactly 2 pets
     if (newSelectedIds.length <= 2) {
+      // Validate that at least one selected pet is owned by the user
+      if (newSelectedIds.length === 2) {
+        const selectedPets = selectablePets.filter(pet => pet.petId && newSelectedIds.includes(pet.petId));
+        const hasOwnedPet = selectedPets.some(pet => pet.isOwned);
+        
+        if (!hasOwnedPet) {
+          // Don't allow selection of two non-owned pets
+          return;
+        }
+      }
+      
       onSelectedPetsChange(newSelectedIds);
     }
   };
@@ -84,11 +116,28 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
       ? 'Your pet' 
       : (pet.user?.username || pet.connectionOwner?.username || 'Connected pet');
 
+    // Check if this pet should be disabled
+    let isDisabled = false;
+    if (pet.petId !== undefined && !selectedPetIds.includes(pet.petId)) {
+      // If we already have 2 pets selected, disable all others
+      if (selectedPetIds.length >= 2) {
+        isDisabled = true;
+      }
+      // If we have 1 connected pet selected and this is also connected, disable it
+      else if (selectedPetIds.length === 1 && !pet.isOwned) {
+        const selectedPets = selectablePets.filter(p => p.petId && selectedPetIds.includes(p.petId));
+        const hasSelectedConnectedPet = selectedPets.some(p => !p.isOwned);
+        if (hasSelectedConnectedPet) {
+          isDisabled = true;
+        }
+      }
+    }
+
     return (
       <MenuItem 
         key={pet.petId} 
         value={pet.petId}
-        disabled={selectedPetIds.length >= 2 && pet.petId !== undefined && !selectedPetIds.includes(pet.petId)}
+        disabled={isDisabled}
         sx={{ py: 1.5 }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
@@ -125,11 +174,18 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
         Select Two Pets for the Wedding
       </Typography>
       
+      <Alert severity="info" sx={{ mb: 2 }}>
+        <Typography variant="body2">
+          <strong>Wedding Rules:</strong> You must select exactly 2 pets, and at least one must belong to you. 
+          You cannot create a wedding with only connected pets from other users.
+        </Typography>
+      </Alert>
+      
       {error && (
         <Alert severity="error">{error}</Alert>
       )}
 
-      <FormControl fullWidth required error={selectedPetIds.length !== 2}>
+      <FormControl fullWidth required error={!selectionValidation.isValid}>
         <InputLabel>Select Pets (Choose exactly 2)</InputLabel>
         <Select
           multiple
@@ -196,15 +252,15 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
           {connectedPets.map(renderPetMenuItem)}
         </Select>
         
-        {selectedPetIds.length !== 2 && (
+        {!selectionValidation.isValid && (
           <Typography variant="caption" color="error" sx={{ mt: 1 }}>
-            You must select exactly 2 pets for the wedding
+            {selectionValidation.message}
           </Typography>
         )}
         
-        {selectedPetIds.length === 2 && (
+        {selectionValidation.isValid && (
           <Typography variant="caption" color="success.main" sx={{ mt: 1 }}>
-            Great! You've selected 2 pets for the wedding
+            {selectionValidation.message}
           </Typography>
         )}
       </FormControl>

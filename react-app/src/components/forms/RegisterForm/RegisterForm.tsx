@@ -127,77 +127,122 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   });
 
   const [errors, setErrors] = useState<RegisterFormErrors>({});
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+
+  // Real-time field validation
+  const validateField = (field: keyof RegisterFormData, value: string): string | undefined => {
+    switch (field) {
+      case 'username':
+        if (!value.trim()) {
+          return 'Username is required';
+        }
+        if (value.length < 3) {
+          return 'Username must be at least 3 characters';
+        }
+        if (value.length > 20) {
+          return 'Username must be less than 20 characters';
+        }
+        if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+          return 'Username can only contain letters, numbers, hyphens, and underscores';
+        }
+        return undefined;
+
+      case 'email':
+        if (!value.trim()) {
+          return 'Email is required';
+        }
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+        if (!emailRegex.test(value)) {
+          return 'Please enter a valid email address';
+        }
+        if (value.length > 100) {
+          return 'Email must be less than 100 characters';
+        }
+        return undefined;
+
+      case 'password':
+        if (!value) {
+          return 'Password is required';
+        }
+        if (value.length < 8) {
+          return 'Password must be at least 8 characters';
+        }
+        if (value.length > 100) {
+          return 'Password must be less than 100 characters';
+        }
+        
+        const hasUpperCase = /[A-Z]/.test(value);
+        const hasLowerCase = /[a-z]/.test(value);
+        const hasNumbers = /\d/.test(value);
+        const allowedSpecialChars = /^[a-zA-Z0-9!@#$%*\-_+=]*$/;
+        
+        if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
+          return 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+        }
+        if (!allowedSpecialChars.test(value)) {
+          return 'Password can only contain letters, numbers, and these special characters: !@#$%*-_+=';
+        }
+        return undefined;
+
+      case 'confirmPassword':
+        if (!value) {
+          return 'Please confirm your password';
+        }
+        if (formData.password !== value) {
+          return 'Passwords do not match';
+        }
+        return undefined;
+
+      case 'firstName':
+        if (!value.trim()) {
+          return 'First name is required';
+        }
+        if (value.length > 50) {
+          return 'First name must be less than 50 characters';
+        }
+        if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+          return 'First name can only contain letters, spaces, hyphens, and apostrophes';
+        }
+        return undefined;
+
+      case 'lastName':
+        if (!value.trim()) {
+          return 'Last name is required';
+        }
+        if (value.length > 50) {
+          return 'Last name must be less than 50 characters';
+        }
+        if (!/^[a-zA-Z\s'-]+$/.test(value)) {
+          return 'Last name can only contain letters, spaces, hyphens, and apostrophes';
+        }
+        return undefined;
+
+      default:
+        return undefined;
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: RegisterFormErrors = {};
-
-    // Username validation
-    if (!formData.username.trim()) {
-      newErrors.username = 'Username is required';
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'Username must be at least 3 characters';
-    } else if (formData.username.length > 20) {
-      newErrors.username = 'Username must be less than 20 characters';
-    } else if (!/^[a-zA-Z0-9_-]+$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, hyphens, and underscores';
-    }
-
-    // Email validation
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!emailRegex.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
-    } else if (formData.email.length > 100) {
-      newErrors.email = 'Email must be less than 100 characters';
-    }
-
-    // Enhanced password validation
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters';
-    } else if (formData.password.length > 100) {
-      newErrors.password = 'Password must be less than 100 characters';
-    } else {
-      const hasUpperCase = /[A-Z]/.test(formData.password);
-      const hasLowerCase = /[a-z]/.test(formData.password);
-      const hasNumbers = /\d/.test(formData.password);
-      const allowedSpecialChars = /^[a-zA-Z0-9!@#$%*\-_+=]*$/;
-      
-      if (!hasUpperCase || !hasLowerCase || !hasNumbers) {
-        newErrors.password = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
-      } else if (!allowedSpecialChars.test(formData.password)) {
-        newErrors.password = 'Password can only contain letters, numbers, and these special characters: !@#$%*-_+=';
-      }
-    }
-
-    // Confirm password validation
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
-    }
-
-    // Name validation
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    } else if (formData.firstName.length > 50) {
-      newErrors.firstName = 'First name must be less than 50 characters';
-    } else if (!/^[a-zA-Z\s'-]+$/.test(formData.firstName)) {
-      newErrors.firstName = 'First name can only contain letters, spaces, hyphens, and apostrophes';
-    }
-
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    } else if (formData.lastName.length > 50) {
-      newErrors.lastName = 'Last name must be less than 50 characters';
-    } else if (!/^[a-zA-Z\s'-]+$/.test(formData.lastName)) {
-      newErrors.lastName = 'Last name can only contain letters, spaces, hyphens, and apostrophes';
-    }
+    
+    newErrors.username = validateField('username', formData.username);
+    newErrors.email = validateField('email', formData.email);
+    newErrors.password = validateField('password', formData.password);
+    newErrors.confirmPassword = validateField('confirmPassword', formData.confirmPassword);
+    newErrors.firstName = validateField('firstName', formData.firstName);
+    newErrors.lastName = validateField('lastName', formData.lastName);
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setTouched({
+      username: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+      firstName: true,
+      lastName: true,
+    });
+    
+    return Object.values(newErrors).every(error => !error);
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -211,18 +256,34 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
   const handleInputChange = (field: keyof RegisterFormData) => (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    const value = event.target.value;
+    
     setFormData(prev => ({
       ...prev,
-      [field]: event.target.value,
+      [field]: value,
     }));
     
-    // Clear error when user starts typing
-    if (errors[field]) {
+    // Real-time validation for touched fields
+    if (touched[field]) {
+      const fieldError = validateField(field, value);
       setErrors(prev => ({
         ...prev,
-        [field]: undefined,
+        [field]: fieldError,
       }));
     }
+  };
+
+  const handleBlur = (field: keyof RegisterFormData) => () => {
+    setTouched(prev => ({
+      ...prev,
+      [field]: true,
+    }));
+    
+    const fieldError = validateField(field, formData[field]);
+    setErrors(prev => ({
+      ...prev,
+      [field]: fieldError,
+    }));
   };
 
   return (
@@ -243,8 +304,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             placeholder="Enter your first name"
             value={formData.firstName}
             onChange={handleInputChange('firstName')}
-            error={!!errors.firstName}
-            helperText={errors.firstName}
+            onBlur={handleBlur('firstName')}
+            error={touched.firstName && !!errors.firstName}
+            helperText={touched.firstName ? errors.firstName : ''}
             required
             disabled={isLoading || disabled}
           />
@@ -255,8 +317,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
             placeholder="Enter your last name"
             value={formData.lastName}
             onChange={handleInputChange('lastName')}
-            error={!!errors.lastName}
-            helperText={errors.lastName}
+            onBlur={handleBlur('lastName')}
+            error={touched.lastName && !!errors.lastName}
+            helperText={touched.lastName ? errors.lastName : ''}
             required
             disabled={isLoading || disabled}
           />
@@ -269,8 +332,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           placeholder="Enter your username"
           value={formData.username}
           onChange={handleInputChange('username')}
-          error={!!errors.username}
-          helperText={errors.username}
+          onBlur={handleBlur('username')}
+          error={touched.username && !!errors.username}
+          helperText={touched.username ? errors.username : ''}
           required
           disabled={isLoading || disabled}
         />
@@ -283,8 +347,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           placeholder="Enter your email"
           value={formData.email}
           onChange={handleInputChange('email')}
-          error={!!errors.email}
-          helperText={errors.email}
+          onBlur={handleBlur('email')}
+          error={touched.email && !!errors.email}
+          helperText={touched.email ? errors.email : ''}
           required
           disabled={isLoading || disabled}
         />
@@ -297,8 +362,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           placeholder="Enter your password"
           value={formData.password}
           onChange={handleInputChange('password')}
-          error={!!errors.password}
-          helperText={errors.password}
+          onBlur={handleBlur('password')}
+          error={touched.password && !!errors.password}
+          helperText={touched.password ? errors.password : ''}
           required
           disabled={isLoading || disabled}
         />
@@ -312,8 +378,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           placeholder="Confirm your password"
           value={formData.confirmPassword}
           onChange={handleInputChange('confirmPassword')}
-          error={!!errors.confirmPassword}
-          helperText={errors.confirmPassword}
+          onBlur={handleBlur('confirmPassword')}
+          error={touched.confirmPassword && !!errors.confirmPassword}
+          helperText={touched.confirmPassword ? errors.confirmPassword : ''}
           required
           disabled={isLoading || disabled}
         />

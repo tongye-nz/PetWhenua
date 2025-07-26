@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -48,6 +48,19 @@ const Posts: React.FC = () => {
   const [followingPosts, setFollowingPosts] = useState<Post[]>([]);
   const [followingLoading, setFollowingLoading] = useState<boolean>(false);
 
+  // Refs to access current values in stable callbacks
+  const filtersRef = useRef<PostFilters>(filters);
+  const paginationRef = useRef<PaginationInfo>(pagination);
+
+  // Update refs when state changes
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  useEffect(() => {
+    paginationRef.current = pagination;
+  }, [pagination]);
+
   // Fetch posts with pagination
   const fetchPosts = useCallback(async (newFilters: PostFilters = {}, page: number = 1, pageSize: number = 10) => {
     try {
@@ -91,22 +104,27 @@ const Posts: React.FC = () => {
     const postType = getPostTypeFromParam(postTypeParam);
     const initialFilters = postType !== undefined ? { postType } : {};
     setFilters(initialFilters);
-    fetchPosts(initialFilters, 1, pagination.pageSize);
+    fetchPosts(initialFilters, 1, 10); // Use default page size to avoid dependency
   }, [postTypeParam, fetchPosts]);
 
   const handleFilterChange = useCallback((newFilters: Partial<PostFilters>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    fetchPosts(updatedFilters, 1, pagination.pageSize); // Reset to page 1 when filters change
-  }, [filters, fetchPosts, pagination.pageSize]);
+    setFilters(prevFilters => {
+      const updatedFilters = { ...prevFilters, ...newFilters };
+      // Defer API call to avoid calling during state update
+      setTimeout(() => {
+        fetchPosts(updatedFilters, 1, 10); // Reset to page 1 when filters change
+      }, 0);
+      return updatedFilters;
+    });
+  }, [fetchPosts]);
 
   const handlePageChange = useCallback((page: number) => {
-    fetchPosts(filters, page, pagination.pageSize);
-  }, [filters, fetchPosts, pagination.pageSize]);
+    fetchPosts(filtersRef.current, page, paginationRef.current.pageSize);
+  }, [fetchPosts]);
 
   const handlePageSizeChange = useCallback((pageSize: number) => {
-    fetchPosts(filters, 1, pageSize); // Reset to page 1 when page size changes
-  }, [filters, fetchPosts]);
+    fetchPosts(filtersRef.current, 1, pageSize); // Reset to page 1 when page size changes
+  }, [fetchPosts]);
 
   // Update available districts when region changes
   useEffect(() => {
@@ -183,11 +201,10 @@ const Posts: React.FC = () => {
       };
       
       refetchFollowingPosts();
-    } else {
-      // Refetch regular posts when not showing following posts
-      fetchPosts(filters, 1, pagination.pageSize);
     }
-  }, [filters.postType, filters.region, filters.district, showingFollowingPosts, fetchPosts, filters, pagination.pageSize]);
+    // Remove the else clause to prevent automatic refetch of regular posts
+    // This will be handled by the handleFilterChange callback
+  }, [filters.postType, filters.region, filters.district, showingFollowingPosts]);
 
   const handleCreatePost = () => {
     // Navigate to create post page
@@ -227,7 +244,7 @@ const Posts: React.FC = () => {
       setShowingFollowingPosts(false);
       setFollowingPosts([]);
       // Refresh the main posts list
-      fetchPosts(filters, 1, pagination.pageSize);
+      fetchPosts(filtersRef.current, 1, paginationRef.current.pageSize);
     } else {
       // Show posts from followed users
       try {
@@ -263,21 +280,22 @@ const Posts: React.FC = () => {
         let filteredFollowingPosts = allFollowingPosts;
         
         // Filter by post type if specified
-        if (filters.postType !== undefined) {
-          filteredFollowingPosts = filteredFollowingPosts.filter(post => post.postType === filters.postType);
+        const currentFilters = filtersRef.current;
+        if (currentFilters.postType !== undefined) {
+          filteredFollowingPosts = filteredFollowingPosts.filter(post => post.postType === currentFilters.postType);
         }
         
         // Filter by region if specified
-        if (filters.region) {
+        if (currentFilters.region) {
           filteredFollowingPosts = filteredFollowingPosts.filter(post => 
-            post.location && post.location.includes(filters.region!)
+            post.location && post.location.includes(currentFilters.region!)
           );
         }
         
         // Filter by district if specified
-        if (filters.district) {
+        if (currentFilters.district) {
           filteredFollowingPosts = filteredFollowingPosts.filter(post => 
-            post.location && post.location.includes(filters.district!)
+            post.location && post.location.includes(currentFilters.district!)
           );
         }
         
@@ -292,7 +310,7 @@ const Posts: React.FC = () => {
         setFollowingLoading(false);
       }
     }
-  }, [showingFollowingPosts, filters, fetchPosts]);
+  }, [showingFollowingPosts, fetchPosts]);
 
   // Get display name for current post type
   const getPostTypeDisplayName = (postType?: PostType): string => {

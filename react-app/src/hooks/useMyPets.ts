@@ -121,9 +121,19 @@ export const useMyPets = () => {
 
     try {
       setLoading(true);
+      setSuccess(null); // Clear any previous success message
       await petService.deletePet(petToDelete.petId);
       await loadPets();
       setDeleteDialogOpen(false);
+      
+      // Show success message with pet name
+      setSuccess(`${petToDelete.name} has been deleted successfully!`);
+      
+      // Clear success message after 5 seconds
+      setTimeout(() => {
+        setSuccess(null);
+      }, 5000);
+      
       setPetToDelete(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete pet');

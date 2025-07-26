@@ -14,16 +14,29 @@ export interface PetDeleteDialogProps {
   pet: Pet | null;
   onClose: () => void;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 const PetDeleteDialog: React.FC<PetDeleteDialogProps> = ({
   open,
   pet,
   onClose,
-  onConfirm
+  onConfirm,
+  isLoading = false
 }) => {
+  const handleClose = (_: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+    if (isLoading) return; // Prevent closing while loading
+    if (reason !== 'backdropClick') {
+      onClose();
+    }
+  };
+
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog 
+      open={open} 
+      onClose={handleClose}
+      disableEscapeKeyDown={isLoading}
+    >
       <DialogTitle>Delete Pet</DialogTitle>
       <DialogContent>
         <DialogContentText>
@@ -31,10 +44,19 @@ const PetDeleteDialog: React.FC<PetDeleteDialogProps> = ({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button variant="outline" onClick={onClose}>
+        <Button 
+          variant="outline" 
+          onClick={onClose}
+          disabled={isLoading}
+        >
           Cancel
         </Button>
-        <Button variant="error" onClick={onConfirm}>
+        <Button 
+          variant="error" 
+          onClick={onConfirm}
+          isLoading={isLoading}
+          loadingText="Deleting..."
+        >
           Delete
         </Button>
       </DialogActions>

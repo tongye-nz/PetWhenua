@@ -7,8 +7,19 @@ import {
   Stack
 } from '@mui/material';
 import { GitHub, LinkedIn } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 const Footer: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleProjectInfoClick = () => {
+    navigate('/project-info');
+  };
+
+  const handleMeetDeveloperClick = () => {
+    navigate('/meet-developer');
+  };
+
   return (
     <Box
       component="footer"
@@ -58,11 +69,15 @@ const Footer: React.FC = () => {
               alignItems="center"
             >
               <Link
-                href="#"
+                component="button"
+                onClick={handleProjectInfoClick}
                 sx={{
                   color: 'text.secondary',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
                   '&:hover': {
                     color: 'text.primary',
                     textDecoration: 'underline'
@@ -72,11 +87,15 @@ const Footer: React.FC = () => {
                 Project Info
               </Link>
               <Link
-                href="#"
+                component="button"
+                onClick={handleMeetDeveloperClick}
                 sx={{
                   color: 'text.secondary',
                   textDecoration: 'none',
                   fontSize: '0.875rem',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
                   '&:hover': {
                     color: 'text.primary',
                     textDecoration: 'underline'

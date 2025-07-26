@@ -54,7 +54,14 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
   };
 
   return (
-    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+    <CardContent sx={{ 
+      flexGrow: 1, 
+      display: 'flex', 
+      flexDirection: 'column',
+      pb: 2,
+      '&:last-child': { pb: 2 } // Override MUI default padding
+    }}>
+      {/* Pet Name - Essential info, never truncated in height but can truncate width */}
       <Text 
         variant={compact ? "h6" : "h5"} 
         component="h3" 
@@ -63,13 +70,21 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
           mb: 1,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          whiteSpace: 'nowrap',
+          minHeight: compact ? '1.5rem' : '2rem' // Reserve minimum space
         }}
       >
         {pet.name}
       </Text>
 
-      <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+      {/* Species and Breed Chips - Essential info, always visible */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 1, 
+        mb: 1, 
+        flexWrap: 'wrap',
+        minHeight: '24px' // Reserve space even if no chips
+      }}>
         {pet.species && (
           <Chip 
             label={pet.species} 
@@ -88,11 +103,16 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
         )}
       </Box>
 
-      <Text variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      {/* Age and Gender - Essential info, always visible */}
+      <Text variant="body2" color="text.secondary" sx={{ 
+        mb: 1,
+        minHeight: '1.25rem' // Reserve minimum space
+      }}>
         {getAgeText()}
         {pet.gender && ` • ${pet.gender}`}
       </Text>
 
+      {/* Description - This is the only content that should be truncated */}
       {pet.description && (
         <Text 
           variant="body2" 
@@ -101,31 +121,40 @@ const PetCardContent: React.FC<PetCardContentProps> = ({
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             display: '-webkit-box',
-            WebkitLineClamp: compact ? 2 : 3,
+            WebkitLineClamp: compact ? 3 : 4, // Increased line clamp
             WebkitBoxOrient: 'vertical',
-            flexGrow: 1
+            mb: 1,
+            lineHeight: 1.4,
+            // Set a maximum height to prevent overflow
+            maxHeight: compact ? '4.2rem' : '5.6rem' // 3-4 lines with line-height 1.4
           }}
         >
           {pet.description}
         </Text>
       )}
 
+      {/* Owner info and connection button - Always at bottom */}
       {pet.user && (
-        <Box sx={{ mt: 'auto', pt: 1 }}>
-          <Text variant="caption" color="text.secondary">
+        <Box sx={{ 
+          mt: 'auto', 
+          pt: 1,
+          minHeight: '20px' // Reserve minimum space
+        }}>
+          <Text variant="caption" color="text.secondary" sx={{
+            display: 'block',
+            mb: showConnectionButton && !isOwnPet && currentUserPetId && pet.petId ? 1 : 0
+          }}>
             Owner: {pet.user.firstName || pet.user.username}
           </Text>
           
           {/* Pet Connection Button - only show for other users' pets */}
           {showConnectionButton && !isOwnPet && currentUserPetId && pet.petId && (
-            <Box sx={{ mt: 1 }}>
-              <PetConnectionButton
-                myPetId={currentUserPetId}
-                targetPetId={pet.petId}
-                size="small"
-                variant="outlined"
-              />
-            </Box>
+            <PetConnectionButton
+              myPetId={currentUserPetId}
+              targetPetId={pet.petId}
+              size="small"
+              variant="outlined"
+            />
           )}
         </Box>
       )}

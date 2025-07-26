@@ -74,16 +74,22 @@ public class PostsController : ControllerBase
 
             PostType? parsedPostType = null;
             
-            // Parse postType if provided
+            // Parse postType if provided - handle both numeric and string values
             if (!string.IsNullOrEmpty(postType))
             {
-                if (Enum.TryParse<PostType>(postType, true, out var result))
+                // Try parsing as integer first (for numeric values like "5")
+                if (int.TryParse(postType, out var numericValue) && Enum.IsDefined(typeof(PostType), numericValue))
+                {
+                    parsedPostType = (PostType)numericValue;
+                }
+                // Fallback to string parsing (for string values like "Moment")
+                else if (Enum.TryParse<PostType>(postType, true, out var result))
                 {
                     parsedPostType = result;
                 }
                 else
                 {
-                    return BadRequest($"Invalid postType: {postType}. Valid values are: {string.Join(", ", Enum.GetNames<PostType>())}");
+                    return BadRequest($"Invalid postType: {postType}. Valid values are: {string.Join(", ", Enum.GetNames<PostType>())} or their numeric equivalents (0-5)");
                 }
             }
 

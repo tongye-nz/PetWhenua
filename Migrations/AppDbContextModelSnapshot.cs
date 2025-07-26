@@ -637,13 +637,13 @@ namespace PetWhenua.Migrations
                     b.HasOne("Pet", "Pet1")
                         .WithMany("ConnectionsAsPet1")
                         .HasForeignKey("Pet1Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Pet", "Pet2")
                         .WithMany("ConnectionsAsPet2")
                         .HasForeignKey("Pet2Id")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("User", "RequestedBy")
@@ -670,7 +670,7 @@ namespace PetWhenua.Migrations
                     b.HasOne("Pet", "Pet")
                         .WithMany("PetWeddingParticipations")
                         .HasForeignKey("PetId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Post", "Post")

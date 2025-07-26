@@ -6,13 +6,8 @@ import {
   Avatar,
   Typography,
   IconButton,
-  Menu,
-  MenuItem,
-  TextField,
-  Button,
-  Chip
 } from '@mui/material';
-import { MoreVert, Edit, Delete, Save, Cancel, Person } from '@mui/icons-material';
+import { Delete, Person } from '@mui/icons-material';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { commentService } from '../../../../api/comment.api';
 import type { Comment } from '../../../../models/comment.types';
@@ -21,74 +16,18 @@ import { formatTimeAgo } from '../../../../utils/dateUtils';
 
 export interface CommentCardProps {
   comment: Comment;
-  onCommentUpdated?: (updatedComment: Comment) => void;
   onCommentDeleted?: (commentId: number) => void;
 }
 
 const CommentCard: React.FC<CommentCardProps> = ({
   comment,
-  onCommentUpdated,
   onCommentDeleted
 }) => {
   const { user } = useAuth();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editContent, setEditContent] = useState(comment.content);
   const [loading, setLoading] = useState(false);
 
   const isOwner = user?.userId === comment.userId;
-  const canEdit = isOwner;
   const canDelete = isOwner;
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleEditStart = () => {
-    setIsEditing(true);
-    setEditContent(comment.content);
-    handleMenuClose();
-  };
-
-  const handleEditCancel = () => {
-    setIsEditing(false);
-    setEditContent(comment.content);
-  };
-
-  const handleEditSave = async () => {
-    if (!user || editContent.trim() === comment.content.trim()) {
-      setIsEditing(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await commentService.updateComment(comment.commentId, {
-        userId: user.userId,
-        content: editContent.trim()
-      });
-
-      const updatedComment = {
-        ...comment,
-        content: editContent.trim(),
-        updatedAt: new Date().toISOString()
-      };
-
-      if (onCommentUpdated) {
-        onCommentUpdated(updatedComment);
-      }
-
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update comment:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async () => {
     if (!user) return;
@@ -108,8 +47,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
     } finally {
       setLoading(false);
     }
-    
-    handleMenuClose();
   };
 
   const formatDate = (dateString: string) => {
@@ -122,8 +59,6 @@ const CommentCard: React.FC<CommentCardProps> = ({
     }
     return comment.user.username;
   };
-
-  const isEdited = comment.updatedAt !== comment.createdAt;
 
   return (
     <Card variant="outlined" sx={{ mb: 1 }}>
@@ -153,87 +88,33 @@ const CommentCard: React.FC<CommentCardProps> = ({
               <Typography variant="caption" color="text.secondary">
                 {formatDate(comment.createdAt)}
               </Typography>
-              {isEdited && (
-                <Chip 
-                  label="edited" 
-                  size="small" 
-                  variant="outlined" 
-                  sx={{ height: 16, fontSize: '0.6rem' }}
-                />
-              )}
               
-              {/* Actions Menu */}
-              {(canEdit || canDelete) && (
+              {/* Delete Button */}
+              {canDelete && (
                 <Box ml="auto">
                   <IconButton
                     size="small"
-                    onClick={handleMenuOpen}
+                    onClick={handleDelete}
                     disabled={loading}
+                    sx={{ 
+                      color: 'text.secondary',
+                      '&:hover': {
+                        color: 'error.main',
+                        backgroundColor: 'error.light',
+                        opacity: 0.1
+                      }
+                    }}
                   >
-                    <MoreVert fontSize="small" />
+                    <Delete fontSize="small" />
                   </IconButton>
-                  <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleMenuClose}
-                  >
-                    {canEdit && (
-                      <MenuItem onClick={handleEditStart}>
-                        <Edit fontSize="small" sx={{ mr: 1 }} />
-                        Edit
-                      </MenuItem>
-                    )}
-                    {canDelete && (
-                      <MenuItem onClick={handleDelete}>
-                        <Delete fontSize="small" sx={{ mr: 1 }} />
-                        Delete
-                      </MenuItem>
-                    )}
-                  </Menu>
                 </Box>
               )}
             </Box>
 
             {/* Content */}
-            {isEditing ? (
-              <Box>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={2}
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  variant="outlined"
-                  size="small"
-                  disabled={loading}
-                  sx={{ mb: 1 }}
-                />
-                <Box display="flex" gap={1}>
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<Save />}
-                    onClick={handleEditSave}
-                    disabled={loading || editContent.trim() === ''}
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<Cancel />}
-                    onClick={handleEditCancel}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                </Box>
-              </Box>
-            ) : (
-              <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
-                {comment.content}
-              </Typography>
-            )}
+            <Typography variant="body2" sx={{ lineHeight: 1.5 }}>
+              {comment.content}
+            </Typography>
           </Box>
         </Box>
       </CardContent>

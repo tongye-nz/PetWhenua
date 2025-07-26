@@ -34,6 +34,17 @@ namespace PetWhenua.Services
                     throw new InvalidOperationException($"You cannot select pet {petId} for this wedding");
             }
 
+            // Validate that at least one pet belongs to the current user
+            var ownedPetIds = await _context.Pets
+                .Where(p => p.UserId == userId && petIds.Contains(p.PetId))
+                .Select(p => p.PetId)
+                .ToListAsync();
+
+            if (!ownedPetIds.Any())
+            {
+                throw new InvalidOperationException("At least one selected pet must belong to you. You cannot create a wedding with only other users' pets.");
+            }
+
             // Validate address
             if (string.IsNullOrWhiteSpace(address) || address.Length < 5)
                 throw new InvalidOperationException("Address is required and must be at least 5 characters long");
@@ -331,6 +342,17 @@ namespace PetWhenua.Services
             {
                 if (!await CanUserSelectPetForWeddingAsync(requestingUserId, petId))
                     throw new InvalidOperationException($"You cannot select pet {petId} for this wedding");
+            }
+
+            // Validate that at least one pet belongs to the current user
+            var ownedPetIds = await _context.Pets
+                .Where(p => p.UserId == requestingUserId && newPetIds.Contains(p.PetId))
+                .Select(p => p.PetId)
+                .ToListAsync();
+
+            if (!ownedPetIds.Any())
+            {
+                throw new InvalidOperationException("At least one selected pet must belong to you. You cannot update a wedding with only other users' pets.");
             }
 
             // Remove existing participants
