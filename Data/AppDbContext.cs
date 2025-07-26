@@ -81,17 +81,19 @@ public class AppDbContext : DbContext
             .IsUnique();
 
         // Configure PetConnection relationships
+        // Note: SQL Server doesn't allow multiple CASCADE DELETE paths to the same table
+        // So we use CASCADE for Pet1Id and NoAction for Pet2Id, handling Pet2Id cleanup in code
         modelBuilder.Entity<PetConnection>()
             .HasOne(pc => pc.Pet1)
             .WithMany(p => p.ConnectionsAsPet1)
             .HasForeignKey(pc => pc.Pet1Id)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<PetConnection>()
             .HasOne(pc => pc.Pet2)
             .WithMany(p => p.ConnectionsAsPet2)
             .HasForeignKey(pc => pc.Pet2Id)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<PetConnection>()
             .HasOne(pc => pc.RequestedBy)
@@ -115,7 +117,7 @@ public class AppDbContext : DbContext
             .HasOne(pwp => pwp.Pet)
             .WithMany(p => p.PetWeddingParticipations)
             .HasForeignKey(pwp => pwp.PetId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<PetWeddingParticipant>()
             .HasOne(pwp => pwp.Owner)

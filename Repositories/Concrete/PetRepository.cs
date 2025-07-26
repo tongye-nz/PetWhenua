@@ -63,6 +63,33 @@ namespace PetWhenua.Repositories.Concrete
                 return false;
             }
 
+            // Manual cleanup for NoAction foreign keys to avoid constraint violations
+            
+            // First, get all PetConnections that will be affected (both Pet1 and Pet2)
+            var allRelatedConnections = await _context.PetConnections
+                .Where(pc => pc.Pet1Id == id || pc.Pet2Id == id)
+                .Select(pc => pc.PetConnectionId)
+                .ToListAsync();
+
+            // Remove Notifications that reference these PetConnections
+            var relatedNotifications = await _context.Notifications
+                .Where(n => n.RelatedConnectionId.HasValue && allRelatedConnections.Contains(n.RelatedConnectionId.Value))
+                .ToListAsync();
+            _context.Notifications.RemoveRange(relatedNotifications);
+
+            // Remove PetConnections where this pet is Pet2 (Pet1 will be handled by CASCADE)
+            var petConnectionsAsPet2 = await _context.PetConnections
+                .Where(pc => pc.Pet2Id == id)
+                .ToListAsync();
+            _context.PetConnections.RemoveRange(petConnectionsAsPet2);
+
+            // Remove PetWeddingParticipants where this pet is involved
+            var petWeddingParticipants = await _context.PetWeddingParticipants
+                .Where(pwp => pwp.PetId == id)
+                .ToListAsync();
+            _context.PetWeddingParticipants.RemoveRange(petWeddingParticipants);
+
+            // Now safe to delete the pet (Pet1 connections will CASCADE automatically)
             _context.Pets.Remove(pet);
             await _context.SaveChangesAsync();
             return true;
