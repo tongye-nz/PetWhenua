@@ -12,7 +12,8 @@ import {
   PetProfileHeader,
   PetProfileOwnerView,
   PetProfilePublicView,
-  PetConnectionsSection
+  PetConnectionsSection,
+  PetDeleteDialog
 } from '../components/features/pets';
 import { useAuth } from '../contexts/AuthContext';
 import { petService } from '../api/pet.api';
@@ -35,6 +36,10 @@ const PetDetail: React.FC = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deletingPet, setDeletingPet] = useState(false);
 
   // Pet connection state
   const [connectDialogOpen, setConnectDialogOpen] = useState(false);
@@ -222,6 +227,35 @@ const PetDetail: React.FC = () => {
     setEditingPet(null);
   };
 
+  const handleDelete = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!pet?.petId) return;
+
+    try {
+      setDeletingPet(true);
+      await petService.deletePet(pet.petId);
+      setSuccess(`${pet.name} has been deleted successfully!`);
+      
+      // Navigate back after a short delay to show success message
+      setTimeout(() => {
+        navigate('/my-pets');
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to delete pet:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete pet');
+    } finally {
+      setDeletingPet(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+  };
+
   const handlePetClick = (petId: number) => {
     navigate(`/pet/${petId}`);
   };
@@ -286,6 +320,7 @@ const PetDetail: React.FC = () => {
         onBack={handleBack}
         onEdit={handleEdit}
         onConnect={handleConnectClick}
+        onDelete={isOwnPet ? handleDelete : undefined}
       />
 
       {/* Conditional Layout based on ownership */}
@@ -328,6 +363,14 @@ const PetDetail: React.FC = () => {
           onConnectionRequested={handleConnectionRequested}
         />
       )}
+
+      {/* Delete Pet Dialog */}
+      <PetDeleteDialog
+        open={deleteDialogOpen}
+        pet={pet}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+      />
     </Container>
   );
 };
