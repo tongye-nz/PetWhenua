@@ -6,10 +6,10 @@ import {
   Typography,
   Card,
   CardContent,
-  Button,
   useTheme,
   useMediaQuery
 } from '@mui/material';
+import { HomeCarousel } from '../components/features/home/HomeCarousel';
 
 const Home: React.FC = () => {
   const theme = useTheme();
@@ -214,121 +214,8 @@ const Home: React.FC = () => {
         </Container>
       </Box>
 
-      {/* Upcoming Meetup Section */}
-      <Box
-        sx={{
-          py: 6,
-          bgcolor: 'background.paper',
-        }}
-      >
-        <Container maxWidth="lg">
-          <Card
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: 4,
-              color: 'white',
-              maxWidth: '800px',
-              mx: 'auto',
-              position: 'relative',
-            }}
-          >
-            <CardContent sx={{ p: 4 }}>
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 3,
-                  flexDirection: isMobile ? 'column' : 'row',
-                  textAlign: isMobile ? 'center' : 'left'
-                }}
-              >
-                <Box
-                  sx={{
-                    fontSize: '2.5rem',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    p: 2,
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: 80,
-                    height: 80,
-                    flexShrink: 0
-                  }}
-                >
-                  🏃‍♂️
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography
-                    variant="h4"
-                    sx={{
-                      fontWeight: 'bold',
-                      mb: 1
-                    }}
-                  >
-                    Upcoming Meetup
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      mb: 2,
-                      opacity: 0.9,
-                    }}
-                  >
-                    Christchurch - 20 July at Hagley Park
-                  </Typography>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      bgcolor: 'white',
-                      color: '#667eea',
-                      fontWeight: 600,
-                      '&:hover': {
-                        bgcolor: '#f0f0f0',
-                      },
-                    }}
-                  >
-                    Join Event
-                  </Button>
-                </Box>
-              </Box>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: 1,
-                  mt: 3
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255, 255, 255, 0.3)',
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'white',
-                  }}
-                />
-                <Box
-                  sx={{
-                    width: 10,
-                    height: 10,
-                    borderRadius: '50%',
-                    bgcolor: 'rgba(255, 255, 255, 0.3)',
-                  }}
-                />
-              </Box>
-            </CardContent>
-          </Card>
-        </Container>
-      </Box>
+      {/* Dynamic Content Carousel */}
+      <HomeCarousel />
     </Box>
   );
 };
