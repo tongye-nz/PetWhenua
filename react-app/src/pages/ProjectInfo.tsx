@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -7,7 +8,8 @@ import {
   Stack,
   useTheme,
   useMediaQuery,
-  Divider
+  Divider,
+  Link
 } from '@mui/material';
 import {
   Pets,
@@ -29,6 +31,11 @@ import {
 const ProjectInfo: React.FC = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const navigate = useNavigate();
+
+  const handleMeetDeveloperClick = () => {
+    navigate('/meet-developer');
+  };
 
   const techStack = [
     { name: 'React + TypeScript', icon: <WebAsset />, color: '#61dafb' },
@@ -346,24 +353,33 @@ const ProjectInfo: React.FC = () => {
 
         {/* Developer Info */}
         <Box sx={{ textAlign: 'center' }}>
-                      <Typography
-              variant="h4"
-              sx={{
-                fontWeight: 'bold',
-                color: 'text.primary',
-                mb: 4,
-                fontSize: isMobile ? '1.25rem' : '1.75rem'
-              }}
-            >
-              Meet the Developer
-            </Typography>
+          <Link
+            component="button"
+            onClick={handleMeetDeveloperClick}
+            sx={{
+              color: 'text.primary',
+              textDecoration: 'none',
+              fontSize: isMobile ? '1.25rem' : '1.75rem',
+              fontWeight: 'bold',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              mb: 4,
+              '&:hover': {
+                color: 'primary.main',
+                textDecoration: 'underline'
+              }
+            }}
+          >
+            Meet the Developer
+          </Link>
           <Typography
             variant="body1"
             sx={{
               color: 'text.secondary',
               lineHeight: 1.8,
               fontSize: '1.1rem',
-              mb: 6
+              mb: 4
             }}
           >
             Tong Ye - Full Stack Developer & Former Veterinarian

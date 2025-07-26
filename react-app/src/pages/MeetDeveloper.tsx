@@ -16,7 +16,8 @@ import {
   CameraAlt,
   ChildCare,
   DeveloperBoard,
-  Interests
+  Interests,
+  CoffeeMaker
 } from '@mui/icons-material';
 
 const MeetDeveloper: React.FC = () => {
@@ -152,11 +153,11 @@ const MeetDeveloper: React.FC = () => {
                 <Pets />
               </Box>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
-                  Licensed Veterinarian Assistant (China)
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
+                  Full-Stack Developer
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Professional experience in animal healthcare and medical practice
+                  Current role building web applications and exploring AI integration
                 </Typography>
               </Box>
             </Box>
@@ -180,11 +181,11 @@ const MeetDeveloper: React.FC = () => {
                 <DeveloperBoard />
               </Box>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
-                  Full-Stack Developer
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, color: 'text.primary' }}>
+                  Licensed Veterinarian Assistant (China)
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  Current role building web applications and exploring AI integration
+                  Professional experience in animal healthcare and medical practice
                 </Typography>
               </Box>
             </Box>
@@ -321,6 +322,37 @@ const MeetDeveloper: React.FC = () => {
               with my commitment to supporting the local tech community. This involvement allows me to stay 
               connected with industry trends while giving back to the community that has helped shape my career.
             </Typography>
+
+            {/* Personal Life Highlights */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'primary.main' }}>
+                <CameraAlt />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  Astrophotography Enthusiast
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'primary.main' }}>
+                <CoffeeMaker />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  Coffee Enthusiast
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'primary.main' }}>
+                <Psychology />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  Mensa New Zealand Member
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, color: 'primary.main' }}>
+                <CameraAlt />
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  CITA NZ Volunteer Photographer
+                </Typography>
+              </Box>
+            </Box>
           </Box>
         </Box>
 

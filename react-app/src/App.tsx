@@ -4,7 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { PostProvider } from './contexts/PostContext';
 import { SignalRProvider } from './contexts/SignalRContext';
-import { Layout } from './components/common';
+import { Layout, ScrollToTop } from './components/common';
 import { NotificationToast } from './components/features/notifications';
 import { ChatButton } from './components/ui';
 import Home from './pages/Home.tsx';
@@ -41,6 +41,7 @@ function App() {
         <SignalRProvider>
           <PostProvider>
           <Router>
+            <ScrollToTop />
             <NotificationToast />
             <ChatButton variant="fab" showUnreadBadge={true} />
             <Layout>
