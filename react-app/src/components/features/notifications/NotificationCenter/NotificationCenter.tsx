@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   IconButton,
   Badge,
@@ -34,6 +35,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   maxDisplayCount = 10,
   autoRefresh = true
 }) => {
+  const navigate = useNavigate();
   const {
     notifications,
     unreadCount,
@@ -179,7 +181,106 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     }
 
     // Navigate based on notification type
-    // TODO: Add navigation logic based on notification type
+    try {
+      console.log('Notification type:', notification.type, 'Expected UserFollowed:', NotificationType.UserFollowed);
+      
+      // Normalize the type to handle potential string/number mismatches
+      let normalizedType: number = typeof notification.type === 'number' ? notification.type : 0;
+      
+      if (typeof notification.type === 'string') {
+        // Check if it's a numeric string first
+        if (!isNaN(Number(notification.type))) {
+          normalizedType = parseInt(notification.type);
+        } else {
+          // Handle enum name strings (e.g., "PetWeddingApproved" -> 4)
+          const enumValue = NotificationType[notification.type as keyof typeof NotificationType];
+          normalizedType = typeof enumValue === 'number' ? enumValue : -1;
+        }
+      }
+      
+      console.log('Normalized type:', normalizedType);
+      
+      switch (normalizedType) {
+        case NotificationType.PetConnectionRequest:
+          navigate('/pet-connection-requests');
+          break;
+
+        case NotificationType.PetConnectionApproved:
+        case NotificationType.PetConnectionRejected:
+          console.log('Pet connection notification:', {
+            type: notification.type,
+            relatedPetId: notification.relatedPetId,
+            relatedConnectionId: notification.relatedConnectionId,
+            relatedUserId: notification.relatedUserId
+          });
+          
+          if (notification.relatedPetId) {
+            navigate(`/pet/${notification.relatedPetId}`);
+          } else if (notification.relatedUserId) {
+            // Fallback: navigate to the related user's profile instead
+            navigate(`/user/${notification.relatedUserId}`);
+          } else {
+            navigate('/pet-connection-requests');
+          }
+          break;
+
+        case NotificationType.PetWeddingPendingApproval:
+          navigate('/wedding-requests');
+          break;
+
+        case NotificationType.PetWeddingApproved:
+        case NotificationType.PetWeddingRejected:
+          if (notification.relatedPostId) {
+            navigate(`/post/${notification.relatedPostId}`);
+          } else {
+            navigate('/wedding-requests');
+          }
+          break;
+
+        case NotificationType.MeetupPendingActivation:
+          navigate('/admin/meetups');
+          break;
+
+        case NotificationType.MeetupActivated:
+        case NotificationType.MeetupRejected:
+          if (notification.relatedPostId) {
+            navigate(`/post/${notification.relatedPostId}`);
+          } else {
+            navigate('/posts/meetup');
+          }
+          break;
+
+        case NotificationType.PostLiked:
+        case NotificationType.PostCommented:
+          if (notification.relatedPostId) {
+            navigate(`/post/${notification.relatedPostId}`);
+          } else {
+            navigate('/posts');
+          }
+          break;
+
+        case NotificationType.UserFollowed:
+          if (notification.relatedUserId) {
+            navigate(`/user/${notification.relatedUserId}`);
+          } else {
+            navigate('/users-near-me');
+          }
+          break;
+
+        case NotificationType.ChatMessage:
+          navigate('/messages');
+          break;
+
+        case NotificationType.General:
+        default:
+          // For general notifications or unknown types, don't navigate
+          console.log('No specific navigation for notification type:', notification.type, 'Normalized:', normalizedType);
+          break;
+      }
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
+
     handleMenuClose();
   };
 
@@ -210,7 +311,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
         PaperProps={{
           sx: {
             width: 420,
-            maxHeight: 600,
+            maxHeight: 'min(600px, calc(100vh - 100px))',
             overflow: 'hidden',
           },
         }}

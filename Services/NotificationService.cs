@@ -207,7 +207,7 @@ namespace PetWhenua.Services
         }
 
         // Convenience methods for common notification types
-        public async Task CreatePetConnectionRequestNotificationAsync(int targetUserId, int requesterUserId, int connectionId, string requesterPetName, string targetPetName)
+        public async Task CreatePetConnectionRequestNotificationAsync(int targetUserId, int requesterUserId, int connectionId, string requesterPetName, string targetPetName, int? requesterPetId = null)
         {
             var requester = await _context.Users.FindAsync(requesterUserId);
             var requesterName = requester?.FirstName ?? requester?.Username ?? "Someone";
@@ -219,13 +219,14 @@ namespace PetWhenua.Services
                 Title = "New Pet Connection Request",
                 Message = $"{requesterName} wants to connect {requesterPetName} with {targetPetName}",
                 RelatedUserId = requesterUserId,
-                RelatedConnectionId = connectionId
+                RelatedConnectionId = connectionId,
+                RelatedPetId = requesterPetId
             };
 
             await CreateAndSendNotificationAsync(request);
         }
 
-        public async Task CreatePetConnectionResponseNotificationAsync(int targetUserId, int responderUserId, int connectionId, bool isApproved, string requesterPetName, string responderPetName)
+        public async Task CreatePetConnectionResponseNotificationAsync(int targetUserId, int responderUserId, int connectionId, bool isApproved, string requesterPetName, string responderPetName, int? connectedPetId = null)
         {
             var responder = await _context.Users.FindAsync(responderUserId);
             var responderName = responder?.FirstName ?? responder?.Username ?? "Someone";
@@ -240,7 +241,8 @@ namespace PetWhenua.Services
                 Title = $"Pet Connection Request {status.ToTitleCase()}",
                 Message = $"{responderName} has {status} the connection request between {requesterPetName} and {responderPetName}",
                 RelatedUserId = responderUserId,
-                RelatedConnectionId = connectionId
+                RelatedConnectionId = connectionId,
+                RelatedPetId = connectedPetId
             };
 
             await CreateAndSendNotificationAsync(request);

@@ -45,6 +45,7 @@ namespace PetWhenua.Controllers
                     var targetUserId = pet1?.UserId == currentUserId ? pet2?.UserId : pet1?.UserId;
                     var requesterPetName = pet1?.UserId == currentUserId ? pet1?.Name : pet2?.Name;
                     var targetPetName = pet1?.UserId == currentUserId ? pet2?.Name : pet1?.Name;
+                    var requesterPetId = pet1?.UserId == currentUserId ? pet1?.PetId : pet2?.PetId;
                     
                     if (targetUserId.HasValue && !string.IsNullOrEmpty(requesterPetName) && !string.IsNullOrEmpty(targetPetName))
                     {
@@ -53,7 +54,8 @@ namespace PetWhenua.Controllers
                             currentUserId, 
                             connection.PetConnectionId, 
                             requesterPetName, 
-                            targetPetName);
+                            targetPetName,
+                            requesterPetId);
                     }
                 }
                 catch (Exception ex)
@@ -87,6 +89,7 @@ namespace PetWhenua.Controllers
                     
                     var requesterPetName = pet1?.UserId == connection.RequestedById ? pet1?.Name : pet2?.Name;
                     var responderPetName = pet1?.UserId == connection.RequestedById ? pet2?.Name : pet1?.Name;
+                    var connectedPetId = pet1?.UserId == connection.RequestedById ? pet2?.PetId : pet1?.PetId;
                     
                     if (!string.IsNullOrEmpty(requesterPetName) && !string.IsNullOrEmpty(responderPetName))
                     {
@@ -97,7 +100,8 @@ namespace PetWhenua.Controllers
                             connection.PetConnectionId, 
                             isApproved, 
                             requesterPetName, 
-                            responderPetName);
+                            responderPetName,
+                            connectedPetId);
                     }
                 }
                 catch (Exception ex)

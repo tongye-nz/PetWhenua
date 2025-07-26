@@ -93,7 +93,7 @@ const PetDetail: React.FC = () => {
       setLoadingConnection(true);
       
       // Get current user's pets
-      const userPets = await petService.getCurrentUserPets();
+      const userPets = await petService.getCurrentUserPets(user.userId);
       
       if (userPets.length === 0) {
         setConnectionStatus(null);

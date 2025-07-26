@@ -26,8 +26,8 @@ namespace PetWhenua.Services
         Task BroadcastNotificationAsync(List<int> userIds, NotificationDto notification);
         
         // Convenience methods for common notification types
-        Task CreatePetConnectionRequestNotificationAsync(int targetUserId, int requesterUserId, int connectionId, string requesterPetName, string targetPetName);
-        Task CreatePetConnectionResponseNotificationAsync(int targetUserId, int responderUserId, int connectionId, bool isApproved, string requesterPetName, string responderPetName);
+        Task CreatePetConnectionRequestNotificationAsync(int targetUserId, int requesterUserId, int connectionId, string requesterPetName, string targetPetName, int? requesterPetId = null);
+        Task CreatePetConnectionResponseNotificationAsync(int targetUserId, int responderUserId, int connectionId, bool isApproved, string requesterPetName, string responderPetName, int? connectedPetId = null);
         Task CreatePetWeddingApprovalNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName);
         Task CreatePetWeddingRequestNotificationAsync(int targetUserId, int postId, string postTitle, string requesterName);
         Task CreateMeetupActivationNotificationAsync(int targetUserId, int postId, string postTitle);

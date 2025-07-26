@@ -98,10 +98,10 @@ export const petService = {
   },
 
   // Get current user's pets
-  async getCurrentUserPets(includeUser: boolean = false): Promise<Pet[]> {
+  async getCurrentUserPets(userId: number, includeUser: boolean = false): Promise<Pet[]> {
     try {
       const params = includeUser ? '?includeUser=true' : '';
-      const response = await petApi.get<Pet[]>(`${API_CONFIG.ENDPOINTS.PETS}/user/me${params}`);
+      const response = await petApi.get<Pet[]>(`${API_CONFIG.ENDPOINTS.PETS}/user/${userId}${params}`);
       return response.data;
     } catch (error) {
       throw handlePetApiError(error as AxiosError);
