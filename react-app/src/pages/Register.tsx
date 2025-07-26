@@ -19,7 +19,7 @@ const Register: React.FC = () => {
   // Clear error when component mounts
   useEffect(() => {
     clearError();
-  }, [clearError]);
+  }, []);
 
   const handleRegister = async (formData: RegisterFormData) => {
     clearError();
@@ -30,6 +30,7 @@ const Register: React.FC = () => {
       navigate('/profile', { replace: true });
     } catch (err) {
       console.error('Registration failed:', err);
+      // Error is already handled in AuthContext
     }
   };
 
@@ -38,43 +39,47 @@ const Register: React.FC = () => {
     navigate('/login');
   };
 
-  // Enhanced error message with helpful guidance
-  const getEnhancedErrorMessage = () => {
+  // Error display
+  const renderErrorAlert = () => {
     if (!error) return null;
 
-    const isValidationError = error.includes('validation') || error.includes('already exists') || error.includes('required');
-    const isNetworkError = error.includes('Network') || error.includes('timeout');
-    const isServerError = error.includes('Server error') || error.includes('temporarily unavailable');
+    const errorLower = error.toLowerCase();
+    const isUsernameError = errorLower.includes('username already exists') || 
+                           (errorLower.includes('username') && errorLower.includes('exists'));
+    const isEmailError = errorLower.includes('email already exists') || 
+                        (errorLower.includes('email') && errorLower.includes('exists'));
 
-    if (isValidationError) {
+    if (isUsernameError) {
       return (
         <Alert severity="warning" sx={{ width: '100%', mb: 2 }}>
-          <AlertTitle>Registration Error</AlertTitle>
-          {error} Please check your information and try again. Make sure your username and email are unique.
+          <AlertTitle>Username Already Taken</AlertTitle>
+          This username is already taken. Please choose a different username.
+          <Box component="ul" sx={{ mt: 1, pl: 2, mb: 0 }}>
+            <li>Usernames must be unique</li>
+            <li>Only letters, numbers, hyphens, and underscores are allowed</li>
+            <li>Length must be between 3 and 20 characters</li>
+          </Box>
         </Alert>
       );
     }
 
-    if (isNetworkError) {
+    if (isEmailError) {
       return (
-        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-          <AlertTitle>Connection Problem</AlertTitle>
-          {error} Please check your internet connection and try again.
+        <Alert severity="warning" sx={{ width: '100%', mb: 2 }}>
+          <AlertTitle>Email Already Registered</AlertTitle>
+          This email is already registered. Please use a different email or try logging in.
+          <Box component="ul" sx={{ mt: 1, pl: 2, mb: 0 }}>
+            <li>Please use a different email address</li>
+            <li>If this is your email, try logging in instead</li>
+          </Box>
         </Alert>
       );
     }
 
-    if (isServerError) {
-      return (
-        <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
-          <AlertTitle>Service Temporarily Unavailable</AlertTitle>
-          {error} Please wait a moment and try again.
-        </Alert>
-      );
-    }
-
+    // For any other error
     return (
       <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
+        <AlertTitle>Registration Failed</AlertTitle>
         {error}
       </Alert>
     );
@@ -88,13 +93,13 @@ const Register: React.FC = () => {
       />
       
       <Box sx={{ width: '100%' }}>
-        {getEnhancedErrorMessage()}
+        {renderErrorAlert()}
         
         <RegisterForm 
           onSubmit={handleRegister}
           onLoginClick={handleLoginClick}
           isLoading={isLoading}
-          error={null} // We handle the error display above
+          error={null}
         />
       </Box>
       
