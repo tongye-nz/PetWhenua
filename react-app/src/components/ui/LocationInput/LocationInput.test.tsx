@@ -151,7 +151,7 @@ describe('LocationInput', () => {
 
     it('should handle empty input', () => {
       const onChange = vi.fn()
-      render(<LocationInput {...defaultProps} onChange={onChange} />)
+      render(<LocationInput {...defaultProps} value="Initial Value" onChange={onChange} />)
       
       const input = screen.getByLabelText('Location')
       fireEvent.change(input, { target: { value: '' } })

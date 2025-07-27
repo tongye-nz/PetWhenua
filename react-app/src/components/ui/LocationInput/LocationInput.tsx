@@ -121,6 +121,12 @@ const LocationInput: React.FC<LocationInputProps> = ({
     onChange(event.target.value);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Escape') {
+      setIsOpen(false);
+    }
+  };
+
   return (
     <ClickAwayListener onClickAway={handleClickAway}>
       <Box position="relative" width={fullWidth ? "100%" : "auto"}>
@@ -130,6 +136,7 @@ const LocationInput: React.FC<LocationInputProps> = ({
           value={value}
           onChange={handleInputChange}
           onFocus={handleInputFocus}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={placeholder}
           error={error}
