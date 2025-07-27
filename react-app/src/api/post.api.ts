@@ -7,6 +7,7 @@ import type {
   PostFilters
 } from '../models/post.types';
 import type { PaginatedResponse, PaginationParams } from '../models/pagination.types';
+import { petWeddingService } from './petWedding.api';
 
 const postApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -68,8 +69,7 @@ export const postService = {
     // Check if this is a pet wedding update with participants
     if (postData.postType === 1 && postData.selectedPetIds && postData.selectedPetIds.length > 0) {
       // Update participants using the dedicated pet wedding endpoint
-      const petWeddingService = await import('./petWedding.api');
-      await petWeddingService.petWeddingService.updatePetWeddingParticipants(id, postData.selectedPetIds);
+      await petWeddingService.updatePetWeddingParticipants(id, postData.selectedPetIds);
     }
 
     // Backend expects only the core Post properties, no navigation properties

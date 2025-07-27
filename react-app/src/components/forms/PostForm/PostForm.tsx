@@ -24,6 +24,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { usePost } from '../../../contexts/PostContext';
 import { formatDateTimeForInput, getCurrentNzTimeForInput, isInputDateTimeInFuture } from '../../../utils/dateUtils';
 import { petWeddingService } from '../../../api/petWedding.api';
+import { postService } from '../../../api/post.api';
 
 export interface PostFormData {
   title: string;
@@ -448,8 +449,7 @@ const PostForm: React.FC<PostFormProps> = ({
           throw new Error('Post status is required');
         }
 
-        // Import and use the post service to update the post
-        const { postService } = await import('../../../api/post.api');
+        // Update the post
         await postService.updatePost(postId, submitData);
         
         // Show success message
