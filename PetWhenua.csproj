@@ -27,6 +27,13 @@
     <Folder Include="react-app\src\utils\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="PetWhenua.Tests\**" />
+    <Content Remove="PetWhenua.Tests\**" />
+    <EmbeddedResource Remove="PetWhenua.Tests\**" />
+    <None Remove="PetWhenua.Tests\**" />
+  </ItemGroup>
+
 
 
 </Project>
