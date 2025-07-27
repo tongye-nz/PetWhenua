@@ -33,7 +33,8 @@ const parseUtcToNz = (dateString: string): Date => {
  * Get current New Zealand time
  */
 export const getNzNow = (): Date => {
-  return new Date(new Date().toLocaleString("en-US", { timeZone: NZ_TIMEZONE }));
+  // Simply return current UTC time since we'll handle timezone conversion in the formatting functions
+  return new Date();
 };
 
 /**
@@ -79,12 +80,12 @@ export const formatTime = (dateString: string): string => {
 };
 
 /**
- * Format time ago relative to New Zealand time
+ * Format time ago relative to current time
  */
 export const formatTimeAgo = (dateString: string): string => {
-  const utcDate = parseUtcToNz(dateString);
-  const nzNow = getNzNow();
-  const diffInSeconds = Math.floor((nzNow.getTime() - utcDate.getTime()) / 1000);
+  const inputDate = parseUtcToNz(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - inputDate.getTime()) / 1000);
 
   if (diffInSeconds < 60) {
     return 'Just now';
