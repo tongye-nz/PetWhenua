@@ -145,7 +145,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
         maxWidth: 400,
       }}
     >
-      {toasts.map((toast, _) => (
+      {toasts.map((toast) => (
         <Slide
           key={toast.toastId}
           direction="left"

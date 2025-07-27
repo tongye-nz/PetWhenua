@@ -45,13 +45,19 @@ authApi.interceptors.response.use(
   }
 );
 
+// Type for API error response
+interface ApiErrorResponse {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
+
 // Helper function to handle API errors
 const handleApiError = (error: AxiosError): ApiError => {
   if (error.response?.data) {
-    const data = error.response.data as any;
+    const data = error.response.data as ApiErrorResponse | string;
     
     // Handle validation errors
-    if (data.errors) {
+    if (typeof data === 'object' && data.errors) {
       const validationMessages = Object.values(data.errors).flat().join(', ');
       return {
         message: validationMessages || 'Validation failed',
@@ -60,7 +66,7 @@ const handleApiError = (error: AxiosError): ApiError => {
     }
     
     // Handle specific error messages from server - prioritize server messages
-    if (data.message) {
+    if (typeof data === 'object' && data.message) {
       return { message: data.message };
     }
     
@@ -81,12 +87,14 @@ const handleApiError = (error: AxiosError): ApiError => {
   switch (error.response.status) {
     case 400:
       return { message: 'Invalid request. Please check your input and try again.' };
-    case 401:
+    case 401: {
       // For 401, try to extract server message first, fallback to generic message
-      const unauthorizedMessage = typeof error.response.data === 'string' 
-        ? error.response.data 
-        : (error.response.data as any)?.message || 'Invalid username/email or password. Please try again.';
+      const data = error.response.data as ApiErrorResponse | string;
+      const unauthorizedMessage = typeof data === 'string' 
+        ? data 
+        : data?.message || 'Invalid username/email or password. Please try again.';
       return { message: unauthorizedMessage };
+    }
     case 403:
       return { message: 'You do not have permission to perform this action.' };
     case 404:

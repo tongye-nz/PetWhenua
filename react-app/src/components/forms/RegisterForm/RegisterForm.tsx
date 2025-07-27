@@ -147,7 +147,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
         }
         return undefined;
 
-      case 'email':
+      case 'email': {
         if (!value.trim()) {
           return 'Email is required';
         }
@@ -159,8 +159,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           return 'Email must be less than 100 characters';
         }
         return undefined;
+      }
 
-      case 'password':
+      case 'password': {
         if (!value) {
           return 'Password is required';
         }
@@ -183,6 +184,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({
           return 'Password can only contain letters, numbers, and these special characters: !@#$%*-_+=';
         }
         return undefined;
+      }
 
       case 'confirmPassword':
         if (!value) {

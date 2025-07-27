@@ -4,6 +4,7 @@ import type {
   ChatRoom, 
   SendMessageRequest 
 } from '../models/chat.types';
+import type { User } from '../models/auth.types';
 import { API_CONFIG } from './config';
 
 // Create axios instance with base configuration
@@ -114,7 +115,7 @@ export const chatService = {
   },
 
   // Search for users to start new chats
-  async searchUsers(query: string): Promise<any[]> {
+  async searchUsers(query: string): Promise<User[]> {
     try {
       const response = await chatApi.get('/users/search', {
         params: { q: query, limit: 10 }

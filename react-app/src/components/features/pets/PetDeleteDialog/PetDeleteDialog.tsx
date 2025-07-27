@@ -24,7 +24,7 @@ const PetDeleteDialog: React.FC<PetDeleteDialogProps> = ({
   onConfirm,
   isLoading = false
 }) => {
-  const handleClose = (_: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
+  const handleClose = (_: unknown, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (isLoading) return; // Prevent closing while loading
     if (reason !== 'backdropClick') {
       onClose();

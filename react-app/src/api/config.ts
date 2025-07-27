@@ -1,3 +1,5 @@
+import type { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
 const getBaseUrl = () => {
   // For Azure Static Web Apps, check the hostname
   if (typeof window !== 'undefined' && window.location.hostname.includes('azurestaticapps.net')) {
@@ -39,8 +41,8 @@ export const removeAuthToken = (): void => {
 };
 
 // Common request interceptor for adding auth token
-export const addAuthInterceptor = (axiosInstance: any) => {
-  axiosInstance.interceptors.request.use((config: any) => {
+export const addAuthInterceptor = (axiosInstance: AxiosInstance) => {
+  axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
