@@ -43,7 +43,7 @@ describe('LikeButton', () => {
       
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(screen.getByText('Sign in to like posts')).toBeInTheDocument()
+      expect(screen.getByLabelText('Sign in to like posts')).toBeInTheDocument()
       expect(screen.getByTestId('favorite-border-icon')).toBeInTheDocument()
     })
 
@@ -449,6 +449,12 @@ describe('LikeButton', () => {
 
       render(<LikeButton postId={1} />)
       
+      const button = screen.getByRole('button')
+      await waitFor(() => expect(button).toBeInTheDocument())
+      
+      // Hover over the button to trigger tooltip
+      fireEvent.mouseEnter(button)
+      
       await waitFor(() => {
         expect(screen.getByText('Like')).toBeInTheDocument()
       })
@@ -464,6 +470,12 @@ describe('LikeButton', () => {
       })
       
       render(<LikeButton postId={1} />)
+      
+      const button = screen.getByRole('button')
+      await waitFor(() => expect(button).toBeInTheDocument())
+      
+      // Hover over the button to trigger tooltip
+      fireEvent.mouseEnter(button)
       
       await waitFor(() => {
         expect(screen.getByText('Unlike')).toBeInTheDocument()
