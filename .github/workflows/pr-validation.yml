@@ -85,7 +85,6 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
         echo "- Full test suite will run when this PR is ready to merge" >> $GITHUB_STEP_SUMMARY
-        echo "- Integration tests will run on the main CI workflow" >> $GITHUB_STEP_SUMMARY
 
   changed-files:
     name: Analyze Changed Files
