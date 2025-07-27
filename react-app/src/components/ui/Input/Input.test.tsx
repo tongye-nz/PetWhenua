@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '../../../utils/test-utils'
+import { render, screen, fireEvent } from '../../../test/utils/test-utils'
 import { vi } from 'vitest'
-import Input from '../../../../components/ui/Input/Input'
+import Input from './Input'
 
 describe('Input Component', () => {
   it('renders input with label', () => {

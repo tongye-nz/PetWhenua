@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react'
-import { render, screen, act, waitFor } from './utils/test-utils'
+import { render, screen, act, waitFor } from './test/utils/test-utils'
 import { vi } from 'vitest'
-import App from '../App'
+import App from './App'
 
 // Mock MUI icons to prevent "too many open files" error
 vi.mock('@mui/icons-material', () => {
@@ -19,7 +19,7 @@ vi.mock('@mui/icons-material', () => {
 })
 
 // Mock all providers and their hooks
-vi.mock('../contexts/ThemeContext', () => ({
+vi.mock('./contexts/ThemeContext', () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="theme-provider">{children}</div>,
   useTheme: () => ({
     mode: 'light',
@@ -28,7 +28,7 @@ vi.mock('../contexts/ThemeContext', () => ({
   })
 }))
 
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('./contexts/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
   useAuth: () => ({
     user: { id: '1', username: 'testuser', email: 'test@test.com' },
@@ -40,7 +40,7 @@ vi.mock('../contexts/AuthContext', () => ({
   })
 }))
 
-vi.mock('../contexts/PostContext', () => ({
+vi.mock('./contexts/PostContext', () => ({
   PostProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="post-provider">{children}</div>,
   usePost: () => ({
     posts: [],
@@ -51,7 +51,7 @@ vi.mock('../contexts/PostContext', () => ({
   })
 }))
 
-vi.mock('../contexts/SignalRContext', () => ({
+vi.mock('./contexts/SignalRContext', () => ({
   SignalRProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="signalr-provider">{children}</div>,
   useSignalR: () => ({
     connection: null,
@@ -61,7 +61,7 @@ vi.mock('../contexts/SignalRContext', () => ({
 }))
 
 // Mock components that are always visible
-vi.mock('../components/common', () => ({
+vi.mock('./components/common', () => ({
   Layout: ({ children }: { children: React.ReactNode }) => <div data-testid="layout">{children}</div>,
   ScrollToTop: () => <div data-testid="scroll-to-top" />,
   ProtectedRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="protected-route">{children}</div>,
@@ -69,11 +69,11 @@ vi.mock('../components/common', () => ({
   MeetupAdminRoute: ({ children }: { children: React.ReactNode }) => <div data-testid="meetup-admin-route">{children}</div>
 }))
 
-vi.mock('../components/features/notifications', () => ({
+vi.mock('./components/features/notifications', () => ({
   NotificationToast: () => <div data-testid="notification-toast" />
 }))
 
-vi.mock('../components/ui', () => ({
+vi.mock('./components/ui', () => ({
   ChatButton: () => <div data-testid="chat-button" />
 }))
 
@@ -109,32 +109,32 @@ vi.mock('react-router-dom', () => {
 })
 
 // Mock all page components
-vi.mock('../pages/Home.tsx', () => ({ default: () => <div data-testid="page-home" /> }))
-vi.mock('../pages/Login.tsx', () => ({ default: () => <div data-testid="page-login" /> }))
-vi.mock('../pages/Register.tsx', () => ({ default: () => <div data-testid="page-register" /> }))
-vi.mock('../pages/MyPets.tsx', () => ({ default: () => <div data-testid="page-my-pets" /> }))
-vi.mock('../pages/AllPets.tsx', () => ({ default: () => <div data-testid="page-all-pets" /> }))
-vi.mock('../pages/Posts.tsx', () => ({ default: () => <div data-testid="page-posts" /> }))
-vi.mock('../pages/PostDetail.tsx', () => ({ default: () => <div data-testid="page-post-detail" /> }))
-vi.mock('../pages/PetDetail.tsx', () => ({ default: () => <div data-testid="page-pet-detail" /> }))
-vi.mock('../pages/CreatePost.tsx', () => ({ default: () => <div data-testid="page-create-post" /> }))
-vi.mock('../pages/MyPosts.tsx', () => ({ default: () => <div data-testid="page-my-posts" /> }))
-vi.mock('../pages/AdminPanel.tsx', () => ({ default: () => <div data-testid="page-admin-panel" /> }))
-vi.mock('../pages/MeetupManagement.tsx', () => ({ default: () => <div data-testid="page-meetup-management" /> }))
-vi.mock('../pages/PetConnectionRequests.tsx', () => ({ default: () => <div data-testid="page-pet-connection-requests" /> }))
-vi.mock('../pages/Messages.tsx', () => ({ default: () => <div data-testid="page-messages" /> }))
-vi.mock('../pages/UsersNearMe.tsx', () => ({ default: () => <div data-testid="page-users-near-me" /> }))
-vi.mock('../pages/PetsNearMe.tsx', () => ({ default: () => <div data-testid="page-pets-near-me" /> }))
-vi.mock('../pages/WeddingRequests.tsx', () => ({ default: () => <div data-testid="page-wedding-requests" /> }))
-vi.mock('../pages/ProjectInfo.tsx', () => ({ default: () => <div data-testid="page-project-info" /> }))
-vi.mock('../pages/MeetDeveloper.tsx', () => ({ default: () => <div data-testid="page-meet-developer" /> }))
+vi.mock('./pages/Home.tsx', () => ({ default: () => <div data-testid="page-home" /> }))
+vi.mock('./pages/Login.tsx', () => ({ default: () => <div data-testid="page-login" /> }))
+vi.mock('./pages/Register.tsx', () => ({ default: () => <div data-testid="page-register" /> }))
+vi.mock('./pages/MyPets.tsx', () => ({ default: () => <div data-testid="page-my-pets" /> }))
+vi.mock('./pages/AllPets.tsx', () => ({ default: () => <div data-testid="page-all-pets" /> }))
+vi.mock('./pages/Posts.tsx', () => ({ default: () => <div data-testid="page-posts" /> }))
+vi.mock('./pages/PostDetail.tsx', () => ({ default: () => <div data-testid="page-post-detail" /> }))
+vi.mock('./pages/PetDetail.tsx', () => ({ default: () => <div data-testid="page-pet-detail" /> }))
+vi.mock('./pages/CreatePost.tsx', () => ({ default: () => <div data-testid="page-create-post" /> }))
+vi.mock('./pages/MyPosts.tsx', () => ({ default: () => <div data-testid="page-my-posts" /> }))
+vi.mock('./pages/AdminPanel.tsx', () => ({ default: () => <div data-testid="page-admin-panel" /> }))
+vi.mock('./pages/MeetupManagement.tsx', () => ({ default: () => <div data-testid="page-meetup-management" /> }))
+vi.mock('./pages/PetConnectionRequests.tsx', () => ({ default: () => <div data-testid="page-pet-connection-requests" /> }))
+vi.mock('./pages/Messages.tsx', () => ({ default: () => <div data-testid="page-messages" /> }))
+vi.mock('./pages/UsersNearMe.tsx', () => ({ default: () => <div data-testid="page-users-near-me" /> }))
+vi.mock('./pages/PetsNearMe.tsx', () => ({ default: () => <div data-testid="page-pets-near-me" /> }))
+vi.mock('./pages/WeddingRequests.tsx', () => ({ default: () => <div data-testid="page-wedding-requests" /> }))
+vi.mock('./pages/ProjectInfo.tsx', () => ({ default: () => <div data-testid="page-project-info" /> }))
+vi.mock('./pages/MeetDeveloper.tsx', () => ({ default: () => <div data-testid="page-meet-developer" /> }))
 
 // Mock lazy-loaded components
-vi.mock('../pages/UserProfile.tsx', () => ({ default: () => <div data-testid="page-user-profile" /> }))
-vi.mock('../pages/OtherUserProfile.tsx', () => ({ default: () => <div data-testid="page-other-user-profile" /> }))
+vi.mock('./pages/UserProfile.tsx', () => ({ default: () => <div data-testid="page-user-profile" /> }))
+vi.mock('./pages/OtherUserProfile.tsx', () => ({ default: () => <div data-testid="page-other-user-profile" /> }))
 
 // Mock ImageUpload component
-vi.mock('../components/ImageUpload.tsx', () => ({
+vi.mock('./components/ImageUpload.tsx', () => ({
   default: () => <div data-testid="image-upload" />
 }))
 
