@@ -124,7 +124,7 @@ public class PostPermissionsControllerTests
     public void GetPostCreationPermissions_NullRole_ReturnsBadRequest()
     {
         // Act
-        var result = _controller.GetPostCreationPermissions(null);
+        var result = _controller.GetPostCreationPermissions(null!);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

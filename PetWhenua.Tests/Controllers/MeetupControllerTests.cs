@@ -96,11 +96,11 @@ public class MeetupControllerTests
         Assert.Equal(500, statusCodeResult.StatusCode);
         
         var response = statusCodeResult.Value;
-        var messageProperty = response.GetType().GetProperty("message");
-        var errorProperty = response.GetType().GetProperty("error");
+        var messageProperty = response?.GetType().GetProperty("message");
+        var errorProperty = response?.GetType().GetProperty("error");
         
-        Assert.Contains("Failed to retrieve inactive meetup posts", messageProperty.GetValue(response).ToString());
-        Assert.Equal(errorMessage, errorProperty.GetValue(response));
+        Assert.Contains("Failed to retrieve inactive meetup posts", messageProperty?.GetValue(response)?.ToString() ?? "");
+        Assert.Equal(errorMessage, errorProperty?.GetValue(response));
     }
 
     [Fact]
@@ -339,11 +339,11 @@ public class MeetupControllerTests
         Assert.Equal(500, statusCodeResult.StatusCode);
         
         var response = statusCodeResult.Value;
-        var messageProperty = response.GetType().GetProperty("message");
-        var errorProperty = response.GetType().GetProperty("error");
+        var messageProperty = response?.GetType().GetProperty("message");
+        var errorProperty = response?.GetType().GetProperty("error");
         
-        Assert.Contains("Failed to retrieve pending meetup posts", messageProperty.GetValue(response).ToString());
-        Assert.Equal(errorMessage, errorProperty.GetValue(response));
+        Assert.Contains("Failed to retrieve pending meetup posts", messageProperty?.GetValue(response)?.ToString() ?? "");
+        Assert.Equal(errorMessage, errorProperty?.GetValue(response));
     }
 
     [Fact]

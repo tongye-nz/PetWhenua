@@ -411,7 +411,7 @@ namespace PetWhenua.Services
             var connectionCount = 0;
 
             // Group pets by user location
-            var petsByLocation = pets.GroupBy(p => p.User.Location).ToList();
+            var petsByLocation = pets.GroupBy(p => p.User.Location ?? "Unknown").ToList();
 
             foreach (var locationGroup in petsByLocation)
             {

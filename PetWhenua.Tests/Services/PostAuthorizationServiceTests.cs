@@ -143,10 +143,10 @@ public class PostAuthorizationServiceTests
     [InlineData("invalid_role", PostType.Moment)]
     [InlineData("", PostType.BuySell)]
     [InlineData(null, PostType.Library)]
-    public void CanCreatePost_InvalidRole_ReturnsFalse(string userRole, PostType postType)
+    public void CanCreatePost_InvalidRole_ReturnsFalse(string? userRole, PostType postType)
     {
         // Act
-        var result = _authorizationService.CanCreatePost(userRole, postType);
+        var result = _authorizationService.CanCreatePost(userRole!, postType);
 
         // Assert
         Assert.False(result);
@@ -461,7 +461,7 @@ public class PostAuthorizationServiceTests
     public void GetInitialPostStatus_NullRole_ReturnsActive()
     {
         // Act
-        var result = _authorizationService.GetInitialPostStatus(null, PostType.Moment);
+        var result = _authorizationService.GetInitialPostStatus(null!, PostType.Moment);
 
         // Assert
         Assert.Equal(PostStatus.Active, result);
@@ -481,7 +481,7 @@ public class PostAuthorizationServiceTests
     public void CanCreatePost_NullRole_ReturnsFalse()
     {
         // Act
-        var result = _authorizationService.CanCreatePost(null, PostType.Moment);
+        var result = _authorizationService.CanCreatePost(null!, PostType.Moment);
 
         // Assert
         Assert.False(result);
@@ -491,7 +491,7 @@ public class PostAuthorizationServiceTests
     public void CanEditPost_NullRole_ReturnsTrueForOwner()
     {
         // Act
-        var result = _authorizationService.CanEditPost(null, 1, 1);
+        var result = _authorizationService.CanEditPost(null!, 1, 1);
 
         // Assert
         Assert.True(result); // Post owners can edit their posts regardless of role validation
