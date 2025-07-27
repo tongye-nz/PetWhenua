@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
@@ -14,7 +14,14 @@ const MockThemeToggle = ({ showLabel }: { showLabel?: boolean }) => (
 );
 
 // Create a simple Button mock component
-const MockButton = ({ children, onClick, variant, fullWidth }: any) => (
+interface MockButtonProps {
+  children: React.ReactNode;
+  onClick?: () => void;
+  variant?: string;
+  fullWidth?: boolean;
+}
+
+const MockButton = ({ children, onClick, variant, fullWidth }: MockButtonProps) => (
   <button 
     onClick={onClick} 
     data-variant={variant}
@@ -39,8 +46,14 @@ const mockIsMeetupAdmin = (role: string) => role === 'meetup_admin';
 
 
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface AuthState {
+  isAuthenticated: boolean;
+  user: any;
+}
+
 // Create a Header component that uses our mocks
-const HeaderWithMocks = ({ authState, onSignInClick }: { authState: any; onSignInClick?: () => void }) => {
+const HeaderWithMocks = ({ authState, onSignInClick }: { authState: AuthState; onSignInClick?: () => void }) => {
   const mockAuthHook = () => ({
     isAuthenticated: authState.isAuthenticated,
     user: authState.user,
@@ -180,10 +193,7 @@ const darkTheme = createTheme({
 // Extended story args interface
 interface HeaderStoryArgs {
   onSignInClick?: () => void;
-  authState: {
-    isAuthenticated: boolean;
-    user: any;
-  };
+  authState: AuthState;
   isDarkMode?: boolean;
   initialPath?: string;
 }

@@ -3,7 +3,6 @@ import type { Preview } from '@storybook/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { withThemeFromJSXProvider } from '@storybook/addon-themes';
-import { fn } from 'storybook/test';
 import { AuthProvider } from '../src/contexts/AuthContext';
 
 // Create light and dark themes
@@ -102,18 +101,26 @@ const mockChatService = {
 };
 
 // Add global mocks
+declare global {
+  interface Window {
+    mockAuthService: typeof mockAuthService;
+    mockLikeService: typeof mockLikeService;
+    mockChatService: typeof mockChatService;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).mockAuthService = mockAuthService;
-  (window as any).mockLikeService = mockLikeService;
-  (window as any).mockChatService = mockChatService;
+  window.mockAuthService = mockAuthService;
+  window.mockLikeService = mockLikeService;
+  window.mockChatService = mockChatService;
 }
 
 // Global decorators
-const withErrorBoundary = (Story: any) => {
+const withErrorBoundary = (Story: React.ComponentType) => {
   return React.createElement(StorybookErrorBoundary, { children: React.createElement(Story) });
 };
 
-const withMockAuth = (Story: any) => {
+const withMockAuth = (Story: React.ComponentType) => {
   // Pre-populate localStorage with mock auth data
   if (typeof window !== 'undefined') {
     localStorage.setItem('authToken', 'mock-token');

@@ -114,7 +114,7 @@ describe('usePostOperations', () => {
       
       const { result } = renderHook(() => usePostOperations())
       
-      let createdPost: any
+      let createdPost: unknown
       await act(async () => {
         createdPost = await result.current.createNewPost(mockCreatePostRequest)
       })

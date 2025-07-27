@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { fn } from 'storybook/test';
 import { IconButton, Tooltip, Badge } from '@mui/material';
 import { Chat, ChatBubble } from '@mui/icons-material';
@@ -15,6 +15,7 @@ interface ChatButtonProps {
   onClick?: () => void;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MockChatButton: React.FC<ChatButtonProps> = ({
   userId: _userId, // Prefixed with underscore to indicate intentionally unused in mock
   variant = 'icon',

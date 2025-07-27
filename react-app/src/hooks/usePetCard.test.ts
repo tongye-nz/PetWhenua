@@ -57,7 +57,7 @@ describe('usePetCard', () => {
       const mockEvent = {
         stopPropagation: vi.fn(),
         currentTarget: document.createElement('button')
-      } as any
+      } as unknown as React.MouseEvent<HTMLButtonElement>
       
       act(() => {
         result.current.handleMenuClick(mockEvent)
@@ -75,7 +75,7 @@ describe('usePetCard', () => {
       const mockEvent = {
         stopPropagation: vi.fn(),
         currentTarget: document.createElement('button')
-      } as any
+      } as unknown as React.MouseEvent<HTMLButtonElement>
       
       act(() => {
         result.current.handleMenuClick(mockEvent)
@@ -119,7 +119,7 @@ describe('usePetCard', () => {
       const mockEvent = {
         stopPropagation: vi.fn(),
         currentTarget: document.createElement('button')
-      } as any
+      } as unknown as React.MouseEvent<HTMLButtonElement>
       
       act(() => {
         result.current.handleMenuClick(mockEvent)

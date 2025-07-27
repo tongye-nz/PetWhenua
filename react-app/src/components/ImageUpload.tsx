@@ -101,6 +101,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     } else {
       onImagesChange(updatedImages);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [images, maxImages, onImagesChange, showCompression]);
 
   const compressImages = useCallback(async (
@@ -197,7 +198,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     return () => {
       images.forEach(image => URL.revokeObjectURL(image.preview));
     };
-  }, []);
+  }, [images]);
 
   return (
     <Box>
