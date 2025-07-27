@@ -10,7 +10,7 @@ const getBaseUrl = () => {
   }
   
   // Development environment
-  return import.meta.env.VITE_API_URL || 'http://localhost:5295/api';
+  return import.meta.env.VITE_API_URL || 'https://localhost:7192/api';
 };
 
 export const API_CONFIG = {
