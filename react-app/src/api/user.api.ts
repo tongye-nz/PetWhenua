@@ -146,8 +146,9 @@ export const userAPI = {
   },
 
   // Delete user (admin only)
-  deleteUser: async (_userId: number): Promise<{ message: string }> => {
-    // Backend endpoint not implemented yet
+  deleteUser: async (userId: number): Promise<{ message: string }> => {
+    // Backend endpoint not implemented yet - userId would be used when implemented
+    console.log(`User deletion requested for userId: ${userId}`);
     throw new Error('User deletion not yet implemented on backend. Please implement DELETE /admin/users/{id} endpoint.');
   }
 };

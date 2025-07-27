@@ -12,6 +12,7 @@ import {
   MyPetsFab
 } from '../components/features/pets';
 import { useMyPets } from '../hooks/useMyPets';
+import type { Pet } from '../models/pet.types';
 
 const MyPets: React.FC = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const MyPets: React.FC = () => {
     return <MyPetsLoading />;
   }
 
-  const handleViewPet = (pet: any) => {
+  const handleViewPet = (pet: Pet) => {
     if (pet.petId) {
       navigate(`/pet/${pet.petId}`);
     }

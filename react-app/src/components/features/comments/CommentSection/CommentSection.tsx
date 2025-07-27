@@ -57,7 +57,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           setComments(fetchedComments);
           setCommentCount(fetchedComments.length);
           setHasLoadedComments(true);
-        } catch (error: any) {
+        } catch (error) {
           console.error('Failed to load comments:', error);
           setError('Failed to load comments. Please try again.');
         } finally {
@@ -78,7 +78,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       setComments(fetchedComments);
       setCommentCount(fetchedComments.length);
       setHasLoadedComments(true);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to load comments:', error);
       setError('Failed to load comments. Please try again.');
     } finally {

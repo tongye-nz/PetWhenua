@@ -105,7 +105,7 @@ const StatusChip: React.FC<StatusChipProps> = ({
     const color = getStatusColor(status);
     return (
       <Chip
-        color={color as any}
+        color={color as 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning'}
         size="small"
         {...props}
       />

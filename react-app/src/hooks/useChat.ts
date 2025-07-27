@@ -31,7 +31,8 @@ export const useChat = (initialUserId?: number, shouldAutoLoad: boolean = true) 
 
   // Set up message handler
   useEffect(() => {
-    const handleMessage = (_message: ChatMessage) => {
+    const handleMessage = (message: ChatMessage) => {
+      console.log('Received chat message in hook:', message.messageId);
       if (selectedRoom) {
         loadMessages(selectedRoom.chatRoomId);
       }

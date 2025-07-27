@@ -7,6 +7,7 @@ import type {
   PostFilters
 } from '../models/post.types';
 import type { PaginatedResponse, PaginationParams } from '../models/pagination.types';
+import { petWeddingService } from './petWedding.api';
 
 const postApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
@@ -68,12 +69,11 @@ export const postService = {
     // Check if this is a pet wedding update with participants
     if (postData.postType === 1 && postData.selectedPetIds && postData.selectedPetIds.length > 0) {
       // Update participants using the dedicated pet wedding endpoint
-      const petWeddingService = await import('./petWedding.api');
-      await petWeddingService.petWeddingService.updatePetWeddingParticipants(id, postData.selectedPetIds);
+      await petWeddingService.updatePetWeddingParticipants(id, postData.selectedPetIds);
     }
 
     // Backend expects only the core Post properties, no navigation properties
-    const updatePayload: any = {
+    const updatePayload: Record<string, unknown> = {
       PostId: id, // Required: must match the ID in URL
       UserId: postData.userId, // Required: user ID
       PostType: postData.postType, // Required: post type
@@ -125,7 +125,7 @@ export const postService = {
     await postApi.delete(`/posts/${id}`);
   },
 
-  // Change post status
+  // Change post status - Updated to use new PostStatusController
   async updatePostStatus(id: number, statusData: UpdatePostStatusRequest): Promise<Post> {
     const response = await postApi.put(`/posts/${id}/status`, statusData);
     return response.data;
@@ -143,27 +143,27 @@ export const postService = {
     return response.data;
   },
 
-  // Get creation permissions for user role
-  async getCreationPermissions(userRole: string): Promise<any> {
-    const response = await postApi.get(`/posts/creation-permissions?userRole=${userRole}`);
+  // Get creation permissions for user role - Updated to use new PostPermissionsController
+  async getCreationPermissions(userRole: string): Promise<Record<string, boolean>> {
+    const response = await postApi.get(`/posts/permissions/creation?userRole=${userRole}`);
     return response.data;
   },
 
-  // Get available status transitions
-  async getStatusTransitions(postId: number, userId: number, userRole: string): Promise<any> {
+  // Get available status transitions - Updated to use new PostStatusController
+  async getStatusTransitions(postId: number, userId: number, userRole: string): Promise<string[]> {
     const response = await postApi.get(
-      `/posts/${postId}/status-transitions?userId=${userId}&userRole=${userRole}`
+      `/posts/${postId}/status/transitions?userId=${userId}&userRole=${userRole}`
     );
     return response.data;
   },
 
-  // Get pending meetup posts (admin only)
+  // Get pending meetup posts (admin only) - Updated to use new MeetupController
   async getPendingMeetupPosts(): Promise<Post[]> {
-    const response = await postApi.get('/posts/meetups/pending');
+    const response = await postApi.get('/meetups/pending');
     return response.data;
   },
 
-  // Update post status (admin action)
+  // Update post status (admin action) - Updated to use new PostStatusController
   async changePostStatus(postId: number, newStatus: number, requestingUserId: number, requestingUserRole: string): Promise<Post> {
     const response = await postApi.patch(`/posts/${postId}/status`, {
       newStatus,

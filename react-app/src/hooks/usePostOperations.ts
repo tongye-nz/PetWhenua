@@ -4,6 +4,7 @@
  */
 import { usePost } from '../contexts/PostContext';
 import { PostType, PostStatus } from '../models/post.types';
+import type { CreatePostRequest, PostFilters } from '../models/post.types';
 
 export const usePostOperations = () => {
   const {
@@ -40,7 +41,7 @@ export const usePostOperations = () => {
       fetchPosts({ postType }),
     
     // Create a new post
-    createNewPost: async (postData: any) => {
+    createNewPost: async (postData: CreatePostRequest) => {
       try {
         const newPost = await createPost(postData);
         return newPost;
@@ -59,7 +60,7 @@ export const usePostOperations = () => {
       updatePostStatus(postId, PostStatus.Inactive, userId, userRole),
     
     // Set filters for posts display
-    filterPosts: (filters: any) => setFilters(filters),
+    filterPosts: (filters: PostFilters) => setFilters(filters),
     
     // Clear current error
     handleClearError: () => clearError()

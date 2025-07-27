@@ -66,7 +66,7 @@ const AdminPanel: React.FC = () => {
       setError('');
       const usersData = await userAPI.getAllUsersForAdmin();
       setUsers(usersData);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load users:', err);
       setError('Failed to load users. Please try again.');
     } finally {
@@ -76,7 +76,7 @@ const AdminPanel: React.FC = () => {
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = users.filter(user => {
+    const filtered = users.filter(user => {
       const matchesSearch = 
         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,8 +118,9 @@ const AdminPanel: React.FC = () => {
       await userAPI.updateUserStatus(user.userId, !user.isActive);
       setSuccess(`User ${user.isActive ? 'deactivated' : 'activated'} successfully`);
       await loadUsers();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update user status. Please try again.');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update user status. Please try again.';
+      setError(errorMessage);
     } finally {
       setActionLoading(prev => ({ ...prev, [user.userId]: false }));
     }
@@ -133,8 +134,9 @@ const AdminPanel: React.FC = () => {
       await userAPI.updateUserRole(user.userId, newRole);
       setSuccess(`User role updated to ${ROLE_LABELS[newRole as keyof typeof ROLE_LABELS] || newRole} successfully`);
       await loadUsers();
-    } catch (err: any) {
-      setError(err.message || 'Failed to update user role. Please try again.');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update user role. Please try again.';
+      setError(errorMessage);
     } finally {
       setActionLoading(prev => ({ ...prev, [user.userId]: false }));
     }

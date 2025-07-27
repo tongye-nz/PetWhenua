@@ -96,7 +96,7 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
               connections[pet.petId] = statusResponse.status;
             }
           }
-        } catch (error) {
+        } catch {
           // No connection exists, which is fine
           console.log(`No connection between pet ${pet.petId} and ${targetPet.petId}`);
         }
@@ -158,13 +158,16 @@ const PetSelectionDialog: React.FC<PetSelectionDialogProps> = ({
       
       // Enhanced error logging
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as any;
+        const axiosError = err as { response?: { data?: { message?: string } | string; status?: number; headers?: unknown } };
         console.error('Response data:', axiosError.response?.data);
         console.error('Response status:', axiosError.response?.status);
         console.error('Response headers:', axiosError.response?.headers);
         
         // Show the backend error message if available
-        const backendMessage = axiosError.response?.data?.message || axiosError.response?.data;
+        const responseData = axiosError.response?.data;
+        const backendMessage = typeof responseData === 'object' && responseData !== null && 'message' in responseData 
+          ? responseData.message 
+          : responseData;
         if (typeof backendMessage === 'string') {
           // Make the error message more user-friendly
           if (backendMessage.includes('Connection already exists with status: Pending')) {

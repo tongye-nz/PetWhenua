@@ -208,9 +208,10 @@ const ChangePasswordForm: React.FC<ChangePasswordFormProps> = ({
           onSuccess(response.message);
         }
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to change password. Please try again.';
       setErrors({
-        general: error.message || 'Failed to change password. Please try again.'
+        general: errorMessage
       });
     } finally {
       setIsLoading(false);

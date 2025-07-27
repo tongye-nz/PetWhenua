@@ -32,16 +32,21 @@ petApi.interceptors.response.use(
   }
 );
 
+// Type for API error response
+interface PetApiErrorResponse {
+  message?: string;
+}
+
 // Helper function to handle API errors
 const handlePetApiError = (error: AxiosError): Error => {
   if (error.response?.data) {
-    const data = error.response.data as any;
+    const data = error.response.data as PetApiErrorResponse | string;
     
     if (typeof data === 'string') {
       return new Error(data);
     }
     
-    if (data.message) {
+    if (typeof data === 'object' && data.message) {
       return new Error(data.message);
     }
   }

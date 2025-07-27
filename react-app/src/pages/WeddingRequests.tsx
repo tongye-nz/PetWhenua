@@ -53,7 +53,7 @@ const WeddingRequests: React.FC = () => {
       setError('');
       const requests = await petWeddingService.getPendingWeddingApprovals();
       setWeddingRequests(requests);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load wedding requests:', err);
       setError('Failed to load wedding requests. Please try again.');
     } finally {
@@ -82,9 +82,10 @@ const WeddingRequests: React.FC = () => {
 
       // Auto-hide success message after 3 seconds
       setTimeout(() => setSuccess(''), 3000);
-    } catch (err: any) {
+    } catch (err) {
       console.error(`Failed to ${action} wedding request:`, err);
-      setError(err?.response?.data?.message || `Failed to ${action} request. Please try again.`);
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      setError(axiosError?.response?.data?.message || `Failed to ${action} request. Please try again.`);
     } finally {
       setActionLoading(prev => ({ ...prev, [postId]: false }));
     }

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { authService } from '../api/auth.api';
-import type { User, AuthState, LoginRequest, RegisterRequest, ApiError } from '../models/auth.types';
+import type { User, AuthState, LoginRequest, RegisterRequest, ApiError, AuthResponse } from '../models/auth.types';
 
 // Authentication context type
 interface AuthContextType extends AuthState {
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       const loginPromise = authService.login(credentials);
-      const response = await Promise.race([loginPromise, timeoutPromise]) as any;
+      const response = await Promise.race([loginPromise, timeoutPromise]) as AuthResponse;
       
       dispatch({
         type: 'AUTH_SUCCESS',
@@ -128,7 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       });
       
       const registerPromise = authService.register(userData);
-      const response = await Promise.race([registerPromise, timeoutPromise]) as any;
+      const response = await Promise.race([registerPromise, timeoutPromise]) as AuthResponse;
       
       dispatch({
         type: 'AUTH_SUCCESS',
@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           dispatch({ type: 'LOGOUT' });
         }
       }
-    } catch (err) {
+    } catch {
       // Silent fail for auth check
       authService.logout();
       dispatch({ type: 'LOGOUT' });
@@ -212,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 };
 
 // Hook to use auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

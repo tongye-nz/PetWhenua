@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material';
 import { Button, Text, LoadingSpinner } from '../components/ui';
 import { petConnectionService } from '../api/petConnection.api';
+import type { RespondConnectionRequest } from '../models/petConnection.types';
 import type { PetConnection } from '../models/petConnection.types';
 import { PetConnectionStatus } from '../models/petConnection.types';
 import { getProfilePictureUrl } from '../utils/imageUrlUtils';
@@ -60,27 +61,18 @@ const PetConnectionRequests: React.FC = () => {
       setError(null);
       setSuccess(null);
 
-      // Convert string enum values to integers for ASP.NET Core
-      const enumToInt = {
-        'Pending': 0,
-        'Accepted': 1,
-        'Rejected': 2,
-        'Blocked': 3
-      };
-
-      const requestData = {
-        response: enumToInt[response as keyof typeof enumToInt],
+      const requestData: RespondConnectionRequest = {
+        response: response,
         message
       };
 
       console.log('Sending response to connection:', {
         connectionId,
         requestData,
-        originalResponse: response,
-        convertedResponse: requestData.response
+        originalResponse: response
       });
 
-      await petConnectionService.respondToConnection(connectionId, requestData as any);
+      await petConnectionService.respondToConnection(connectionId, requestData);
 
       // Remove the processed connection from the list
       setConnections(prev => prev.filter(conn => conn.petConnectionId !== connectionId));
@@ -97,7 +89,7 @@ const PetConnectionRequests: React.FC = () => {
       
       // Enhanced error logging
       if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as any;
+        const axiosError = err as { response?: { data?: { errors?: Record<string, string[]>; message?: string }; status?: number; headers?: unknown } };
         console.error('Response data:', axiosError.response?.data);
         console.error('Response status:', axiosError.response?.status);
         console.error('Response headers:', axiosError.response?.headers);

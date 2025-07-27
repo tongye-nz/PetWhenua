@@ -69,9 +69,10 @@ const Posts: React.FC = () => {
       const response = await postService.getPostsPaginated(newFilters, { page, pageSize });
       setPosts(response.posts);
       setPagination(response.pagination);
-    } catch (error: any) {
+    } catch (error) {
       console.error('fetchPosts error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch posts';
+      const axiosError = error as { response?: { data?: { message?: string } }; message?: string };
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Failed to fetch posts';
       setError(errorMessage);
     } finally {
       setLoading(false);
