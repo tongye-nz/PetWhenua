@@ -280,11 +280,15 @@ public class PostsController : ControllerBase
                                existingPost.Category != updateDto.Category ||
                                !existingPost.Images.SequenceEqual(updateDto.Images ?? new List<string>());
                 
+                // Check if user is admin (site admin or meetup admin) and owns the meetup
+                bool isAdminOwner = (UserRoles.IsAdmin(userRoleClaim) || UserRoles.IsMeetupAdmin(userRoleClaim)) && 
+                                   existingPost.UserId == userId;
+                
                 // Require pending status if:
-                // 1. This was an active meetup and content changed, OR
-                // 2. This is already pending (don't allow frontend to override back to active)
-                requiresPendingStatus = (existingPost.Status == PostStatus.Active && contentChanged) || 
-                                      existingPost.Status == PostStatus.Pending;
+                // 1. This was an active meetup and content changed AND user is not an admin owner, OR
+                // 2. This is already pending AND user is not an admin owner (don't allow frontend to override back to active unless admin owner)
+                requiresPendingStatus = ((existingPost.Status == PostStatus.Active && contentChanged) || 
+                                       existingPost.Status == PostStatus.Pending) && !isAdminOwner;
             }
 
             // Update the existing tracked entity instead of creating a new one
