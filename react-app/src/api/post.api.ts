@@ -125,7 +125,7 @@ export const postService = {
     await postApi.delete(`/posts/${id}`);
   },
 
-  // Change post status
+  // Change post status - Updated to use new PostStatusController
   async updatePostStatus(id: number, statusData: UpdatePostStatusRequest): Promise<Post> {
     const response = await postApi.put(`/posts/${id}/status`, statusData);
     return response.data;
@@ -143,27 +143,27 @@ export const postService = {
     return response.data;
   },
 
-  // Get creation permissions for user role
+  // Get creation permissions for user role - Updated to use new PostPermissionsController
   async getCreationPermissions(userRole: string): Promise<any> {
-    const response = await postApi.get(`/posts/creation-permissions?userRole=${userRole}`);
+    const response = await postApi.get(`/posts/permissions/creation?userRole=${userRole}`);
     return response.data;
   },
 
-  // Get available status transitions
+  // Get available status transitions - Updated to use new PostStatusController
   async getStatusTransitions(postId: number, userId: number, userRole: string): Promise<any> {
     const response = await postApi.get(
-      `/posts/${postId}/status-transitions?userId=${userId}&userRole=${userRole}`
+      `/posts/${postId}/status/transitions?userId=${userId}&userRole=${userRole}`
     );
     return response.data;
   },
 
-  // Get pending meetup posts (admin only)
+  // Get pending meetup posts (admin only) - Updated to use new MeetupController
   async getPendingMeetupPosts(): Promise<Post[]> {
-    const response = await postApi.get('/posts/meetups/pending');
+    const response = await postApi.get('/meetups/pending');
     return response.data;
   },
 
-  // Update post status (admin action)
+  // Update post status (admin action) - Updated to use new PostStatusController
   async changePostStatus(postId: number, newStatus: number, requestingUserId: number, requestingUserRole: string): Promise<Post> {
     const response = await postApi.patch(`/posts/${postId}/status`, {
       newStatus,
