@@ -1,10 +1,10 @@
-import { render, screen, fireEvent } from '../../../utils/test-utils'
+import { render, screen, fireEvent } from '../../../test/utils/test-utils'
 import { vi } from 'vitest'
-import { useTheme } from '../../../../contexts/ThemeContext'
-import ThemeToggle from '../../../../components/ui/ThemeToggle/ThemeToggle'
+import { useTheme } from '../../../contexts/ThemeContext'
+import ThemeToggle from './ThemeToggle'
 
 // Mock the useTheme hook
-vi.mock('../../../../contexts/ThemeContext', () => ({
+vi.mock('../../../contexts/ThemeContext', () => ({
   useTheme: vi.fn()
 }))
 

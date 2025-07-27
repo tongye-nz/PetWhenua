@@ -3,7 +3,6 @@ import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
 import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
-import { EventEmitter } from 'events'
 
 declare module 'vitest' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type
@@ -63,7 +62,4 @@ class MockIntersectionObserver implements IntersectionObserver {
   takeRecords(): IntersectionObserverEntry[] { return [] }
 }
 
-global.IntersectionObserver = MockIntersectionObserver
-
-// Increase max listeners to handle MUI components
-EventEmitter.defaultMaxListeners = 50 
+global.IntersectionObserver = MockIntersectionObserver 
