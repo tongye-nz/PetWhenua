@@ -21,7 +21,6 @@ import UsersNearMe from './pages/UsersNearMe.tsx';
 import PetsNearMe from './pages/PetsNearMe.tsx';
 import PetConnectionRequests from './pages/PetConnectionRequests.tsx';
 import Messages from './pages/Messages.tsx';
-import ImageUploadDemo from './components/ImageUploadDemo.tsx';
 import ProjectInfo from './pages/ProjectInfo.tsx';
 import MeetDeveloper from './pages/MeetDeveloper.tsx';
 import { ProtectedRoute, AdminRoute, MeetupAdminRoute } from './components/common';
@@ -124,7 +123,6 @@ function App() {
                     <WeddingRequests />
                   </ProtectedRoute>
                 } />
-                <Route path="/image-upload-demo" element={<ImageUploadDemo />} />
                 <Route path="/project-info" element={<ProjectInfo />} />
                 <Route path="/meet-developer" element={<MeetDeveloper />} />
               </Routes>
