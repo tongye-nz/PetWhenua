@@ -57,7 +57,7 @@ describe('LoadingSpinner', () => {
 
   describe('centered layout', () => {
     it('should render non-centered by default', () => {
-      const { container } = render(<LoadingSpinner />)
+      render(<LoadingSpinner />)
       
       // Should not have a wrapper Box when not centered
       const spinner = screen.getByRole('progressbar')
