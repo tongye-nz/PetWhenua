@@ -25,19 +25,20 @@ PetWhenua embodies the **"Networking"** theme by creating a comprehensive social
 ### ✅ Basic Requirements Met
 
 **Frontend:**
-- ✅ Built using React with TypeScript
+- ✅ Built using React with TypeScript (JavaScript allowed but TypeScript preferred)
 - ✅ Visually appealing and responsive UI (works on desktop and mobile)
+- ✅ Uses Material-UI styling library for modern, accessible design
 - ✅ Navigation using React Router
 - ✅ Clear use of Git with regular commit history
+- ✅ Frontend deployed (Azure Static Web Apps ready)
 
 **Backend:**
 - ✅ Built using C# with .NET 8
-- ✅ Uses Entity Framework Core (EF Core)
-- ✅ Data persistence using SQL Server database
-- ✅ CRUD operations implemented for all entities
+- ✅ Must use Entity Framework Core (EF Core)
+- ✅ Data persistence using SQL database (SQL Server)
+- ✅ Implement CRUD operations (Create, Read, Update, Delete)
 - ✅ Clear use of Git with regular commit history
 - ✅ Backend deployed (Azure App Service ready)
-- ✅ Frontend deployed (Azure Static Web Apps ready)
 
 ### 🚀 Advanced Requirements Implemented
 
@@ -52,8 +53,8 @@ PetWhenua embodies the **"Networking"** theme by creating a comprehensive social
 
 **This project significantly exceeds the minimum requirements:**
 
-- ✅ **All 7 Basic Requirements** implemented and documented
-- ✅ **4 Advanced Requirements** implemented (only 3 required)
+- ✅ **All Basic Requirements** implemented and documented
+- ✅ **At least 3 Advanced Requirements** implemented
 - ✅ **Production-ready** with comprehensive testing and deployment guides
 - ✅ **Theme compliance** with multiple networking features demonstrating creativity and originality
 - ✅ **Professional documentation** with clear setup and deployment instructions
@@ -142,7 +143,6 @@ PetWhenua embodies the **"Networking"** theme by creating a comprehensive social
 ### Testing & Development
 - **Vitest** for unit testing
 - **Testing Library** for component testing
-- **Playwright** for end-to-end testing
 - **Storybook** for component development
 - **ESLint** for code quality
 
@@ -480,49 +480,36 @@ VITE_SIGNALR_HUB_URL=https://localhost:7192/notificationHub
 
 ```
 PetWhenua/
-├── Controllers/           # API Controllers
+├── Controllers/           # API Controllers (Auth, Pet, Post, Chat, etc.)
 ├── Models/               # Data models and DTOs
 ├── Services/             # Business logic services
-├── Repositories/         # Data access layer
-├── Hubs/                # SignalR hubs
-├── Migrations/          # EF Core migrations
+├── Repositories/         # Data access layer (Abstract & Concrete)
+├── Data/                 # Database context (AppDbContext)
+├── Hubs/                # SignalR hubs for real-time features
+├── Migrations/          # EF Core database migrations
+├── Middleware/          # Custom middleware components
+├── Utils/               # Backend utility classes
+├── Integration/         # Integration tests
+├── PetWhenua.Tests/     # Unit and integration tests
+├── Properties/          # Launch settings and publish profiles
 ├── react-app/           # Frontend React application
 │   ├── src/
 │   │   ├── components/  # Reusable UI components
 │   │   ├── pages/       # Page components
-│   │   ├── services/    # API services
+│   │   ├── api/         # API service calls
+│   │   ├── services/    # Frontend services (SignalR, etc.)
 │   │   ├── hooks/       # Custom React hooks
-│   │   ├── contexts/    # React contexts
-│   │   └── utils/       # Utility functions
-│   └── public/          # Static assets
-└── wwwroot/             # Backend static files
+│   │   ├── contexts/    # React contexts (Auth, Theme, etc.)
+│   │   ├── models/      # TypeScript type definitions
+│   │   ├── utils/       # Utility functions
+│   │   ├── data/        # Static data (locations, categories)
+│   │   ├── config/      # Configuration files
+│   │   ├── test/        # Test utilities and setup
+│   │   └── store/       # State management
+│   ├── public/          # Static assets
+│   └── .storybook/      # Storybook configuration
+└── wwwroot/             # Backend static files and uploads
 ```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🆘 Support
-
-If you encounter any issues or have questions:
-
-1. Check the [Issues](https://github.com/your-repo/PetWhenua/issues) page
-2. Review the [API Documentation](https://localhost:7192/swagger) 
-3. Check the [Storybook Component Library](http://localhost:6006)
 
 ---
 
