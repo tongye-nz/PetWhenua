@@ -183,16 +183,26 @@ describe('ChatButton', () => {
   })
 
   describe('tooltip functionality', () => {
-    it('should show default tooltip', () => {
+    it('should show default tooltip', async () => {
       render(<ChatButton />)
       
-      expect(screen.getByText('Open chat')).toBeInTheDocument()
+      const button = screen.getByRole('button')
+      fireEvent.mouseEnter(button)
+      
+      await waitFor(() => {
+        expect(screen.getByText('Open chat')).toBeInTheDocument()
+      })
     })
 
-    it('should show custom tooltip', () => {
+    it('should show custom tooltip', async () => {
       render(<ChatButton tooltip="Start conversation" />)
       
-      expect(screen.getByText('Start conversation')).toBeInTheDocument()
+      const button = screen.getByRole('button')
+      fireEvent.mouseEnter(button)
+      
+      await waitFor(() => {
+        expect(screen.getByText('Start conversation')).toBeInTheDocument()
+      })
     })
   })
 
