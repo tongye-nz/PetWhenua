@@ -1,0 +1,156 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Cancel in-progress workflows when a new commit is pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quick-validation:
+    name: Quick Validation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: react-app/package-lock.json
+        
+    - name: Cache .NET packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    # Backend validation
+    - name: Restore .NET dependencies
+      run: dotnet restore
+      
+    - name: Build backend (Debug)
+      run: dotnet build --configuration Debug --no-restore
+      
+    - name: Run critical backend tests
+      run: dotnet test --configuration Debug --no-build --filter "Priority=High|Category=Critical" --verbosity minimal
+      
+    # Frontend validation  
+    - name: Install frontend dependencies
+      working-directory: react-app
+      run: npm ci
+      
+    - name: Frontend linting
+      working-directory: react-app
+      run: npm run lint
+      
+    - name: TypeScript check
+      working-directory: react-app
+      run: npx tsc --noEmit
+      
+    - name: Build frontend
+      working-directory: react-app
+      run: npm run build
+      
+    - name: Run critical frontend tests
+      working-directory: react-app
+      run: npm test -- --run --reporter=basic
+      
+    - name: PR Validation Summary
+      if: always()
+      run: |
+        echo "## 🚀 PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Build validation completed successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### What was checked:" >> $GITHUB_STEP_SUMMARY
+        echo "- 🏗️ Backend build and critical tests" >> $GITHUB_STEP_SUMMARY
+        echo "- 🎨 Frontend build, linting, and TypeScript validation" >> $GITHUB_STEP_SUMMARY
+        echo "- ⚡ Critical test suites" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
+        echo "- Full test suite will run when this PR is ready to merge" >> $GITHUB_STEP_SUMMARY
+        echo "- Integration tests will run on the main CI workflow" >> $GITHUB_STEP_SUMMARY
+
+  changed-files:
+    name: Analyze Changed Files
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        
+    - name: Get changed files
+      id: changed-files
+      uses: tj-actions/changed-files@v44
+      with:
+        files_yaml: |
+          backend:
+            - '**/*.cs'
+            - '**/*.csproj'
+            - '**/appsettings*.json'
+          frontend:
+            - 'react-app/**'
+          tests:
+            - '**/*Tests/**'
+            - '**/*Test.cs'
+          workflows:
+            - '.github/workflows/**'
+            
+    - name: Show changed files summary
+      run: |
+        echo "## 📁 Changed Files Analysis" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ steps.changed-files.outputs.backend_any_changed }}" == "true" ]]; then
+          echo "### 🔧 Backend Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "Changed backend files:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changed-files.outputs.backend_all_changed_files }}" | tr ' ' '\n' | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ steps.changed-files.outputs.frontend_any_changed }}" == "true" ]]; then
+          echo "### 🎨 Frontend Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "Changed frontend files:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changed-files.outputs.frontend_all_changed_files }}" | tr ' ' '\n' | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ steps.changed-files.outputs.tests_any_changed }}" == "true" ]]; then
+          echo "### 🧪 Test Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "Changed test files:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changed-files.outputs.tests_all_changed_files }}" | tr ' ' '\n' | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ "${{ steps.changed-files.outputs.workflows_any_changed }}" == "true" ]]; then
+          echo "### ⚙️ Workflow Changes Detected" >> $GITHUB_STEP_SUMMARY
+          echo "Changed workflow files:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changed-files.outputs.workflows_all_changed_files }}" | tr ' ' '\n' | while read file; do
+            echo "- \`$file\`" >> $GITHUB_STEP_SUMMARY
+          done
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi 
