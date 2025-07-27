@@ -480,7 +480,7 @@ const PostForm: React.FC<PostFormProps> = ({
         if (responseData && responseData.errors) {
           console.error('Validation errors:', responseData.errors);
           // Display specific validation errors to user
-          let validationMessages = [];
+          const validationMessages: string[] = [];
           for (const [field, messages] of Object.entries(responseData.errors)) {
             if (Array.isArray(messages)) {
               validationMessages.push(`${field}: ${messages.join(', ')}`);

@@ -131,7 +131,8 @@ export const UnifiedChat: React.FC<UnifiedChatProps> = ({
   // Set up SignalR message handler for page mode
   useEffect(() => {
     if (mode === 'page') {
-      const handleMessage = (_message: ChatMessage) => {
+      const handleMessage = (message: ChatMessage) => {
+        console.log('Received chat message:', message.messageId);
         if (selectedRoom) {
           loadMessages(selectedRoom.chatRoomId);
         }

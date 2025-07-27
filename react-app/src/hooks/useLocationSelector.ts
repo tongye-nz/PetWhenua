@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { Region, District } from '../data/nzLocations';
 // Remove static import - we'll load this dynamically
 // import { NZ_REGIONS, getDistrictsByRegion } from '../data/nzLocations';
 
@@ -7,7 +8,7 @@ interface LocationSelectorState {
   selectedDistrict: string;
   isDistrictDisabled: boolean;
   districts: string[];
-  regions: any[];
+  regions: Region[];
   isLoading: boolean;
 }
 
@@ -21,8 +22,8 @@ export const useLocationSelector = (
   const [selectedRegion, setSelectedRegion] = useState(initialRegion);
   const [selectedDistrict, setSelectedDistrict] = useState(initialDistrict);
   const [districts, setDistricts] = useState<string[]>([]);
-  const [regions, setRegions] = useState<any[]>([]);
-  const [getDistrictsByRegionFn, setGetDistrictsByRegionFn] = useState<((regionName: string) => any[]) | null>(null);
+  const [regions, setRegions] = useState<Region[]>([]);
+  const [getDistrictsByRegionFn, setGetDistrictsByRegionFn] = useState<((regionName: string) => District[]) | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load location data dynamically

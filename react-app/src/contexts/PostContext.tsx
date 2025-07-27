@@ -201,6 +201,7 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <PostContext.Provider value={value}>{children}</PostContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePost = () => {
   const context = useContext(PostContext);
   if (!context) {

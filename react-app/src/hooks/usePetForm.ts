@@ -136,7 +136,7 @@ export const usePetForm = ({ initialData = {}, onSubmit }: UsePetFormProps) => {
 
     try {
       await onSubmit(formData, processedImageFile);
-    } catch (err) {
+    } catch (_) {
       // Error is handled by parent component
     }
   };

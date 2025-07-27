@@ -25,7 +25,7 @@ const Register: React.FC = () => {
     clearError();
     
     try {
-      const { confirmPassword, ...registerData } = formData;
+      const { confirmPassword: _, ...registerData } = formData; // confirmPassword not sent to API
       await register(registerData);
       navigate('/profile', { replace: true });
     } catch (err) {

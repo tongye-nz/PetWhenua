@@ -1,13 +1,13 @@
-/// <reference types="vitest" />
 import '@testing-library/jest-dom'
 import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 import * as matchers from '@testing-library/jest-dom/matchers'
 import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
+import { EventEmitter } from 'events'
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends TestingLibraryMatchers<T, void> {}
-  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<any, void> {}
+  interface Assertion extends TestingLibraryMatchers<Element, void> {}
+  interface AsymmetricMatchersContaining extends TestingLibraryMatchers<Element, void> {}
 }
 
 // Extend Vitest's expect method with methods from react-testing-library
@@ -35,10 +35,10 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor(cb: any) {
+  constructor(cb: ResizeObserverCallback) {
     this.cb = cb
   }
-  cb: any
+  cb: ResizeObserverCallback
   observe() {}
   unobserve() {}
   disconnect() {}
@@ -64,4 +64,4 @@ class MockIntersectionObserver implements IntersectionObserver {
 global.IntersectionObserver = MockIntersectionObserver
 
 // Increase max listeners to handle MUI components
-require('events').EventEmitter.defaultMaxListeners = 50 
+EventEmitter.defaultMaxListeners = 50 

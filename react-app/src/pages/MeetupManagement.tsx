@@ -101,7 +101,7 @@ const MeetupManagement: React.FC = () => {
 
   // Filter and sort meetups
   const filteredAndSortedMeetups = useMemo(() => {
-    let filtered = meetups.filter(meetup => {
+    const filtered = meetups.filter(meetup => {
       const matchesSearch = 
         meetup.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (meetup.content || '').toLowerCase().includes(searchTerm.toLowerCase()) ||

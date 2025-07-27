@@ -76,7 +76,7 @@ const AdminPanel: React.FC = () => {
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = users.filter(user => {
+    const filtered = users.filter(user => {
       const matchesSearch = 
         user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||

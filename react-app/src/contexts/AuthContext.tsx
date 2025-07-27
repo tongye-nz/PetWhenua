@@ -181,7 +181,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           dispatch({ type: 'LOGOUT' });
         }
       }
-    } catch (err) {
+    } catch (_) {
       // Silent fail for auth check
       authService.logout();
       dispatch({ type: 'LOGOUT' });
@@ -212,6 +212,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 };
 
 // Hook to use auth context
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {

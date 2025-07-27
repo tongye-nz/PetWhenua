@@ -11,6 +11,7 @@ const testTheme = createTheme({
 })
 
 // Create a custom render function that includes providers
+// eslint-disable-next-line react-refresh/only-export-components
 const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <BrowserRouter>
@@ -25,6 +26,7 @@ const customRender = (ui: React.ReactElement, options?: any) =>
   render(ui, { wrapper: AllTheProviders, ...options })
 
 // Re-export everything
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react'
 
 // Override render method

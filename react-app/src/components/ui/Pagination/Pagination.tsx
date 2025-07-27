@@ -9,6 +9,7 @@ import {
   Typography,
   Stack
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import type { PaginationInfo } from '../../../models/pagination.types';
 
 interface PaginationProps {
@@ -26,7 +27,7 @@ export const Pagination: React.FC<PaginationProps> = ({
     onPageChange(page);
   };
 
-  const handlePageSizeChange = (event: any) => {
+  const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
     onPageSizeChange(Number(event.target.value));
   };
 

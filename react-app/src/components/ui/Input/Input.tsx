@@ -23,7 +23,7 @@ const Input: React.FC<InputProps> = ({
       helperText={helperText}
       sx={{
         ...inputStyles.base,
-        ...(sx as any),
+        ...(sx as Record<string, unknown>),
       }}
       {...props}
     />

@@ -74,7 +74,7 @@ const Button: React.FC<ButtonProps> = ({
         ...buttonStyle,
         // Ensure consistent minimum height to prevent layout shift
         minHeight: size === 'large' ? 42 : size === 'small' ? 30 : 36,
-        ...(sx as any),
+        ...(sx as Record<string, unknown>),
       }}
       {...props}
     >
