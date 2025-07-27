@@ -137,9 +137,10 @@ const UserProfile: React.FC = () => {
         // Load other user's profile
         try {
           apiUser = await userAPI.getUserById(targetUserId);
-        } catch (userError: any) {
+        } catch (userError) {
           // Handle specific user not found error
-          if (userError?.response?.status === 404) {
+          const axiosError = userError as { response?: { status?: number } };
+          if (axiosError?.response?.status === 404) {
             setIsUserNotFound(true);
             setError('User not found');
             return;
@@ -216,16 +217,17 @@ const UserProfile: React.FC = () => {
       // Reset retry count on success
       setRetryCount(0);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to load profile:', error);
       
       // Check for network errors
-      if (error?.code === 'NETWORK_ERROR' || error?.message?.includes('Network') || error?.name === 'TypeError') {
+      const networkError = error as { code?: string; message?: string; name?: string; response?: { status?: number } };
+      if (networkError?.code === 'NETWORK_ERROR' || networkError?.message?.includes('Network') || networkError?.name === 'TypeError') {
         setHasNetworkError(true);
         setError('Network error. Please check your connection and try again.');
-      } else if (error?.response?.status === 403) {
+      } else if (networkError?.response?.status === 403) {
         setError('You do not have permission to view this profile.');
-      } else if (error?.response?.status === 500) {
+      } else if (networkError?.response?.status === 500) {
         setError('Server error. Please try again later.');
       } else {
         setError(error instanceof Error ? error.message : 'Failed to load profile. Please try again.');

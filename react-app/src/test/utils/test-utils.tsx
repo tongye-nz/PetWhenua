@@ -22,7 +22,7 @@ const AllTheProviders: React.FC<{ children: React.ReactNode }> = ({ children }) 
   )
 }
 
-const customRender = (ui: React.ReactElement, options?: any) => 
+const customRender = (ui: React.ReactElement, options?: Omit<Parameters<typeof render>[1], 'wrapper'>) => 
   render(ui, { wrapper: AllTheProviders, ...options })
 
 // Re-export everything

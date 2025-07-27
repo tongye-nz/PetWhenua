@@ -95,9 +95,10 @@ const OtherUserProfile: React.FC = () => {
       const posts = await postService.getUserPosts(targetUserId);
       setUserPosts(posts);
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to load user profile:', error);
-      if (error?.response?.status === 404) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError?.response?.status === 404) {
         setError('User not found');
       } else {
         setError('Failed to load user profile. Please try again.');

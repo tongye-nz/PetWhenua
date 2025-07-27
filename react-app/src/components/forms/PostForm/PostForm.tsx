@@ -9,6 +9,7 @@ import {
   Select, 
   MenuItem
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Button, Input, LocationInput, DateTimeInput } from '../../ui';
 import PetWeddingSelection from '../PetWeddingSelection/PetWeddingSelection';
 import ImageUpload from '../../ImageUpload';
@@ -169,7 +170,7 @@ const PostForm: React.FC<PostFormProps> = ({
   };
 
   const handleSelectChange = (field: keyof PostFormData) => (
-    event: any
+    event: SelectChangeEvent<string | number>
   ) => {
     setFormData(prev => ({
       ...prev,
@@ -470,13 +471,14 @@ const PostForm: React.FC<PostFormProps> = ({
       console.error('Form submission error:', error);
       
       // Log more detailed error information for debugging
-      if (error && typeof error === 'object' && (error as any).response) {
-        console.error('Response status:', (error as any).response.status);
-        console.error('Response data:', (error as any).response.data);
-        console.error('Response headers:', (error as any).response.headers);
+      const axiosError = error as { response?: { status?: number; data?: { errors?: Record<string, string[]> }; headers?: unknown } };
+      if (error && typeof error === 'object' && axiosError.response) {
+        console.error('Response status:', axiosError.response.status);
+        console.error('Response data:', axiosError.response.data);
+        console.error('Response headers:', axiosError.response.headers);
         
         // Extract specific validation errors for user display
-        const responseData = (error as any).response.data;
+        const responseData = axiosError.response.data;
         if (responseData && responseData.errors) {
           console.error('Validation errors:', responseData.errors);
           // Display specific validation errors to user
@@ -501,15 +503,16 @@ const PostForm: React.FC<PostFormProps> = ({
         errorMessage = error.message;
       } else if (typeof error === 'object' && error !== null) {
         // Try to get the most specific error message from the response
-        const responseError = (error as any).response?.data;
+        const errorObj = error as { response?: { data?: string | { message?: string; error?: string } }; message?: string };
+        const responseError = errorObj.response?.data;
         if (typeof responseError === 'string') {
           errorMessage = responseError;
-        } else if (responseError?.message) {
+        } else if (typeof responseError === 'object' && responseError?.message) {
           errorMessage = responseError.message;
-        } else if (responseError?.error) {
+        } else if (typeof responseError === 'object' && responseError?.error) {
           errorMessage = responseError.error;
-        } else if ((error as any).message) {
-          errorMessage = (error as any).message;
+        } else if (errorObj.message) {
+          errorMessage = errorObj.message;
         } else {
           errorMessage = 'Unknown error occurred';
         }

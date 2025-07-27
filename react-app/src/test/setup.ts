@@ -6,7 +6,9 @@ import type { TestingLibraryMatchers } from '@testing-library/jest-dom/matchers'
 import { EventEmitter } from 'events'
 
 declare module 'vitest' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface Assertion extends TestingLibraryMatchers<Element, void> {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   interface AsymmetricMatchersContaining extends TestingLibraryMatchers<Element, void> {}
 }
 

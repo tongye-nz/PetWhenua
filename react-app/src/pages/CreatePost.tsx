@@ -121,18 +121,21 @@ const CreatePost: React.FC = () => {
           navigate('/posts');
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to submit post:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Validation errors:', error.response?.data?.errors);
+      const axiosError = error as { response?: { data?: { errors?: Record<string, string[]> }; status?: number } };
+      console.error('Error response:', axiosError.response?.data);
+      console.error('Validation errors:', axiosError.response?.data?.errors);
       // Log specific validation error messages
-      if (error.response?.data?.errors) {
-        Object.keys(error.response.data.errors).forEach(field => {
-          console.error(`${field} validation error:`, error.response.data.errors[field]);
+      if (axiosError.response?.data?.errors) {
+        Object.keys(axiosError.response.data.errors).forEach(field => {
+          const fieldErrors = axiosError.response?.data?.errors?.[field];
+          console.error(`${field} validation error:`, fieldErrors);
         });
       }
-      console.error('Error status:', error.response?.status);
-      console.error('Error message:', error.message);
+      console.error('Error status:', axiosError.response?.status);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error message:', errorMessage);
       // Error will be handled by the PostForm component
     }
   };

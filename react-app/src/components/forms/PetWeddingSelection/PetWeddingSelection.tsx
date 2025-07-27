@@ -14,6 +14,7 @@ import {
   ListSubheader,
   Divider
 } from '@mui/material';
+import type { SelectChangeEvent } from '@mui/material';
 import { Pets } from '@mui/icons-material';
 import { getProfilePictureUrl } from '../../../utils/imageUrlUtils';
 import type { SelectablePet } from '../../../models/petWedding.types';
@@ -58,7 +59,7 @@ const PetWeddingSelection: React.FC<PetWeddingSelectionProps> = ({
 
   const selectionValidation = getSelectionValidation();
 
-  const handlePetSelection = (event: any) => {
+  const handlePetSelection = (event: SelectChangeEvent<number[]>) => {
     const value = event.target.value;
     const newSelectedIds = typeof value === 'string' ? value.split(',').map(Number) : value;
     

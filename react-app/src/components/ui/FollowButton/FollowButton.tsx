@@ -52,7 +52,8 @@ const FollowButton: React.FC<FollowButtonProps> = ({
       console.error('Failed to toggle follow status:', error);
       
       // Handle specific "already following" error
-      const errorMessage = (error as any)?.response?.data || (error as any)?.message || '';
+      const axiosError = error as { response?: { data?: string }; message?: string };
+      const errorMessage = axiosError?.response?.data || axiosError?.message || '';
       
       if (errorMessage.includes('already being followed') || errorMessage.includes('already followed')) {
         // User is already following - treat this as success and update the state

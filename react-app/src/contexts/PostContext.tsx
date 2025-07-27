@@ -111,11 +111,12 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'FETCH_START' });
       const posts = await postService.getPosts(filters);
       dispatch({ type: 'FETCH_POSTS_SUCCESS', payload: posts });
-    } catch (error: any) {
+    } catch (error) {
       console.error('fetchPosts error details:', error);
-      console.error('Error response:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch posts';
+      const axiosError = error as { response?: { data?: { message?: string }; status?: number }; message?: string };
+      console.error('Error response:', axiosError.response?.data);
+      console.error('Error status:', axiosError.response?.status);
+      const errorMessage = axiosError.response?.data?.message || axiosError.message || 'Failed to fetch posts';
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
     }
   }, []);
@@ -125,7 +126,7 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'FETCH_START' });
       const post = await postService.getPost(id);
       dispatch({ type: 'FETCH_POST_SUCCESS', payload: post });
-    } catch (error) {
+    } catch {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to fetch post' });
     }
   }, []);
@@ -136,8 +137,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const newPost = await postService.createPost(postData);
       dispatch({ type: 'CREATE_POST_SUCCESS', payload: newPost });
       return newPost;
-    } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Failed to create post' });
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      dispatch({ type: 'SET_ERROR', payload: axiosError.response?.data?.message || 'Failed to create post' });
       throw error;
     }
   }, []);
@@ -150,8 +152,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Refetch the post to get the latest data from server (including any backend status changes)
       const updatedPost = await postService.getPost(id);
       dispatch({ type: 'UPDATE_POST_SUCCESS', payload: updatedPost });
-    } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Failed to update post' });
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      dispatch({ type: 'SET_ERROR', payload: axiosError.response?.data?.message || 'Failed to update post' });
       throw error;
     }
   }, []);
@@ -161,8 +164,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'FETCH_START' });
       await postService.deletePost(id);
       dispatch({ type: 'DELETE_POST_SUCCESS', payload: id });
-    } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Failed to delete post' });
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      dispatch({ type: 'SET_ERROR', payload: axiosError.response?.data?.message || 'Failed to delete post' });
       throw error;
     }
   }, []);
@@ -172,8 +176,9 @@ export const PostProvider: React.FC<{ children: React.ReactNode }> = ({ children
       dispatch({ type: 'FETCH_START' });
       const updatedPost = await postService.updatePostStatus(id, { status, userId, userRole });
       dispatch({ type: 'UPDATE_POST_SUCCESS', payload: updatedPost });
-    } catch (error: any) {
-      dispatch({ type: 'SET_ERROR', payload: error.response?.data?.message || 'Failed to update post status' });
+    } catch (error) {
+      const axiosError = error as { response?: { data?: { message?: string } } };
+      dispatch({ type: 'SET_ERROR', payload: axiosError.response?.data?.message || 'Failed to update post status' });
       throw error;
     }
   }, []);

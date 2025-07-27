@@ -91,7 +91,7 @@ const MeetupManagement: React.FC = () => {
       setError('');
       const meetupsData = await postService.getPendingMeetupPosts();
       setMeetups(meetupsData);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to load pending meetups:', err);
       setError('Failed to load pending meetups. Please try again.');
     } finally {
@@ -143,7 +143,7 @@ const MeetupManagement: React.FC = () => {
       await loadPendingMeetups();
       
       setTimeout(() => setSuccess(''), 5000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to approve meetup:', err);
       setError('Failed to approve meetup. Please try again.');
       setTimeout(() => setError(''), 5000);
@@ -162,7 +162,7 @@ const MeetupManagement: React.FC = () => {
       await loadPendingMeetups();
       
       setTimeout(() => setSuccess(''), 5000);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to reject meetup:', err);
       setError('Failed to reject meetup. Please try again.');
       setTimeout(() => setError(''), 5000);

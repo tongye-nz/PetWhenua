@@ -118,7 +118,7 @@ const PetDetail: React.FC = () => {
             } else if (statusResponse.status === 'Pending' && overallStatus !== 'Accepted') {
               overallStatus = 'Pending';
             }
-          } catch (error) {
+          } catch {
             // If no connection exists between these pets, continue checking others
             console.log(`No connection between pet ${userPet.petId} and ${targetPet.petId}`);
           }
