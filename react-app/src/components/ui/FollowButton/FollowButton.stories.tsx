@@ -2,21 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
 import FollowButton from './FollowButton';
 
-// Mock the userFollowService for Storybook
-const mockUserFollowService = {
-  followUser: (userId: number) => {
-    console.log('Mock: Following user', userId);
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 1000);
-    });
-  },
-  unfollowUser: (userId: number) => {
-    console.log('Mock: Unfollowing user', userId);
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 1000);
-    });
-  },
-};
+
 
 // Note: API calls will use actual service in Storybook
 // The component handles errors gracefully if API is unavailable

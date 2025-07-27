@@ -2,35 +2,14 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
 import LocationInput from './LocationInput';
 
-// Mock user data for Storybook
-const mockUser = {
-  id: 1,
-  username: 'storybook-user',
-  email: 'user@example.com',
-  firstName: 'John',
-  lastName: 'Doe',
-  location: 'Auckland, Auckland Region'
-};
 
-// Mock useAuth hook for Storybook
-const mockUseAuth = (user: typeof mockUser | null = mockUser) => ({
-  user,
-  token: 'mock-token',
-  login: fn(),
-  logout: fn(),
-  checkAuth: fn(),
-  register: fn(),
-  isAuthenticated: !!user,
-  isLoading: false,
-  error: null,
-  clearError: fn(),
-});
+
+
 
 // Simple wrapper for stories - component will handle missing auth gracefully
 const MockAuthProvider: React.FC<{ 
   children: React.ReactNode;
-  user?: typeof mockUser | null;
-}> = ({ children, user = mockUser }) => {
+}> = ({ children }) => {
   return <div>{children}</div>;
 };
 
@@ -184,7 +163,7 @@ export const WithoutUserLocation: Story = {
   },
   decorators: [
     (Story) => (
-      <MockAuthProvider user={null}>
+      <MockAuthProvider>
         <div style={{ padding: '20px', minWidth: '400px' }}>
           <p style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
             No user logged in - only recent locations will be suggested
@@ -202,7 +181,7 @@ export const UserWithoutLocation: Story = {
   },
   decorators: [
     (Story) => (
-      <MockAuthProvider user={{ ...mockUser, location: '' }}>
+      <MockAuthProvider>
         <div style={{ padding: '20px', minWidth: '400px' }}>
           <p style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
             User logged in but no location in profile

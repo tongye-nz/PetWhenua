@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { fn } from 'storybook/test';
 import PetConnectionButton from './PetConnectionButton';
-import type { PetConnectionStatus } from '../../../models/petConnection.types';
 
 // Create a wrapper component that shows the button with some context
 const StoryWrapper: React.FC<{ children: React.ReactNode; title: string }> = ({ children, title }) => {
