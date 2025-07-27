@@ -27,7 +27,7 @@ const Posts: React.FC = () => {
   const { postType: postTypeParam } = useParams<{ postType?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { clearError } = usePost();
+  const { clearError, deletePost } = usePost();
   
   // Pagination state
   const [posts, setPosts] = useState<Post[]>([]);
@@ -224,13 +224,23 @@ const Posts: React.FC = () => {
   };
 
   const handleDeletePost = async (post: Post) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        // The actual delete logic will be handled by PostContext
-        console.log('Delete post:', post.postId);
-      } catch (error) {
-        console.error('Failed to delete post:', error);
+    try {
+      // Use PostContext's deletePost method to actually delete the post
+      await deletePost(post.postId);
+      
+      // Refresh the posts list after successful deletion
+      if (showingFollowingPosts) {
+        // If showing following posts, refresh that list
+        handleFollowingPostsToggle();
+        handleFollowingPostsToggle(); // Toggle twice to refresh
+      } else {
+        // Refresh the main posts list
+        fetchPosts(filtersRef.current, paginationRef.current.currentPage, paginationRef.current.pageSize);
       }
+      
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      setError('Failed to delete post. Please try again.');
     }
   };
 

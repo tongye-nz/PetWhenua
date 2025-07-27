@@ -141,11 +141,21 @@ const PostDetail: React.FC = () => {
     try {
       setIsDeleting(true);
       await deletePost(currentPost.postId);
-      // After deleting, go back to the previous page (could be /posts, /my-posts, etc.)
-      navigate(-1);
+      
+      // Navigate to a safe fallback page instead of using navigate(-1)
+      // Check if user owns the post to determine best navigation target
+      if (user.userId === currentPost.userId) {
+        // User deleted their own post, go to My Posts
+        navigate('/my-posts', { replace: true });
+      } else {
+        // User is admin deleting someone else's post, go to main Posts
+        navigate('/posts', { replace: true });
+      }
     } catch (error) {
       console.error('Failed to delete post:', error);
       setIsDeleting(false);
+      // Show an alert or toast notification for the error
+      alert('Failed to delete post. Please try again.');
     }
   };
 
