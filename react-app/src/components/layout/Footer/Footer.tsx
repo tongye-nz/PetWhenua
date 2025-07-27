@@ -104,20 +104,6 @@ const Footer: React.FC = () => {
               >
                 Meet the Developer
               </Link>
-              <Link
-                href="#"
-                sx={{
-                  color: 'text.secondary',
-                  textDecoration: 'none',
-                  fontSize: '0.875rem',
-                  '&:hover': {
-                    color: 'text.primary',
-                    textDecoration: 'underline'
-                  }
-                }}
-              >
-                Contact Admin
-              </Link>
             </Stack>
           </Box>
 
