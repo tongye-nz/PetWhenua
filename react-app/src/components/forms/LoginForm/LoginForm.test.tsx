@@ -19,8 +19,8 @@ describe('LoginForm', () => {
     it('should render all form elements', () => {
       render(<LoginForm {...defaultProps} />)
       
-      expect(screen.getByLabelText('Email or Username')).toBeInTheDocument()
-      expect(screen.getByLabelText('Password')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Enter your email or username')).toBeInTheDocument()
+      expect(screen.getByPlaceholderText('Enter your password')).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
     })
 
@@ -50,7 +50,7 @@ describe('LoginForm', () => {
     it('should show validation error for empty username/email field', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.blur(usernameInput)
       
       await waitFor(() => {
@@ -61,7 +61,7 @@ describe('LoginForm', () => {
     it('should show validation error for short username/email', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: 'ab' } })
       fireEvent.blur(usernameInput)
       
@@ -73,7 +73,7 @@ describe('LoginForm', () => {
     it('should validate email format correctly', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: 'invalid-email@' } })
       fireEvent.blur(usernameInput)
       
@@ -85,7 +85,7 @@ describe('LoginForm', () => {
     it('should accept valid email format', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: 'user@example.com' } })
       fireEvent.blur(usernameInput)
       
@@ -97,7 +97,7 @@ describe('LoginForm', () => {
     it('should validate username format correctly', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: 'user@name!' } })
       fireEvent.blur(usernameInput)
       
@@ -109,7 +109,7 @@ describe('LoginForm', () => {
     it('should accept valid username format', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: 'valid_user-123' } })
       fireEvent.blur(usernameInput)
       
@@ -121,7 +121,7 @@ describe('LoginForm', () => {
     it('should show validation error for empty password', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const passwordInput = screen.getByLabelText('Password')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       fireEvent.blur(passwordInput)
       
       await waitFor(() => {
@@ -132,7 +132,7 @@ describe('LoginForm', () => {
     it('should show validation error for short password', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const passwordInput = screen.getByLabelText('Password')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       fireEvent.change(passwordInput, { target: { value: '1234567' } })
       fireEvent.blur(passwordInput)
       
@@ -144,7 +144,7 @@ describe('LoginForm', () => {
     it('should accept valid password', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const passwordInput = screen.getByLabelText('Password')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       fireEvent.change(passwordInput, { target: { value: 'validpassword123' } })
       fireEvent.blur(passwordInput)
       
@@ -156,7 +156,7 @@ describe('LoginForm', () => {
     it('should show validation error for too long email', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       const longEmail = 'a'.repeat(95) + '@example.com' // > 100 chars
       fireEvent.change(usernameInput, { target: { value: longEmail } })
       fireEvent.blur(usernameInput)
@@ -169,7 +169,7 @@ describe('LoginForm', () => {
     it('should show validation error for too long username', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       const longUsername = 'a'.repeat(25) // > 20 chars
       fireEvent.change(usernameInput, { target: { value: longUsername } })
       fireEvent.blur(usernameInput)
@@ -182,7 +182,7 @@ describe('LoginForm', () => {
     it('should show validation error for too long password', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const passwordInput = screen.getByLabelText('Password')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       const longPassword = 'a'.repeat(105) // > 100 chars
       fireEvent.change(passwordInput, { target: { value: longPassword } })
       fireEvent.blur(passwordInput)
@@ -197,7 +197,7 @@ describe('LoginForm', () => {
     it('should validate in real-time after field is touched', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       
       // Touch the field first
       fireEvent.blur(usernameInput)
@@ -216,7 +216,7 @@ describe('LoginForm', () => {
     it('should not show validation errors before field is touched', () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.change(usernameInput, { target: { value: '' } })
       
       expect(screen.queryByText('Email or username is required')).not.toBeInTheDocument()
@@ -228,8 +228,8 @@ describe('LoginForm', () => {
       const onSubmit = vi.fn()
       render(<LoginForm {...defaultProps} onSubmit={onSubmit} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
-      const passwordInput = screen.getByLabelText('Password')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       const submitButton = screen.getByRole('button', { name: 'Sign In' })
       
       fireEvent.change(usernameInput, { target: { value: 'testuser' } })
@@ -274,8 +274,8 @@ describe('LoginForm', () => {
     it('should disable inputs and show loading button when isLoading is true', () => {
       render(<LoginForm {...defaultProps} isLoading />)
       
-      expect(screen.getByLabelText('Email or Username')).toBeDisabled()
-      expect(screen.getByLabelText('Password')).toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your email or username')).toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your password')).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Signing In...' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Create Account' })).toBeDisabled()
     })
@@ -283,8 +283,8 @@ describe('LoginForm', () => {
     it('should show normal state when isLoading is false', () => {
       render(<LoginForm {...defaultProps} isLoading={false} />)
       
-      expect(screen.getByLabelText('Email or Username')).not.toBeDisabled()
-      expect(screen.getByLabelText('Password')).not.toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your email or username')).not.toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your password')).not.toBeDisabled()
       expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: 'Create Account' })).not.toBeDisabled()
     })
@@ -294,8 +294,8 @@ describe('LoginForm', () => {
     it('should disable all inputs and buttons when disabled is true', () => {
       render(<LoginForm {...defaultProps} disabled />)
       
-      expect(screen.getByLabelText('Email or Username')).toBeDisabled()
-      expect(screen.getByLabelText('Password')).toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your email or username')).toBeDisabled()
+      expect(screen.getByPlaceholderText('Enter your password')).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Sign In' })).toBeDisabled()
       expect(screen.getByRole('button', { name: 'Create Account' })).toBeDisabled()
     })
@@ -327,15 +327,15 @@ describe('LoginForm', () => {
     it('should have proper form labels and structure', () => {
       render(<LoginForm {...defaultProps} />)
       
-      expect(screen.getByLabelText('Email or Username')).toHaveAttribute('required')
-      expect(screen.getByLabelText('Password')).toHaveAttribute('required')
-      expect(screen.getByLabelText('Password')).toHaveAttribute('type', 'password')
+      expect(screen.getByPlaceholderText('Enter your email or username')).toHaveAttribute('required')
+      expect(screen.getByPlaceholderText('Enter your password')).toHaveAttribute('required')
+      expect(screen.getByPlaceholderText('Enter your password')).toHaveAttribute('type', 'password')
     })
 
     it('should associate error messages with form fields', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       fireEvent.blur(usernameInput)
       
       await waitFor(() => {
@@ -356,7 +356,7 @@ describe('LoginForm', () => {
     it('should handle empty strings vs undefined for validation', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       
       // Test empty string
       fireEvent.change(usernameInput, { target: { value: '   ' } }) // spaces only
@@ -370,7 +370,7 @@ describe('LoginForm', () => {
     it('should handle special characters in email validation correctly', async () => {
       render(<LoginForm {...defaultProps} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
       
       // Test valid email with allowed special characters
       fireEvent.change(usernameInput, { target: { value: 'user.name+tag@example.co.uk' } })
@@ -385,8 +385,8 @@ describe('LoginForm', () => {
       const onSubmit = vi.fn()
       render(<LoginForm {...defaultProps} onSubmit={onSubmit} />)
       
-      const usernameInput = screen.getByLabelText('Email or Username')
-      const passwordInput = screen.getByLabelText('Password')
+      const usernameInput = screen.getByPlaceholderText('Enter your email or username')
+      const passwordInput = screen.getByPlaceholderText('Enter your password')
       const submitButton = screen.getByRole('button', { name: 'Sign In' })
       
       fireEvent.change(usernameInput, { target: { value: '  testuser  ' } })
